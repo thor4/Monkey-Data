@@ -28,7 +28,7 @@ for i=1:length(clark{1})
     for j=2:3
         myfilename = sprintf(path, monkeys(2), clark{1}{i}, clark{j});
         load(myfilename);
-        recordingArea(2,i,j) = {recording_info.area};
+        recordingArea(2,i,j) = strcat({recording_info.cortex},{recording_info.area});
     end
 end;
 

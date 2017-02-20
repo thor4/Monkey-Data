@@ -5,7 +5,7 @@ days_clark = string({'060328', '060406', '060411', '060414', '060426', '060427',
 betty = { days_betty, string('session01') };
 clark = { days_clark, string('session02'), string('session03') };
 % total number of trials indexed by monkey, day, session
-numTrials = zeros(2,24,3);
+delay = zeros(61400,4);
 path = 'E:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\trial_info.mat';
 
 
@@ -20,7 +20,13 @@ path = 'E:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity
 for i=1:length(betty{1})
     myfilename = sprintf(path, monkeys(1), betty{1}{i}, betty{2});
     load(myfilename);
-    numTrials(1,i,1) = trial_info.numTrials;
+    numTrials = trial_info.numTrials;
+    for j=1:trial_info.numTrials
+        delay(j,1) = j;
+        delay(j,2) = trial_info.CueOffset(j);
+        delay(j,3) = trial_info.MatchOnset(j);
+        delay(j,4) = delay(j,3) - delay(j,2);
+    end
 end;
 
 % clark loop
@@ -28,7 +34,7 @@ for i=1:length(clark{1})
     for j=2:3
         myfilename = sprintf(path, monkeys(2), clark{1}{i}, clark{j});
         load(myfilename);
-        numTrials(2,i,j) = trial_info.numTrials;
+        delay(2,i,j) = trial_info.numTrials;
     end
 end;
 
