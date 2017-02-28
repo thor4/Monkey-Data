@@ -10,17 +10,23 @@ clark = { days_clark, string('session02'), string('session03') };
 delay = zeros(61400,6);
 days_betty_num = [90615, 90616, 90617, 90618, 90622, 90625, 90626, 90629, 90701, 90702, 90706, 90708, 90709, 90901, 90903, 90916, 90917, 90921, 90923, 90924, 90928, 90929, 90930, 91001];
 days_clark_num = [60328, 60406, 60411, 60414, 60426, 60427, 60428, 60502, 60503, 60509, 60511, 60531, 60601, 60602, 60824, 60825, 60831, 60907, 61212, 61213, 61214, 61215, 61221];
-path = 'E:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\trial_info.mat';
+trial_path = 'E:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\trial_info.mat';
+recording_path = 'E:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\recording_info.mat';
+trial_lfp_path = 'E:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\trial_info.mat';
 
 % counter
 idx = 1;
 
 for i=1:length(betty{1})
-    myfilename = sprintf(path, monkeys(1), betty{1}{i}, betty{2});
-    load(myfilename);
+    trial_myfilename = sprintf(trial_path, monkeys(1), betty{1}{i}, betty{2});
+    load(trial_myfilename);
+    recording_myfilename = sprintf(recording_path, monkeys(1), betty{1}{i}, betty{2});
+    load(recording_myfilename);
     for j=1:trial_info.numTrials
         if (trial_info.good_trials(j) == 1) && (trial_info.stable_trials(j) == 1)
-            delay(idx,1) = days_betty_num(i);
+            trial_myfilename = sprintf(trial_path, monkeys(1), betty{1}{i}, betty{2});
+            load(trial_myfilename);
+            delay(idx,1:1222) = days_betty_num(i);
             delay(idx,2) = 1;
             delay(idx,3) = j;
             delay(idx,4) = trial_info.CueOffset(j);
@@ -34,8 +40,8 @@ end;
 % clark loop
 for i=1:length(clark{1})
     for j=2:3
-        myfilename = sprintf(path, monkeys(2), clark{1}{i}, clark{j});
-        load(myfilename);
+        trial_myfilename = sprintf(trial_path, monkeys(2), clark{1}{i}, clark{j});
+        load(trial_myfilename);
         for k=1:trial_info.numTrials
             if (trial_info.good_trials(k) == 1) && (trial_info.stable_trials(k) == 1)
                 delay(idx,1) = days_clark_num(i);
