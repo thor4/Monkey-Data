@@ -73,9 +73,17 @@ for i=1:length(clark{1})
                 [r,c] = size(lfp_data);
                 delay_period = trial_info.MatchOnset(k)-trial_info.CueOffset(k);
                 for l=1:r % parse through each channel
-                    % insert voltage values during delay period, take one second after
-					% sample goes away up through one second before match appears
-                    data(idx,1:delay_period-1) = lfp_data(k,trial_info.CueOffset(k)+1:trial_info.MatchOnset(k)-1);
+                    % insert voltage values during delay period, round-down 
+                    % CueOffset then add 1 to ensure blank screen/beginning
+                    % of delay. round-up MatchOnset then subtract 1 to 
+					% ensure the match hasn't shown yet/end of delay
+                    % additionally, check to ensure no dimension mismatch
+                    % via if/else
+                    if (length(floor(trial_info.CueOffset(k))+1:ceil(trial_info.MatchOnset(k))-1) == floor(delay_period))
+                        data(idx,1:floor(delay_period)) = lfp_data(l,floor(trial_info.CueOffset(k))+1:ceil(trial_info.MatchOnset(k))-1);
+                    else
+                        data(idx,1:floor(delay_period)+1) = lfp_data(l,floor(trial_info.CueOffset(k))+1:ceil(trial_info.MatchOnset(k))-1);
+                    end
                     if j==2
                         data(idx,1223:1225) = [0,1,0]; % sessionID 2 for clark
                     else
