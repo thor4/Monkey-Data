@@ -66,9 +66,12 @@ axis xy; title('Parietal PEC'); xlabel('Time(s)'); ylabel('Freq (Hz)'); colormap
 
 toc
 
-plot_matrix(P,T,F); xlabel([]); % plot spectrogram
-%caxis([8 28]); 
-colorbar;
-set(gca,'FontName','Times New Roman','Fontsize', 14);
-title({['LFP 1,  W=' num2str(params.tapers(1)/movingwin(1)) 'Hz']; ['moving window = ' num2str(movingwin(1)) 's, step = ' num2str(movingwin(2)) 's']});
-ylabel('frequency Hz');
+% plot_matrix(P,T,F); xlabel([]); % plot spectrogram
+% %caxis([8 28]); 
+% colorbar;
+% set(gca,'FontName','Times New Roman','Fontsize', 14);
+% title({['LFP 1,  W=' num2str(params.tapers(1)/movingwin(1)) 'Hz']; ['moving window = ' num2str(movingwin(1)) 's, step = ' num2str(movingwin(2)) 's']});
+% ylabel('frequency Hz');
+
+freq=[0:3:60]; %Frequencies we are interested in
+[S,F,T,P]=spectrogram(Correct.area9L,128,127,freq,1000,'yaxis');
