@@ -8,6 +8,7 @@ Created on Thu Jun  8 17:00:37 2017
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_predict
 from sklearn.linear_model import SGDClassifier
@@ -92,7 +93,6 @@ plt.show()
 sgd_roc_auc_score = roc_auc_score(y_train, y_scores)
 
 #now test scores
-
 y_test_pred = cross_val_predict(sgd_clf, X_test, y_test, cv=5)
 confusion_matrix(y_test, y_test_pred)
 sgd_clf_precision = precision_score(y_test, y_test_pred)
@@ -102,3 +102,7 @@ y_scores = cross_val_predict(sgd_clf, X_test, y_test, cv=5,
                              method="decision_function")
 fpr, tpr, thresholds = roc_curve(y_test, y_scores)
 sgd_roc_auc_score = roc_auc_score(y_test, y_scores)
+
+#save model
+joblib.dump(sgd_clf, "model-sgd-spec500.pkl")
+#sgd_clf = joblib.load("model-sgd-spec500.pkl") #load model

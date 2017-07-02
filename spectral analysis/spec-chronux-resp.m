@@ -1,4 +1,4 @@
-movingwin=[0.5 0.05]; % set the moving window dimensions, window=500ms step=50ms, w=10Hz
+movingwin=[0.5 0.005]; % set the moving window dimensions, window=500ms step=5ms, w=10Hz
 params.Fs=1000; % sampling frequency
 %params.fpass=[0 60]; % frequency of interest
 params.tapers=[5 9]; % tapers
@@ -11,7 +11,9 @@ tic
 figure 
 % maxDb=25; %Limit power range to 15 Db
 load('correct.mat')
+tic
 [Pc,Tc,Fc]=mtspecgramc(correct,movingwin,params);
+toc
 subplot(2,1,1)
 imagesc(T,F,10*log10(P')) %Plot power in dB
 axis xy; title('Correct Frontal'); xlabel('Time(s)'); ylabel('Freq (Hz)'); colormap jet; colorbar;
