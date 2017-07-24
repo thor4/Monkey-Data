@@ -41,4 +41,6 @@ params.tapers=[5 9]; % tapers
 params.trialave=0; % don't average over trials. gives frequency x channels
 params.err=0; % no error computation
 load('incorrect.mat')
-[S,f] = mtspectrumc(incorrect(:,1),params); %power spectrum
+%[S,f] = mtspectrumc(incorrect(:,1),params); %power spectrum
+[Si,fi] = mtspectrumc(incorrect,params); %power spectrum
+[Sc,fc] = mtspectrumc(correct,params); %power spectrum

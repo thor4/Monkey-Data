@@ -38,7 +38,7 @@ def plot_roc_curve(fpr, tpr, label=None):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
 
-h5f = h5py.File('/home/bconkli4/Documents/Python/ml/datasets/spec500-resp.h5','r')
+h5f = h5py.File('/home/bconkli4/Documents/data/ml/input-raw-response.h5','r')
 X, y = h5f['data'][:], h5f['response'][:]
 h5f.close()
 
