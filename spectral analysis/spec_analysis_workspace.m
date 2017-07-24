@@ -4,7 +4,7 @@ figure
 [pxx,f] = pwelch(lfp_data(1,:),128,127,128,fs); xlabel('Frequency (Hz)')
 
 
-% Chronux time spectrum
+% Chronux power spectrum
 params.Fs = 1000;
 params.fpass = [0 100];
 params.pad = 2;
