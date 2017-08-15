@@ -40,25 +40,7 @@ pause
 % end
 % 
  
+
 chan=eye(11)
  
 % {8B, 9L, LIP, MIP, PG, vPFC 6DR, 8AD, PE, PEC, dPFC}
-
-% crawling baseline period
-baseline_period = (trial_info.CueOnset(29) - 50) - (trial_info.CueOnset(29) - 450);
-
-lfp_data(1,trial_info.CueOnset(29)-450:trial_info.CueOnset(29)-51);
-
-find(bad_trials ~= 0)
-
-lfp_data(1,floor(trial_info.CueOnset(29))-450:floor(trial_info.CueOnset(29))-51);
-
-data1 = zeros(400,10000);
-data1 = data1(400,1:7531);
-
-data=data(1:400,1:3958);
-
-inc = incorrect(1:810,1:7531);
-
-dataPAD = zeros(810,7531);
-dataPAD(1:400,1:7531) = data(1:400,1:7531);
