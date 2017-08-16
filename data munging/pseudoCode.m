@@ -42,7 +42,7 @@ pause
  
 chan=eye(11)
  
-% {8B, 9L, LIP, MIP, PG, vPFC 6DR, 8AD, PE, PEC, dPFC}
+% {8B, 9L, 6DR, 8AD, vPFC, dPFC, LIP, MIP, PE, PG, PEC}
 
 % crawling baseline period
 baseline_period = (trial_info.CueOnset(29) - 50) - (trial_info.CueOnset(29) - 450);
@@ -56,9 +56,19 @@ lfp_data(1,floor(trial_info.CueOnset(29))-450:floor(trial_info.CueOnset(29))-51)
 data1 = zeros(400,10000);
 data1 = data1(400,1:7531);
 
-data=data(1:400,1:3958);
+data=data(1:400,1:80166);
 
 inc = incorrect(1:810,1:7531);
 
 dataPAD = zeros(810,7531);
 dataPAD(1:400,1:7531) = data(1:400,1:7531);
+
+% horizontal concatenation of areas into regions
+
+incorrectFrontal = horzcat(area8B, area9L, area6DR, area8AD, areavPFC, areadPFC);
+incorrectParietal = horzcat(areaLIP, areaMIP, areaPE, areaPG, areaPEC);
+incorrect = horzcat(incorrectFrontal, incorrectParietal);
+
+correctFrontal = horzcat(area8B, area9L, area6DR, area8AD, areavPFC, areadPFC);
+correctParietal = horzcat(areaLIP, areaMIP, areaPE, areaPG, areaPEC);
+correct = horzcat(correctFrontal, correctParietal);

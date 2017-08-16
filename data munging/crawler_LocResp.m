@@ -17,8 +17,8 @@ areas = string({'9L', '8B', '6DR', '8AD', 'vPFC', 'dPFC', 'LIP', 'MIP', 'PE', 'P
 responses = [0 1];
 idx = 1; % counter
 tic
-area = areas(7);
-response = responses(1);
+area = areas(11);
+response = responses(2);
 
 % betty loop
 for i=1:length(betty{1})

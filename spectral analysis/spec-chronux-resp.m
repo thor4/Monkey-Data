@@ -40,8 +40,10 @@ params.fpass=[0 300]; % frequency of interest
 params.tapers=[5 9]; % tapers
 params.trialave=0; % don't average over trials. gives frequency x channels
 params.err=0; % no error computation
+params.pad=1; % pad input to 1024 points for the FFT
 load('incorrect.mat')
 %[S,f] = mtspectrumc(incorrect(:,1),params); %power spectrum
 %[Si,fi] = mtspectrumc(incorrect,params); %power spectrum
-[Si,fi] = mtspectrumc(dataPAD,params); %power spectrum
+[Si,fi] = mtspectrumc(inc,params); %power spectrum
+[Si,fi] = mtspectrumc(data,params); %power spectrum
 [Sc,fc] = mtspectrumc(correct,params); %power spectrum
