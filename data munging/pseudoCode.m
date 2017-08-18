@@ -72,3 +72,6 @@ incorrect = horzcat(incorrectFrontal, incorrectParietal);
 correctFrontal = horzcat(area8B, area9L, area6DR, area8AD, areavPFC, areadPFC);
 correctParietal = horzcat(areaLIP, areaMIP, areaPE, areaPG, areaPEC);
 correct = horzcat(correctFrontal, correctParietal);
+
+SiDelay
+fiDelay

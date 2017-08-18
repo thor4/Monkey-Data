@@ -1,5 +1,5 @@
-load('C:\Users\bryan\OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data\incorrect.mat')
-load('C:\Users\bryan\OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data\correct.mat')
+load('incorrect.mat')
+load('correct.mat')
 porder = 10;
 fs = 1000;
 arpower_cBase = zeros(352967,501);
