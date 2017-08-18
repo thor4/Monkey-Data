@@ -36,14 +36,22 @@ toc
 
 %power spectrum chronux
 params.Fs=1000; % sampling frequency
-params.fpass=[0 300]; % frequency of interest
+params.fpass=[0 250]; % frequency of interest
 params.tapers=[5 9]; % tapers
-params.trialave=0; % don't average over trials. gives frequency x channels
+params.trialave=1; % average over trials for power spectrum plots.
 params.err=0; % no error computation
-params.pad=1; % pad input to 1024 points for the FFT
-load('incorrect.mat')
-%[S,f] = mtspectrumc(incorrect(:,1),params); %power spectrum
-%[Si,fi] = mtspectrumc(incorrect,params); %power spectrum
-[Si,fi] = mtspectrumc(inc,params); %power spectrum
-[Si,fi] = mtspectrumc(data,params); %power spectrum
-[Sc,fc] = mtspectrumc(correct,params); %power spectrum
+% pad to 1024 points prior to FFT to match delay period frequency resolution
+% averaging for the plot only
+params.pad=0;
+[Si,fi] = mtspectrumc(incorrect,params); 
+params.pad=1;
+[SiBase,fiBase] = mtspectrumc(incorrectBase,params); 
+SiNorm = Si./SiBase; SiNormdB = 10*log10(SiNorm); %baseline normalization
+params.pad=0;
+[Sc,fc] = mtspectrumc(correct,params); 
+params.pad=1;
+[ScBase,fcBase] = mtspectrumc(correctBase,params); 
+ScNorm = Sc./ScBase; ScNormdB = 10*log10(ScNorm); %baseline normalization
+% no average for input data for machine learning models
+params.trialave=0; % don't average over trials. gives frequency x channels
+% now run spectral analysis pipeline again (lines above)
