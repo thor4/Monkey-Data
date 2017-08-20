@@ -10,24 +10,7 @@
 % subplot(2,1,2)
 % plot_vector(SiDelay(:,10),fiDelay,'n',[],'g')
 
-figure
-subplot(2,1,1);
-plot(f, ScNormdB, f, SiNormdB, ':', 'LineWidth', 2);
-title('LFP Slepian/Chronux Spectrum During Delay');
-xlabel('Frequency (Hz)');
-ylabel('Baseline-normalized Power (dB)');
-legend('Correct Trials','Incorrect Trials');
-
-arpower_cNormAvgdB = 10*(log10(arpower_cNormAvg));
-arpower_iNormAvgdB = 10*(log10(arpower_iNormAvg));
-
-subplot(2,1,2);
-time = (0:250);
-plot(time, 10*(log10(arpower_cNormAvg)), time, 10*(log10(arpower_iNormAvg)), ':', 'LineWidth', 2);
-title('LFP AR/BSMART Spectrum During Delay');
-xlabel('Frequency (Hz)');
-ylabel('Baseline-normalized Power (dB)');
-legend('Correct Trials','Incorrect Trials');
+plot(f, ScN
 
 
 %various plots of power
