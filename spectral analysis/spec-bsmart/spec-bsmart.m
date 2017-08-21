@@ -2,15 +2,15 @@ load('incorrect.mat')
 load('correct.mat')
 porder = 10;
 fs = 1000;
-arpower_cBase = zeros(352967,501);
+arpower_iBase = zeros(137078,501);
 tic
-for i = 1:size(correctBase,2)
-    x = correctBase(:,i);
+for i = 1:size(incorrectBase,2)
+    x = incorrectBase(:,i);
     x = transpose(x);
     Nr = size(x,1);
     Nl = size(x,2);
     pp = arpower(x,Nr,Nl,porder,fs);
-    arpower_cBase(i,:) = pp(1,:);
+    arpower_iBase(i,:) = pp(1,:);
 end
 toc
 
@@ -25,3 +25,8 @@ arpower_iNorm = arpower_iDelay ./ arpower_iBase;
 %average across trials
 arpower_iNormAvg = mean(arpower_iNorm);
 arpower_cNormAvg = mean(arpower_cNorm);
+
+%second option: average then normalize
+arpower_cBaseAvg = mean(arpower_cBase);
+arpower_cDelayAvg = mean(arpower_cDelay);
+arpower_cAvgNorm = arpower_cDelayAvg ./ arpower_cBaseAvg;
