@@ -18,12 +18,9 @@ xlabel('Frequency (Hz)');
 ylabel('Baseline-normalized Power (dB)');
 legend('Correct Trials','Incorrect Trials');
 
-arpower_cNormAvgdB = 10*(log10(arpower_cNormAvg));
-arpower_iNormAvgdB = 10*(log10(arpower_iNormAvg));
-
 subplot(2,1,2);
 time = (0:250);
-plot(time, 10*(log10(arpower_cNormAvg)), time, 10*(log10(arpower_iNormAvg)), ':', 'LineWidth', 2);
+plot(time, 10*(log10(arpower_cAvgNorm)), time, 10*(log10(arpower_iAvgNorm)), ':', 'LineWidth', 2);
 title('LFP AR/BSMART Spectrum During Delay');
 xlabel('Frequency (Hz)');
 ylabel('Baseline-normalized Power (dB)');
