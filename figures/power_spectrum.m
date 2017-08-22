@@ -11,17 +11,24 @@
 % plot_vector(SiDelay(:,10),fiDelay,'n',[],'g')
 
 figure
-subplot(2,1,1);
+subplot(3,1,1);
 plot(f, ScNormdB, f, SiNormdB, ':', 'LineWidth', 2);
 title('LFP Slepian/Chronux Spectrum During Delay');
 xlabel('Frequency (Hz)');
 ylabel('Baseline-normalized Power (dB)');
 legend('Correct Trials','Incorrect Trials');
 
-subplot(2,1,2);
+subplot(3,1,2);
 time = (0:250);
 plot(time, 10*(log10(arpower_cAvgNorm)), time, 10*(log10(arpower_iAvgNorm)), ':', 'LineWidth', 2);
 title('LFP AR/BSMART Spectrum During Delay');
+xlabel('Frequency (Hz)');
+ylabel('Baseline-normalized Power (dB)');
+legend('Correct Trials','Incorrect Trials');
+
+subplot(3,1,3);
+plot(freqfft, 10*(log10(fftpower_cAvgNorm)), freqfft, 10*(log10(fftpower_iAvgNorm)), ':', 'LineWidth', 2);
+title('LFP FFT/DFT Spectrum During Delay');
 xlabel('Frequency (Hz)');
 ylabel('Baseline-normalized Power (dB)');
 legend('Correct Trials','Incorrect Trials');
