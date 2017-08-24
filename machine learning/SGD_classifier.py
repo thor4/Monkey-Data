@@ -38,8 +38,10 @@ def plot_roc_curve(fpr, tpr, label=None):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
 
-h5f = h5py.File('/home/bconkli4/Documents/data/ml/input-raw-response.h5','r')
-X, y = h5f['data'][:], h5f['response'][:]
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-epochs.h5','r')
+X1, y1 = h5f['early-data'][:], h5f['early-response'][:]
+X2, y2 = h5f['mid-data'][:], h5f['mid-response'][:]
+X3, y3 = h5f['late-data'][:], h5f['late-response'][:]
 h5f.close()
 
 #split 80/20 train/test sets

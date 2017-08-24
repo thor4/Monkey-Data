@@ -78,10 +78,23 @@ time = c_i['Tc']
 freq = c_i['Fc']
 cor = np.transpose(correct)
 
+#load raw data epochs
+raw = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/raw-epochs.mat')
+correct1 = np.transpose(raw['correct1'])
+correct2 = np.transpose(raw['correct2'])
+correct3= np.transpose(raw['correct3'])
+incorrect1 = np.transpose(raw['incorrect1'])
+incorrect2 = np.transpose(raw['incorrect2'])
+incorrect3= np.transpose(raw['incorrect3'])
+
 #prep raw data
 #labels
-c = np.ones(len(correct))
-i = np.zeros(len(incorrect))
+c1 = np.ones(len(correct1))
+c2 = np.ones(len(correct2))
+c3 = np.ones(len(correct3))
+i1 = np.zeros(len(incorrect1))
+i2 = np.zeros(len(incorrect2))
+i3 = np.zeros(len(incorrect3))
 
 #combine data and labels
 spec500_data = np.vstack((correct,incorrect))
@@ -91,6 +104,16 @@ response = response.reshape(len(spec500_data),)
 arpower_data = np.vstack((correct,incorrect))
 response = np.vstack((c[:,None],i[:,None]))
 response = response.reshape(len(arpower_data),)
+###for raw epoch data
+raw_early_data = np.vstack((correct1,incorrect1))
+early_response = np.vstack((c1[:,None],i1[:,None]))
+early_response = early_response.reshape(len(raw_early_data),)
+raw_mid_data = np.vstack((correct2,incorrect2))
+mid_response = np.vstack((c2[:,None],i2[:,None]))
+mid_response = mid_response.reshape(len(raw_mid_data),)
+raw_late_data = np.vstack((correct3,incorrect3))
+late_response = np.vstack((c3[:,None],i3[:,None]))
+late_response = late_response.reshape(len(raw_late_data),)
 
 #save h5py
 h5f = h5py.File('spec500-resp.h5', 'w')
@@ -101,6 +124,16 @@ h5f.close()
 h5f = h5py.File('arpower-resp.h5', 'w')
 h5f.create_dataset('data', data=arpower_data)
 h5f.create_dataset('response', data=response)
+h5f.close()
+
+###for raw epoch data
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/raw-epochs.h5', 'w')
+h5f.create_dataset('early-data', data=raw_early_data)
+h5f.create_dataset('early-response', data=early_response)
+h5f.create_dataset('mid-data', data=raw_mid_data)
+h5f.create_dataset('mid-response', data=mid_response)
+h5f.create_dataset('late-data', data=raw_late_data)
+h5f.create_dataset('late-response', data=late_response)
 h5f.close()
 
 #load h5py
