@@ -21,18 +21,26 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_recall_curve, roc_curve
 from sklearn.preprocessing import StandardScaler
 
-h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-epochs.h5','r')
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-epochs-stats.h5','r')
 X1, y1 = h5f['early-data'][:], h5f['early-response'][:]
 X2, y2 = h5f['mid-data'][:], h5f['mid-response'][:]
 X3, y3 = h5f['late-data'][:], h5f['late-response'][:]
 h5f.close()
 
+#chronux
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-chronux.h5','r')
+X, y = h5f['data'][:], h5f['response'][:]
+h5f.close()
+
 #standardize data to improve model
-scaler = StandardScaler()
-scaler = scaler.fit(X_train3)
+scalerx = StandardScaler()
+scalery = StandardScaler()
+scalerx = scaler.fit(X_train)
+scalery = scaler.fit(y_train)
 # standardization the dataset and print the first 5 rows
-normalized = scaler.transform(X_train3)
-print('Mean: %d, StandardDeviation: %d' % (np.mean(normalized), sqrt(np.var(normalized))))
+normalx = scaler.transform(X_train)
+normaly = scaler.transform(y_train)
+print('Mean: %d, StandardDeviation: %d' % (np.mean(normalx), sqrt(np.var(normalx))))
 # inverse transform brings back original data
 inversed = scaler.inverse_transform(normalized)
 
@@ -41,6 +49,9 @@ inversed = scaler.inverse_transform(normalized)
 X_train1, X_test1, y_train1, y_test1 = train_test_split(X1, y1, test_size=0.2, random_state=42, stratify=y1)
 X_train2, X_test2, y_train2, y_test2 = train_test_split(X2, y2, test_size=0.2, random_state=42, stratify=y2)
 X_train3, X_test3, y_train3, y_test3 = train_test_split(X3, y3, test_size=0.2, random_state=42, stratify=y3)
+
+#chronux split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 #manual split test
 X_train3, X_test3, y_train3, y_test3
@@ -55,11 +66,16 @@ sgd_clf1.fit(X_train1, y_train1)
 sgd_clf2 = SGDClassifier(random_state=42)
 sgd_clf2.fit(X_train2, y_train2)
 sgd_clf3 = SGDClassifier(random_state=42)
-sgd_clf3.fit(X3, y3)
+sgd_clf3.fit(X_train3, y_train3)
 
+#train SGD classifier chronux
+sgd_clf = SGDClassifier(random_state=42)
+sgd_clf.fit(normalx, y_train)
+
+accuracyn = cross_val_score(sgd_clf, normalx, y_train, cv=5, scoring="accuracy")
 accuracy1 = cross_val_score(sgd_clf1, X_train1, y_train1, cv=5, scoring="accuracy")
 accuracy2 = cross_val_score(sgd_clf2, X_train2, y_train2, cv=5, scoring="accuracy")
-accuracy3n = cross_val_score(sgd_clf3, normalized, y_train3, cv=5, scoring="accuracy")
+accuracy3 = cross_val_score(sgd_clf3, X_train3, y_train3, cv=5, scoring="accuracy")
 accuracy3full = cross_val_score(sgd_clf3, X3, y3, cv=5, scoring="accuracy")
 
 #normalize example
