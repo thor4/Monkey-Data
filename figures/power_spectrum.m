@@ -33,6 +33,29 @@ xlabel('Frequency (Hz)');
 ylabel('Baseline-normalized Power (dB)');
 legend('Correct Trials','Incorrect Trials');
 
+% not normalized
+figure
+subplot(3,1,1);
+plot(f, ScNorm, f, SiNorm, ':', 'LineWidth', 2);
+title('LFP Slepian/Chronux Spectrum During Delay');
+xlabel('Frequency (Hz)');
+ylabel('Baseline-normalized Power (dB)');
+legend('Correct Trials','Incorrect Trials');
+
+subplot(3,1,2);
+time = (0:250);
+plot(time, arpower_cAvgNorm, time, arpower_iAvgNorm, ':', 'LineWidth', 2);
+title('LFP AR/BSMART Spectrum During Delay');
+xlabel('Frequency (Hz)');
+ylabel('Baseline-normalized Power (dB)');
+legend('Correct Trials','Incorrect Trials');
+
+subplot(3,1,3);
+plot(freqfft, fftpower_cAvgNorm, freqfft, fftpower_iAvgNorm, ':', 'LineWidth', 2);
+title('LFP FFT/DFT Spectrum During Delay');
+xlabel('Frequency (Hz)');
+ylabel('Baseline-normalized Power (dB)');
+legend('Correct Trials','Incorrect Trials');
 
 %various plots of power
 deltaIdx = find(f>=0 & f<4);

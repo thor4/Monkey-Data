@@ -1,6 +1,6 @@
 s = 1000;
 [fftpower_cAvgDelay, cfaxd] = fftPow(s, filtC', 810);
-fftpower_iAvgDelay = fftPow(s, filtI', 810);
+fftpower_iAvgDelay = fftPow(s, filtI');
 [fftpower_cAvgBase, cfax] = fftPow(s, filtCb', 810);
 fftpower_iAvgBase = fftPow(s, filtIb', 810);
 
@@ -10,7 +10,7 @@ fftpower_iAvgNorm = fftpower_iAvgDelay ./ fftpower_iAvgBase;
 
 %only interested in frequencies 1-250Hz
 freqIdx = find(cfax>=0 & cfax<250);
-freqfft = cfax(freqIdx(1):freqIdx(end));
+f = cfax(freqIdx(1):freqIdx(end));
 fftpower_cAvgNorm = fftpower_cAvgNorm(freqIdx(1):freqIdx(end));
 fftpower_iAvgNorm = fftpower_iAvgNorm(freqIdx(1):freqIdx(end));
 
