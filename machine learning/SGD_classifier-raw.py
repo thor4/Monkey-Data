@@ -32,14 +32,19 @@ h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-chronux.h5','r'
 X, y = h5f['data'][:], h5f['response'][:]
 h5f.close()
 
+#raw sub sampled data
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered-base_norm_subsample.mat.h5','r')
+X, y = h5f['data'][:], h5f['response'][:]
+h5f.close()
+
 #standardize data to improve model
 scalerx = StandardScaler()
-scalery = StandardScaler()
-scalerx = scaler.fit(X_train)
-scalery = scaler.fit(y_train)
+scalerxt = StandardScaler()
+scalerx = scalerx.fit(X_train)
+scalerxt = scalerxt.fit(X_test)
 # standardization the dataset and print the first 5 rows
-normalx = scaler.transform(X_train)
-normaly = scaler.transform(y_train)
+normalx = scalerx.transform(X_train)
+normalxt = scalerxt.transform(X_test)
 print('Mean: %d, StandardDeviation: %d' % (np.mean(normalx), sqrt(np.var(normalx))))
 # inverse transform brings back original data
 inversed = scaler.inverse_transform(normalized)
@@ -70,8 +75,10 @@ sgd_clf3.fit(X_train3, y_train3)
 
 #train SGD classifier chronux
 sgd_clf = SGDClassifier(random_state=42)
+sgd_clf.fit(X_train, y_train)
 sgd_clf.fit(normalx, y_train)
 
+accuracy = cross_val_score(sgd_clf, X_train, y_train, cv=5, scoring="accuracy")
 accuracyn = cross_val_score(sgd_clf, normalx, y_train, cv=5, scoring="accuracy")
 accuracy1 = cross_val_score(sgd_clf1, X_train1, y_train1, cv=5, scoring="accuracy")
 accuracy2 = cross_val_score(sgd_clf2, X_train2, y_train2, cv=5, scoring="accuracy")

@@ -28,14 +28,14 @@ X_train3, X_test3, y_train3, y_test3 = train_test_split(X3, y3, test_size=0.2, r
 
 #logistic regression classifier
 start=time.time()
-#log_reg = LogisticRegression()
-#log_reg.fit(X_train3, y_train3)
-param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100] }
-log_reg = GridSearchCV(LogisticRegression(penalty='l2'), param_grid)
+log_reg = LogisticRegression()
+log_reg.fit(X_train, y_train)
+#param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100] }
+#log_reg = GridSearchCV(LogisticRegression(penalty='l2'), param_grid)
 
 print("--- %s seconds ---" % (time.time() - start))
 
 #obtain accuracy
 start=time.time()
-accuracy3 = cross_val_score(log_reg, X_train3, y_train3, cv=5, scoring="accuracy")
+accuracyLogR = cross_val_score(log_reg, X_train, y_train, cv=5, scoring="accuracy")
 print("--- %s seconds ---" % (time.time() - start))

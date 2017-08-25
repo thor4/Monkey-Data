@@ -4,7 +4,7 @@ x = 0;
 y = 20;
 sr = 1000;
 
-[b,a] = butter(filtOrder,[0,20]/(sr/2),'bandpass'); % construct filter; xx 
+%[b,a] = butter(filtOrder,[0,20]/(sr/2),'bandpass'); % construct filter; xx 
 %and yy are the lower and upper components of the bandpass, sr is your sampling rate
 [b,a] = butter(filtOrder,20/(sr/2),'low');
 
