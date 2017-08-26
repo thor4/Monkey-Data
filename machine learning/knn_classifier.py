@@ -34,9 +34,26 @@ nbrs_clf = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
 nbrs_clf.fit(X_train, y_train)
 print("--- %s seconds ---" % (time.time() - start))
 
+#1 nearest neighbors classifier epochs
+start = time.time()
+nbrs_clf1 = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
+nbrs_clf1.fit(X_train1, y_train1)
+nbrs_clf2 = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
+nbrs_clf2.fit(X_train2, y_train2)
+nbrs_clf3 = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
+nbrs_clf3.fit(X_train3, y_train3)
+print("--- %s seconds ---" % (time.time() - start))
+
 #obtain accuracy
 start = time.time()
 accuracyNN = cross_val_score(nbrs_clf, X_train, y_train, cv=5, scoring="accuracy")
 print("--- %s seconds ---" % (time.time() - start))
 pred = nbrs_clf.predict(X_test3)
 accnn = accuracy_score(y_test3, pred)
+
+#accuracy epochs
+start = time.time()
+accuracy1NN = cross_val_score(nbrs_clf1, X_train1, y_train1, cv=5, scoring="accuracy")
+accuracy2NN = cross_val_score(nbrs_clf2, X_train2, y_train2, cv=5, scoring="accuracy")
+accuracy3NN = cross_val_score(nbrs_clf3, X_train3, y_train3, cv=5, scoring="accuracy")
+print("--- %s seconds ---" % (time.time() - start))

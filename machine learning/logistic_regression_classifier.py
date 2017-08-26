@@ -35,7 +35,19 @@ log_reg.fit(X_train, y_train)
 
 print("--- %s seconds ---" % (time.time() - start))
 
+#logistic regression classifier epochs
+log_reg1 = LogisticRegression()
+log_reg2 = LogisticRegression()
+log_reg3 = LogisticRegression()
+
 #obtain accuracy
 start=time.time()
 accuracyLogR = cross_val_score(log_reg, X_train, y_train, cv=5, scoring="accuracy")
+print("--- %s seconds ---" % (time.time() - start))
+
+#accuracy epochs
+start=time.time()
+accuracy1LogR = cross_val_score(log_reg1, X_train1, y_train1, cv=5, scoring="accuracy")
+accuracy2LogR = cross_val_score(log_reg2, X_train2, y_train2, cv=5, scoring="accuracy")
+accuracy3LogR = cross_val_score(log_reg3, X_train3, y_train3, cv=5, scoring="accuracy")
 print("--- %s seconds ---" % (time.time() - start))
