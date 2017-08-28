@@ -16,6 +16,7 @@ fax = 0:frStep:(nyq-frStep);            % index of all frequencies up to the nyq
 
 %data = rand(100,1000);                  % generate fake data
 fftd = fft(data,nframes,2);                       % apply discrete fourier transform
-fftPow = mean(abs(fftd).^2);                  % convert to power estimates and avg across trials
-fftPow = fftPow(1:length(fftPow)/2);    % ditch all frequencies above the nyquist from redundant part of DFT
+%fftPow = mean(abs(fftd).^2);                  % convert to power estimates and avg across trials
+fftPow = abs(fftd).^2;                  % convert to power estimates for all trials
+fftPow = fftPow(:,1:size(fftPow,2)/2);    % ditch all frequencies above the nyquist from redundant part of DFT
 end

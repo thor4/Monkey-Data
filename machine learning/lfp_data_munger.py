@@ -25,6 +25,11 @@ time = c_i['Tc']
 freq = c_i['Fc']
 cor = np.transpose(correct)
 
+#load filtered 0-20 Hz fft data
+c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/spec-fft-0_20_filtered')
+correct = c_i['fftCfilt']
+incorrect = c_i['fftIfilt']
+
 #load raw data subsamples
 raw = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/raw-0_20_filtered-base_norm_subsample.mat')
 correct = raw['cSub']
@@ -138,6 +143,12 @@ h5f.close()
 
 ###for raw subsampled data
 h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered-base_norm_subsample.mat.h5', 'w')
+h5f.create_dataset('data', data=data)
+h5f.create_dataset('response', data=response)
+h5f.close()
+
+###for filtered 0-20Hz fft data
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-spec-fft-0_20_filtered.h5', 'w')
 h5f.create_dataset('data', data=data)
 h5f.create_dataset('response', data=response)
 h5f.close()
