@@ -12,11 +12,5 @@ sr = 1000;
 % output. data should be an #samples x #trials matrix
 filtCFdpfc = filtfilt(b,a,CFdpfc);  
 filtCPpec = filtfilt(b,a,CPpec);  
-filtIFdpfc = filtfilt(b,a,IFdpfc);  
-filtIPpec = filtfilt(b,a,IPpec);
-
-%baseline
-filtbCFdpfc = filtfilt(b,a,bCFdpfc);  
-filtbCPpec = filtfilt(b,a,bCPpec);  
-filtbIFdpfc = filtfilt(b,a,bIFdpfc);  
-filtbIPpec = filtfilt(b,a,bIPpec);
+filtIb = filtfilt(b,a,incorrectBase);  
+filtCb = filtfilt(b,a,correctBase);

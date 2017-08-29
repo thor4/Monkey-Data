@@ -16,20 +16,20 @@ fftpower_iAvgNorm = fftpower_iAvgNorm(freqIdx(1):freqIdx(end));
 
 %reduce dataset of filtered 0-20Hz fft power
 %split into frontal and parietal
-cfNorm = fftCfilt(1:162922,:);
-cpNorm = fftCfilt(162923:352967,:);
-ifNorm = fftIfilt(1:64786,:);
-ipNorm = fftIfilt(64787:137078,:);
+cfNorm = phaseCfilt(1:162922,:);
+cpNorm = phaseCfilt(162923:352967,:);
+ifNorm = phaseIfilt(1:64786,:);
+ipNorm = phaseIfilt(64787:137078,:);
 
 %randomly sample to lower corpus count, produces trials x samples
-cfFiltPowerSub = datasample(cfNorm, 5000);
-cpFiltPowerSub = datasample(cpNorm, 5000);
-ifFiltPowerSub = datasample(ifNorm, 5000);
-ipFiltPowerSub = datasample(ipNorm, 5000);
+cfFiltPhaseSub = datasample(cfNorm, 5000);
+cpFiltPhaseSub = datasample(cpNorm, 5000);
+ifFiltPhaseSub = datasample(ifNorm, 5000);
+ipFiltPhaseSub = datasample(ipNorm, 5000);
 
 %concatenate to create correct and incorrect subsamples
-cFiltPowerSub = vertcat(cfFiltPowerSub, cpFiltPowerSub);
-iFiltPowerSub = vertcat(ifFiltPowerSub, ipFiltPowerSub);
+cFiltPhaseSub = vertcat(cfFiltPhaseSub, cpFiltPhaseSub);
+iFiltPhaseSub = vertcat(ifFiltPhaseSub, ipFiltPhaseSub);
 
 % 
 figure(1),clf

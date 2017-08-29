@@ -41,14 +41,13 @@ legend('Correct Trials','Incorrect Trials');
 set(gca,'box','off','Xlim',[time(1);time(end)]);
 
 %correct vs incorrect dPFC vs PEC ERP
-%dPFC
 corfAvg = mean(filtCFdpfc');
 incorrfAvg = mean(filtIFdpfc');
 ncorfAvg = corfAvg + (-corfAvg(1));
 nincorrfAvg = incorrfAvg + (-incorrfAvg(1));
-%PEC
-corpAvg = mean(filtCPpec');
-incorrpAvg = mean(filtIPpec');
+%parietal
+corpAvg = mean(correctParietal');
+incorrpAvg = mean(incorrectParietal');
 ncorpAvg = corpAvg - (corpAvg(1));
 nincorrpAvg = incorrpAvg + (-incorrpAvg(1));
 %figure
@@ -56,14 +55,14 @@ time = 1:size(corfAvg,2);
 figure
 subplot(2,1,1)
 plot(time,ncorfAvg,time,nincorrfAvg,':', 'LineWidth', 2);
-title('Trial-averaged Delay-period dPFC Region Time-series');
+title('Trial-averaged Delay-period Frontal Region Time-series');
 xlabel('Time (ms)');
 ylabel('Normalized Voltage (�V)');
 legend('Correct Trials','Incorrect Trials');
 set(gca,'box','off','Xlim',[time(1);time(end)]);
 subplot(2,1,2)
 plot(time,ncorpAvg,time,nincorrpAvg,':', 'LineWidth', 2);
-title('Trial-averaged Delay-period PEC Region Time-series');
+title('Trial-averaged Delay-period Parietal Region Time-series');
 xlabel('Time (ms)');
 ylabel('Normalized Voltage (�V)');
 legend('Correct Trials','Incorrect Trials');

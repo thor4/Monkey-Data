@@ -33,7 +33,12 @@ print("--- %s seconds ---" % (time.time() - start))
 
 #accuracy
 start=time.time()
-accuracysvm1 = cross_val_score(svm_clf1, X_train1, y_train1, cv=5, scoring="accuracy")
+accuracySVM = cross_val_score(svm_clf, X_train, y_train, cv=5, scoring="accuracy")
+print("--- %s seconds ---" % (time.time() - start))
+
+#accuracy
+start=time.time()
+accuracySVM1 = cross_val_score(svm_clf, X_train1, y_train1, cv=5, scoring="accuracy")
 accuracysvm2 = cross_val_score(svm_clf2, X_train2, y_train2, cv=5, scoring="accuracy")
 accuracysvm3 = cross_val_score(svm_clf3, X_train3, y_train3, cv=5, scoring="accuracy")
 accuracysvm3fs = cross_val_score(svm_clf4, X_train3fs, y_train3, cv=5, scoring="accuracy")

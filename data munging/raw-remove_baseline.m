@@ -1,6 +1,8 @@
 %calc single avg baseline signal across trials then across timepoints
-basec = mean(mean(filtCb'));
-basei = mean(mean(filtIb'));
+baseCdpfc = mean(mean(filtbCFdpfc'));
+baseCpec = mean(mean(filtbCPpec'));
+baseIdpfc = mean(mean(filtbIFdpfc'));
+baseIpec = mean(mean(filtbIPpec'));
 
 %average signal across trials
 noisec = mean(filtC');

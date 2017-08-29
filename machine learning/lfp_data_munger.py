@@ -25,10 +25,27 @@ time = c_i['Tc']
 freq = c_i['Fc']
 cor = np.transpose(correct)
 
+#load filtered 0-20 Hz phase data
+c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/phase-fft-0_20_filtered-base_norm_subsample.mat')
+correct = c_i['cFiltPhaseSub']
+incorrect = c_i['iFiltPhaseSub']
+
 #load filtered 0-20 Hz fft data
-c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/spec-fft-0_20_filtered')
+c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/spec-fft-0_20_filtered.mat')
 correct = c_i['fftCfilt']
 incorrect = c_i['fftIfilt']
+
+#load filtered 0-20 Hz fft data subsampled
+c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/spec-fft-0_20_filtered-base_norm_subsample.mat')
+correct = c_i['cFiltPowerSub']
+incorrect = c_i['iFiltPowerSub']
+
+#load filtered 0-20 Hz fft data by region
+c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/spec-fft-0_20_filtered_region.mat')
+correctF = c_i['cfNorm']
+correctP = c_i['cpNorm']
+incorrectF = c_i['ifNorm']
+incorrectP = c_i['ipNorm']
 
 #load raw data subsamples
 raw = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/raw-0_20_filtered-base_norm_subsample.mat')
@@ -53,10 +70,32 @@ i1stat = raw['i1stat']
 i2stat = raw['i2stat']
 i3stat = raw['i3stat']
 
+#load raw data by broadmann area
+c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/raw-0_20_filtered_base_norm-electode_sites.mat')
+correctdpfc = np.transpose(c_i['CNormFiltdpfc'])
+correctlip = np.transpose(c_i['CNormFiltlip'])
+incorrectdpfc = np.transpose(c_i['INormFiltdpfc'])
+incorrectlip = np.transpose(c_i['INormFiltlip'])
+
 #prep raw data subsample
 #labels
 c = np.ones(len(correct))
 i = np.zeros(len(incorrect))
+
+
+#prep fft power data by region
+#labels
+cF = np.ones(len(correctF))
+cP = np.ones(len(correctP))
+iF = np.zeros(len(incorrectF))
+iP = np.zeros(len(incorrectP))
+
+#prep filtered norm raw data by area
+#labels
+cdpfc = np.ones(len(correctdpfc))
+clip = np.ones(len(correctlip))
+idpfc = np.zeros(len(incorrectdpfc))
+ilip = np.zeros(len(incorrectlip))
 
 #prep raw data
 #labels
@@ -110,6 +149,22 @@ data = np.vstack((correct,incorrect))
 response = np.vstack((c[:,None],i[:,None]))
 response = response.reshape(len(data),)
 
+#combine data and labels fft power by region
+f_data = np.vstack((correctF,incorrectF))
+f_response = np.vstack((cF[:,None],iF[:,None]))
+f_response = f_response.reshape(len(f_data),)
+p_data = np.vstack((correctP,incorrectP))
+p_response = np.vstack((cP[:,None],iP[:,None]))
+p_response = p_response.reshape(len(p_data),)
+
+#combine data and labels raw filtered norm by area
+dpfc_data = np.vstack((correctdpfc,incorrectdpfc))
+dpfc_response = np.vstack((cdpfc[:,None],idpfc[:,None]))
+dpfc_response = dpfc_response.reshape(len(dpfc_data),)
+lip_data = np.vstack((correctlip,incorrectlip))
+lip_response = np.vstack((clip[:,None],ilip[:,None]))
+lip_response = lip_response.reshape(len(lip_data),)
+
 #save h5py
 h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/chronux.h5', 'w')
 h5f.create_dataset('data', data=chronux_data)
@@ -151,6 +206,34 @@ h5f.close()
 h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-spec-fft-0_20_filtered.h5', 'w')
 h5f.create_dataset('data', data=data)
 h5f.create_dataset('response', data=response)
+h5f.close()
+
+###for filtered 0-20Hz phase data
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-phase-fft-0_20_filtered-base_norm_subsample.h5', 'w')
+h5f.create_dataset('data', data=data)
+h5f.create_dataset('response', data=response)
+h5f.close()
+
+###for filtered 0-20Hz fft data subsampled
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-spec-fft-0_20_filtered_subsample.h5', 'w')
+h5f.create_dataset('data', data=data)
+h5f.create_dataset('response', data=response)
+h5f.close()
+
+###for filtered 0-20Hz fft data by region
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-spec-fft-0_20_filtered_region.h5', 'w')
+h5f.create_dataset('dataF', data=f_data)
+h5f.create_dataset('responseF', data=f_response)
+h5f.create_dataset('dataP', data=p_data)
+h5f.create_dataset('responseP', data=p_response)
+h5f.close()
+
+###for filtered 0-20Hz raw data by area
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered_base_norm-area-dpfc_lip.h5', 'w')
+h5f.create_dataset('datadpfc', data=dpfc_data)
+h5f.create_dataset('responsedpfc', data=dpfc_response)
+h5f.create_dataset('datalip', data=lip_data)
+h5f.create_dataset('responselip', data=lip_response)
 h5f.close()
 
 #load h5py

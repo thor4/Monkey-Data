@@ -10,6 +10,7 @@ import h5py
 from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn.externals import joblib
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.model_selection import train_test_split
@@ -41,19 +42,32 @@ X, y = h5f['data'][:], h5f['response'][:]
 h5f.close()
 
 #raw sub sampled data
-h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-epochs-0_20_filtered-base_norm_subsample.h5','r')
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-spec-fft-0_20_filtered.h5','r')
 X, y = h5f['data'][:], h5f['response'][:]
 h5f.close()
 
+#filtered fft power by region
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-spec-fft-0_20_filtered_region.h5','r')
+Xf, yf = h5f['dataF'][:], h5f['responseF'][:]
+Xp, yp = h5f['dataP'][:], h5f['responseP'][:]
+h5f.close()
+
+#filtered raw data by area
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered_base_norm-area-dpfc_lip.h5','r')
+Xdpfc, ydpfc = h5f['datadpfc'][:], h5f['responsedpfc'][:]
+Xlip, ylip = h5f['datalip'][:], h5f['responselip'][:]
+h5f.close()
+
 #standardize data to improve model
-scalerx = StandardScaler()
-scalerxfs = StandardScaler()
-scalerx = scalerx.fit(X_train3)
-scalerxfs = scalerxfs.fit(X_train3fs)
-# standardization the dataset and print the first 5 rows
-stdx = scalerx.transform(X_train3)
+scalerf = StandardScaler()
+scalerp = StandardScaler()
+scalerf = scalerf.fit(X_trainf)
+scalerp = scalerp.fit(X_trainp)
+X_trainfstd = scalerf.transform(X_trainf)
+X_trainpstd = scalerp.transform(X_trainp)
+stdx = scalerx.transform(X_train)
 stdxfs = scalerxfs.transform(X_train3fs)
-print('Mean: %d, StandardDeviation: %d' % (np.mean(stdx), sqrt(np.var(stdx))))
+print('Mean: %d, StandardDeviation: %d' % (np.mean(X_trainfstd), sqrt(np.var(X_trainpstd))))
 # inverse transform brings back original data
 inversed = scalerx.inverse_transform(stdx)
 
@@ -66,12 +80,30 @@ X_train3, X_test3, y_train3, y_test3 = train_test_split(X3, y3, test_size=0.2, r
 #chronux split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
+#filtered fft power by region split
+X_trainf, X_testf, y_trainf, y_testf = train_test_split(Xf, yf, test_size=0.2, random_state=42, stratify=yf)
+X_trainp, X_testp, y_trainp, y_testp = train_test_split(Xp, yp, test_size=0.2, random_state=42, stratify=yp)
+
+#filtered raw data by area split
+X_traindpfc, X_testdpfc, y_traindpfc, y_testdpfc = train_test_split(Xdpfc, ydpfc, test_size=0.2, random_state=42, stratify=ydpfc)
+X_trainlip, X_testlip, y_trainlip, y_testlip = train_test_split(Xlip, ylip, test_size=0.2, random_state=42, stratify=ylip)
+
 #feature selection
-#maximal information coefficient
-selector = SelectKBest(mutual_info_classif, k=2).fit(X_train3, y_train3)
-selector.scores_
-scores = -np.log10(selector.scores_)
-X_train3fs = selector.transform(X_train3)
+#maximal information coefficient, standardization of training data yields the same scores
+selector = SelectKBest(mutual_info_classif, k=250).fit(X_trainlip, y_trainlip)
+scores = selector.scores_
+#extract & plot which of the 250ms timepoints are most important
+df = pd.DataFrame(scores);
+top250 = df.nlargest(250,0);
+topidx = np.sort(top250.index.values);
+plt.figure()
+plt.hist(topidx, bins=[0,100,200,300,400,500,600,700,810], facecolor='green', alpha=0.75)
+plt.xlabel('Time (ms)')
+plt.title('Histogram of Mutual Information Score for Each Time Point')
+plt.grid(True)
+plt.axis('tight')
+#scores = -np.log10(selector.scores_)
+X_trainlipfs = selector.transform(X_trainlip)
 
 mi1 = mutual_info_classif(X1, y1)
 mi2 = mutual_info_classif(X2, y2)
@@ -87,28 +119,41 @@ sgd_clf1.fit(X_train1, y_train1)
 sgd_clf2 = SGDClassifier(random_state=42)
 sgd_clf2.fit(X_train2, y_train2)
 sgd_clf3 = SGDClassifier(random_state=42)
-sgd_clf3.fit(X_train3, y_train3)
-sgd_clf4 = SGDClassifier(random_state=42)
-sgd_clf4.fit(stdx, y_train3)
-sgd_clf5 = SGDClassifier(random_state=42)
-sgd_clf5.fit(X_train3fs, y_train3)
-sgd_clf6 = SGDClassifier(random_state=42)
-sgd_clf6.fit(stdxfs, y_train3)
+
+#train filtered fft by region classifier
+sgd_clf1 = SGDClassifier(random_state=42)
+sgd_clf1.fit(X_trainfstd, y_trainf)
+sgd_clf2 = SGDClassifier(random_state=42)
+sgd_clf2.fit(X_trainpstd, y_trainp)
+
+#train filtered raw data by area classifier
+sgd_clf1 = SGDClassifier(random_state=42)
+sgd_clf1.fit(X_traindpfc, y_traindpfc)
+sgd_clf2 = SGDClassifier(random_state=42)
+sgd_clf2.fit(X_trainlipfs, y_trainlip)
 
 #train SGD classifier chronux
 sgd_clf = SGDClassifier(random_state=42)
 sgd_clf.fit(X_train, y_train)
-sgd_clf.fit(normalx, y_train)
 
-accuracy = cross_val_score(sgd_clf, X_train, y_train, cv=5, scoring="accuracy")
-accuracyn = cross_val_score(sgd_clf, normalx, y_train, cv=5, scoring="accuracy")
+#train SGD classifier standardized
+sgd_clf = SGDClassifier(random_state=42)
+sgd_clf.fit(stdx, y_train)
+
+accuracySGD = cross_val_score(sgd_clf, X_train, y_train, cv=5, scoring="accuracy")
+accuracySGDstd = cross_val_score(sgd_clf, stdx, y_train, cv=5, scoring="accuracy")
 accuracySGD1 = cross_val_score(sgd_clf1, X_train1, y_train1, cv=5, scoring="accuracy")
 accuracySGD2 = cross_val_score(sgd_clf2, X_train2, y_train2, cv=5, scoring="accuracy")
 accuracySGD3 = cross_val_score(sgd_clf3, X_train3, y_train3, cv=5, scoring="accuracy")
-accuracySGD3std = cross_val_score(sgd_clf4, stdx, y_train3, cv=5, scoring="accuracy")
-accuracySGD3fs = cross_val_score(sgd_clf5, X_train3fs, y_train3, cv=5, scoring="accuracy")
-accuracySGD3fsstd = cross_val_score(sgd_clf6, stdxfs, y_train3, cv=5, scoring="accuracy")
-accuracy3full = cross_val_score(sgd_clf3, X3, y3, cv=5, scoring="accuracy")
+
+#accuracy filtered fft by region
+accuracySGDfstd = cross_val_score(sgd_clf1, X_trainfstd, y_trainf, cv=5, scoring="accuracy")
+accuracySGDpstd = cross_val_score(sgd_clf2, X_trainpstd, y_trainp, cv=5, scoring="accuracy")
+
+#accuracy filtered raw data by area
+accuracySGDdpfc = cross_val_score(sgd_clf1, X_traindpfc, y_traindpfc, cv=5, scoring="accuracy")
+accuracySGDlipfs = cross_val_score(sgd_clf2, X_trainlipfs, y_trainlip, cv=5, scoring="accuracy")
+
 
 #normalize example
 

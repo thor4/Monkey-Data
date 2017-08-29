@@ -9,6 +9,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegressionCV
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_score
 import time
@@ -29,11 +30,18 @@ X_train3, X_test3, y_train3, y_test3 = train_test_split(X3, y3, test_size=0.2, r
 #logistic regression classifier
 start=time.time()
 log_reg = LogisticRegression()
-log_reg.fit(X_train, y_train)
+log_reg.fit(X_trainfs, y_train)
+print("--- %s seconds ---" % (time.time() - start))
+
+#logistic regression classifier standardized data
+start=time.time()
+log_reg = LogisticRegression()
+log_reg.fit(stdx, y_train)
 #param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100] }
 #log_reg = GridSearchCV(LogisticRegression(penalty='l2'), param_grid)
 
 print("--- %s seconds ---" % (time.time() - start))
+
 
 #logistic regression classifier epochs
 log_reg1 = LogisticRegression()
@@ -47,7 +55,12 @@ log_reg4.fit(X_train3fs, y_train3)
 
 #obtain accuracy
 start=time.time()
-accuracyLogR = cross_val_score(log_reg, X_train, y_train, cv=5, scoring="accuracy")
+accuracyLogRfs = cross_val_score(log_reg, X_trainfs, y_train, cv=5, scoring="accuracy")
+print("--- %s seconds ---" % (time.time() - start))
+
+#obtain accuracy standardized data
+start=time.time()
+accuracyLogRstd = cross_val_score(log_reg, stdx, y_train, cv=5, scoring="accuracy")
 print("--- %s seconds ---" % (time.time() - start))
 
 #accuracy epochs
@@ -57,3 +70,19 @@ accuracy2LogR = cross_val_score(log_reg2, X_train2, y_train2, cv=5, scoring="acc
 accuracy3LogR = cross_val_score(log_reg3, X_train3, y_train3, cv=5, scoring="accuracy")
 accuracy3fsLogR = cross_val_score(log_reg4, X_train3fs, y_train3, cv=5, scoring="accuracy")
 print("--- %s seconds ---" % (time.time() - start))
+
+#hyperparameter tuning
+start=time.time()
+searchCV = LogisticRegressionCV(
+    Cs=list(np.power(10.0, np.arange(-10, 10)))
+    ,penalty='l2'
+    ,scoring='accuracy'
+    ,random_state=42
+    ,fit_intercept=True
+    ,solver='sag'
+    ,max_iter=10000
+)
+searchCV.fit(X_train1, y_train1)
+print("--- %s seconds ---" % (time.time() - start))
+
+print ('Max auc_roc:', searchCV.scores_[1].max())
