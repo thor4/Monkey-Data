@@ -22,6 +22,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_recall_curve, roc_curve
 from sklearn.preprocessing import StandardScaler
+from tempfile import TemporaryFile
 
 h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-epochs-0_20_filtered-base_norm_subsample.h5','r')
 X1, y1 = h5f['early-d'][:], h5f['early-r'][:]
@@ -53,9 +54,17 @@ Xp, yp = h5f['dataP'][:], h5f['responseP'][:]
 h5f.close()
 
 #filtered raw data by area
-h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered_base_norm-area-dpfc_lip.h5','r')
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered_base_norm-area-dpfc_lip-even.h5','r')
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered_base_norm-area-6dr_8ad_8b_9l_pe_pec_pg-even.h5','r')
+X6dr, y6dr = h5f['data6dr'][:], h5f['response6dr'][:]
+X8ad, y8ad = h5f['data8ad'][:], h5f['response8ad'][:]
+X8b, y8b = h5f['data8b'][:], h5f['response8b'][:]
+X9l, y9l = h5f['data9l'][:], h5f['response9l'][:]
 Xdpfc, ydpfc = h5f['datadpfc'][:], h5f['responsedpfc'][:]
 Xlip, ylip = h5f['datalip'][:], h5f['responselip'][:]
+Xpe, ype = h5f['datape'][:], h5f['responsepe'][:]
+Xpec, ypec = h5f['datapec'][:], h5f['responsepec'][:]
+Xpg, ypg = h5f['datapg'][:], h5f['responsepg'][:]
 h5f.close()
 
 #standardize data to improve model
@@ -85,12 +94,19 @@ X_trainf, X_testf, y_trainf, y_testf = train_test_split(Xf, yf, test_size=0.2, r
 X_trainp, X_testp, y_trainp, y_testp = train_test_split(Xp, yp, test_size=0.2, random_state=42, stratify=yp)
 
 #filtered raw data by area split
+X_train6dr, X_test6dr, y_train6dr, y_test6dr = train_test_split(X6dr, y6dr, test_size=0.2, random_state=42, stratify=y6dr)
+X_train8ad, X_test8ad, y_train8ad, y_test8ad = train_test_split(X8ad, y8ad, test_size=0.2, random_state=42, stratify=y8ad)
+X_train8b, X_test8b, y_train8b, y_test8b = train_test_split(X8b, y8b, test_size=0.2, random_state=42, stratify=y8b)
+X_train9l, X_test9l, y_train9l, y_test9l = train_test_split(X9l, y9l, test_size=0.2, random_state=42, stratify=y9l)
 X_traindpfc, X_testdpfc, y_traindpfc, y_testdpfc = train_test_split(Xdpfc, ydpfc, test_size=0.2, random_state=42, stratify=ydpfc)
 X_trainlip, X_testlip, y_trainlip, y_testlip = train_test_split(Xlip, ylip, test_size=0.2, random_state=42, stratify=ylip)
+X_trainpe, X_testpe, y_trainpe, y_testpe = train_test_split(Xpe, ype, test_size=0.2, random_state=42, stratify=ype)
+X_trainpec, X_testpec, y_trainpec, y_testpec = train_test_split(Xpec, ypec, test_size=0.2, random_state=42, stratify=ypec)
+X_trainpg, X_testpg, y_trainpg, y_testpg = train_test_split(Xpg, ypg, test_size=0.2, random_state=42, stratify=ypg)
 
 #feature selection
 #maximal information coefficient, standardization of training data yields the same scores
-selector = SelectKBest(mutual_info_classif, k=250).fit(X_trainlip, y_trainlip)
+selector = SelectKBest(mutual_info_classif, k=250).fit(X_trainpe, y_trainpe)
 scores = selector.scores_
 #extract & plot which of the 250ms timepoints are most important
 df = pd.DataFrame(scores);
@@ -103,7 +119,7 @@ plt.title('Histogram of Mutual Information Score for Each Time Point')
 plt.grid(True)
 plt.axis('tight')
 #scores = -np.log10(selector.scores_)
-X_trainlipfs = selector.transform(X_trainlip)
+X_testpefs = selector.transform(X_testpe)
 
 mi1 = mutual_info_classif(X1, y1)
 mi2 = mutual_info_classif(X2, y2)
@@ -128,7 +144,7 @@ sgd_clf2.fit(X_trainpstd, y_trainp)
 
 #train filtered raw data by area classifier
 sgd_clf1 = SGDClassifier(random_state=42)
-sgd_clf1.fit(X_traindpfc, y_traindpfc)
+sgd_clf1.fit(X_train9lfs, y_train9l)
 sgd_clf2 = SGDClassifier(random_state=42)
 sgd_clf2.fit(X_trainlipfs, y_trainlip)
 
@@ -151,7 +167,7 @@ accuracySGDfstd = cross_val_score(sgd_clf1, X_trainfstd, y_trainf, cv=5, scoring
 accuracySGDpstd = cross_val_score(sgd_clf2, X_trainpstd, y_trainp, cv=5, scoring="accuracy")
 
 #accuracy filtered raw data by area
-accuracySGDdpfc = cross_val_score(sgd_clf1, X_traindpfc, y_traindpfc, cv=5, scoring="accuracy")
+accuracySGD9lfs = cross_val_score(sgd_clf1, X_train9lfs, y_train9l, cv=5, scoring="accuracy")
 accuracySGDlipfs = cross_val_score(sgd_clf2, X_trainlipfs, y_trainlip, cv=5, scoring="accuracy")
 
 
@@ -178,3 +194,7 @@ for i in range(5):
 inversed = scaler.inverse_transform(normalized)
 for i in range(5):
 	print(inversed[i])
+    
+#save numpy arrays
+scoreslipF = TemporaryFile()
+np.save('/mnt/ceph/home/bconkli4/Documents/data/ml/temp/scorespeF.npy', scorespe)

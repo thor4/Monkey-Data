@@ -8,7 +8,7 @@ Created on Fri Aug 25 02:58:53 2017
 
 from scipy.stats import randint as sp_randint
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
+from sklearn.externals import joblib
 from sklearn.model_selection import RandomizedSearchCV
 import time
 
@@ -27,9 +27,23 @@ print("--- %s seconds ---" % (time.time() - start))
 #fit filtered raw data by area
 start = time.time()
 forest_clf1 = RandomForestClassifier(n_estimators=20, random_state=42)
-forest_clf1.fit(X_traindpfc, y_traindpfc)
+forest_clf1.fit(X_train6drfs, y_train6dr)
 forest_clf2 = RandomForestClassifier(n_estimators=20, random_state=42)
-forest_clf2.fit(X_trainlipfs, y_trainlip)
+forest_clf2.fit(X_train8adfs, y_train8ad)
+forest_clf3 = RandomForestClassifier(n_estimators=20, random_state=42)
+forest_clf3.fit(X_train8bfs, y_train8b)
+forest_clf4 = RandomForestClassifier(n_estimators=20, random_state=42)
+forest_clf4.fit(X_train9lfs, y_train9l)
+forest_clf5 = RandomForestClassifier(n_estimators=20, random_state=42)
+forest_clf5.fit(X_traindpfcfs, y_traindpfc)
+forest_clf6 = RandomForestClassifier(n_estimators=20, random_state=42)
+forest_clf6.fit(X_trainlipfs, y_trainlip)
+forest_clf7 = RandomForestClassifier(n_estimators=20, random_state=42)
+forest_clf7.fit(X_trainpecfs, y_trainpec)
+forest_clf8 = RandomForestClassifier(n_estimators=20, random_state=42)
+forest_clf8.fit(X_trainpefs, y_trainpe)
+forest_clf9 = RandomForestClassifier(n_estimators=20, random_state=42)
+forest_clf9.fit(X_trainpgfs, y_trainpg)
 print("--- %s seconds ---" % (time.time() - start))
 #epochs stats
 forest_clf1 = RandomForestClassifier(n_estimators=20, random_state=42)
@@ -69,8 +83,15 @@ print("--- %s seconds ---" % (time.time() - start))
 
 #obtain accuracy raw data by area
 start=time.time()
-accuracyRFdpfc = cross_val_score(forest_clf1, X_traindpfc, y_traindpfc, cv=5, scoring="accuracy")
+accuracyRF6drfs = cross_val_score(forest_clf1, X_train6drfs, y_train6dr, cv=5, scoring="accuracy")
+accuracyRF8adfs = cross_val_score(forest_clf2, X_train8adfs, y_train8ad, cv=5, scoring="accuracy")
+accuracyRF8bfs = cross_val_score(forest_clf3, X_train8bfs, y_train8b, cv=5, scoring="accuracy")
+accuracyRF9lfs = cross_val_score(forest_clf4, X_train9lfs, y_train9l, cv=5, scoring="accuracy")
+accuracyRFdpfcfs = cross_val_score(forest_clf1, X_traindpfcfs, y_traindpfc, cv=5, scoring="accuracy")
 accuracyRFlipfs = cross_val_score(forest_clf2, X_trainlipfs, y_trainlip, cv=5, scoring="accuracy")
+accuracyRFpefs = cross_val_score(forest_clf3, X_trainpefs, y_trainpe, cv=5, scoring="accuracy")
+accuracyRFpecfs = cross_val_score(forest_clf4, X_trainpecfs, y_trainpec, cv=5, scoring="accuracy")
+accuracyRFpgfs = cross_val_score(forest_clf5, X_trainpgfs, y_trainpg, cv=5, scoring="accuracy")
 print("--- %s seconds ---" % (time.time() - start))
 #accuracy epochs stats
 start=time.time()
@@ -100,15 +121,26 @@ param_dist = {"max_depth": [3, None],
               "criterion": ["gini", "entropy"]}
 # run randomized search
 n_iter_search = 1000
-random_search = RandomizedSearchCV(forest_clf, param_distributions=param_dist,
+random_search = RandomizedSearchCV(forest_clf8, param_distributions=param_dist,
                                    n_iter=n_iter_search)
 
 start = time.time()
-random_search.fit(X_train, y_train)
+random_search.fit(X_trainpefs, y_trainpe)
 print("RandomizedSearchCV took %.2f seconds for %d candidates"
       " parameter settings." % ((time.time() - start), n_iter_search))
+accuracyRFpefsTuned = random_search.score(X_trainpefs, y_trainpe)
+accuracyRFpefsTest = random_search.score(X_testpefs, y_testpe)
+print("[INFO] randomized search accuracy: {:.2f}%".format(accuracyRFpefsTest * 100))
+print("[INFO] randomized search best parameters: {}".format(
+	random_search.best_params_))
+#random_search is 6dr name
 
 #accuracy
 report(random_search.cv_results_)
 random_search.best_estimator_
 
+#save model
+joblib.dump(random_search, '/mnt/ceph/home/bconkli4/Documents/data/ml/models/peRF.pkl') 
+
+#load model
+clf = joblib.load('/mnt/ceph/home/bconkli4/Documents/data/ml/models/lipRF.pkl') 
