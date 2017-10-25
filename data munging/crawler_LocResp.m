@@ -14,11 +14,11 @@ trial_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Ac
 recording_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\recording_info.mat';
 trial_lfp_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\%s%s%s.%04d.mat';
 areas = string({'9L', '8B', '6DR', '8AD', 'vPFC', 'dPFC', 'LIP', 'MIP', 'PE', 'PG', 'PEC'});
-responses = [0 1];
+responses = [0 1]; % 0 incorrect, 1 correct
 idx = 1; % counter
 tic
-area = areas(11);
-response = responses(2);
+area = areas(3);
+response = responses(1); 
 
 % betty loop
 for i=1:length(betty{1})
