@@ -15,12 +15,15 @@ recording_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency F
 trial_lfp_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\%s%s%s.%04d.mat';
 areas = string({'9L', '8B', '6DR', '8AD', 'vPFC', 'dPFC', 'LIP', 'MIP', 'PE', 'PG', 'PEC'});
 responses = [0 1]; % 0 incorrect, 1 correct
-idx = 1; % counter
-tic
-area = areas(3);
-response = responses(1); 
+rules = [1 2]; % Rule 1 Identity, Rule 2 Location
 
-% betty loop
+tic
+idx = 1; % counter
+area = areas(4);
+response = responses(2);
+rule = rules(2);
+
+%betty loop
 for i=1:length(betty{1})
     trial_myfilename = sprintf(trial_path, monkeys(1), betty{1}{i}, betty{2});
     load(trial_myfilename);
@@ -28,7 +31,7 @@ for i=1:length(betty{1})
     load(recording_myfilename);
     for j=1:trial_info.numTrials
         % parse through each good, stable trial with a certain response 
-        if (trial_info.good_trials(j) == 1) && (trial_info.stable_trials(j) == 1) && (trial_info.BehResp(j) == response)
+        if (trial_info.good_trials(j) == 1) && (trial_info.stable_trials(j) == 1) && (trial_info.BehResp(j) == response) && (trial_info.rule(j) == rule)
             trial_lfp_myfilename = sprintf(trial_lfp_path, monkeys(1), betty{1}{i}, betty{2}, monkeys(1), betty{1}{i}, betty{2}{1}(8:9), j);
             load(trial_lfp_myfilename);
             [r,c] = size(lfp_data);
@@ -58,6 +61,10 @@ for i=1:length(betty{1})
         end
     end
 end;
+toc
+
+%data = data(:,1:9471);
+
 
 % clark loop
 for i=1:length(clark{1})
@@ -68,7 +75,7 @@ for i=1:length(clark{1})
         load(recording_myfilename);
         for k=1:trial_info.numTrials
             % parse through each good, stable trial with a certain response
-            if (trial_info.good_trials(k) == 1) && (trial_info.stable_trials(k) == 1) && (trial_info.BehResp(j) == response)
+            if (trial_info.good_trials(k) == 1) && (trial_info.stable_trials(k) == 1) && (trial_info.BehResp(k) == response) && (trial_info.rule(k) == rule)
                 trial_lfp_myfilename = sprintf(trial_lfp_path,  monkeys(2), clark{1}{i}, clark{j}, monkeys(2), clark{1}{i}, clark{j}{1}(8:9), k);
                 load(trial_lfp_myfilename);
                 [r,c] = size(lfp_data);
