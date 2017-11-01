@@ -43,7 +43,7 @@ X, y = h5f['data'][:], h5f['response'][:]
 h5f.close()
 
 #raw sub sampled data
-h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-spec-fft-0_20_filtered.h5','r')
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-lip-base_norm_subsample.h5','r')
 X, y = h5f['data'][:], h5f['response'][:]
 h5f.close()
 

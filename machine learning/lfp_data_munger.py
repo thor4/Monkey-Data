@@ -26,9 +26,9 @@ freq = c_i['Fc']
 cor = np.transpose(correct)
 
 #load filtered 0-20 Hz phase data
-c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/phase-fft-0_20_filtered-base_norm_subsample.mat')
-correct = c_i['cFiltPhaseSub']
-incorrect = c_i['iFiltPhaseSub']
+c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/raw-norm_lip.mat')
+correct = np.transpose(c_i['CNormlip'])
+incorrect = np.transpose(c_i['INormlip'])
 
 #load filtered 0-20 Hz fft data
 c_i = scipy.io.loadmat('/mnt/ceph/home/bconkli4/Documents/data/spec-fft-0_20_filtered.mat')
@@ -95,6 +95,7 @@ incorrect9l = incorrect9l[np.random.choice(incorrect9l.shape[0], len(correct9l),
 correctpe = correctpe[np.random.choice(correctpe.shape[0], len(incorrectpe), replace=False),:];
 correctpec = correctpec[np.random.choice(correctpec.shape[0], len(incorrectpec), replace=False),:];
 correctpg = correctpg[np.random.choice(correctpg.shape[0], len(incorrectpg), replace=False),:];
+correct = correct[np.random.choice(correct.shape[0], len(incorrect), replace=False),:];
 
 #prep raw data subsample
 #labels
@@ -241,7 +242,7 @@ h5f.create_dataset('late-r', data=late_response)
 h5f.close()
 
 ###for raw subsampled data
-h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-0_20_filtered-base_norm_subsample.mat.h5', 'w')
+h5f = h5py.File('/mnt/ceph/home/bconkli4/Documents/data/ml/input-raw-lip-base_norm_subsample.h5', 'w')
 h5f.create_dataset('data', data=data)
 h5f.create_dataset('response', data=response)
 h5f.close()

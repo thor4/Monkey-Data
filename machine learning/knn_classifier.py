@@ -32,7 +32,7 @@ X_train3, X_test3, y_train3, y_test3 = train_test_split(X3, y3, test_size=0.2, r
 #1 nearest neighbors classifier
 start = time.time()
 nbrs_clf = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
-nbrs_clf.fit(X_trainfs, y_train)
+nbrs_clf.fit(X_train, y_train)
 print("--- %s seconds ---" % (time.time() - start))
 
 #1 nearest neighbors classifier epochs
@@ -59,7 +59,7 @@ print("--- %s seconds ---" % (time.time() - start))
 
 #obtain accuracy
 start = time.time()
-accuracyNNfs = cross_val_score(nbrs_clf, X_trainfs, y_train, cv=5, scoring="accuracy")
+accuracyNN = cross_val_score(nbrs_clf, X_train, y_train, cv=5, scoring="accuracy")
 print("--- %s seconds ---" % (time.time() - start))
 pred = nbrs_clf.predict(X_test3)
 accnn = accuracy_score(y_test3, pred)

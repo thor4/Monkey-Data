@@ -69,3 +69,28 @@ ylabel('Normalized Voltage (�V)');
 legend('Correct Trials','Incorrect Trials');
 set(gca,'box','off','Xlim',[time(1);time(end)]);
 
+%total, frontal and parietal slices 
+time = 1:size(CNormFiltAvg,2);
+figure
+subplot(2,2,[1 2])
+plot(time,CNormFiltAvg,time,INormFiltAvg,':', 'LineWidth', 2);
+title('Trial-averaged Delay-period Both Regions');
+xlabel('Time after stimulus off (ms)');
+ylabel('Potential (µV)');
+legend('Correct Trials','Incorrect Trials');
+set(gca,'box','off','Xlim',[time(1);time(end)]);
+subplot(2,2,3)
+plot(time,CNormFiltAvgf,time,INormFiltAvgf,':', 'LineWidth', 2);
+title('Trial-averaged Delay-period Frontal Region');
+xlabel('Time after stimulus off (ms)');
+ylabel('Potential (µV)');
+%legend('Correct Trials','Incorrect Trials');
+set(gca,'box','off','Xlim',[time(1);time(end)]);
+subplot(2,2,4)
+plot(time,CNormFiltAvgp,time,INormFiltAvgp,':', 'LineWidth', 2);
+title('Trial-averaged Delay-period Parietal Region');
+xlabel('Time after stimulus off (ms)');
+ylabel('Potential (µV)');
+%legend('Correct Trials','Incorrect Trials');
+set(gca,'box','off','Xlim',[time(1);time(end)]);
+set(gcf,'color','white')

@@ -52,6 +52,7 @@ y_scoresLRlip = y_probLRlip[:, 1] # score = proba of positive class
 fpr_LRlip, tpr_LRlip, thresholds_LRlip = roc_curve(y_testlip,y_scoresLRlip)
 
 #PE
+start = time.time()
 y_probRFpe = cross_val_predict(RFpe, X_testpefs, y_testpe, cv=5,
 method="predict_proba")
 y_scoresRFpe = y_probRFpe[:, 1] # score = proba of positive class
@@ -64,7 +65,7 @@ y_probLRpe = cross_val_predict(LRpe, X_testpefs, y_testpe, cv=5,
 method="predict_proba")
 y_scoresLRpe = y_probLRpe[:, 1] # score = proba of positive class
 fpr_LRpe, tpr_LRpe, thresholds_LRpe = roc_curve(y_testpe,y_scoresLRpe)
-
+print("--- %s seconds ---" % (time.time() - start))
 
 #plot ROC curve
 #6DR
