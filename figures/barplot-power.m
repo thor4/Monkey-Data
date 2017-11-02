@@ -1,0 +1,23 @@
+clear
+cLIPbandsCorR1samplemeans = mean(cLIPbandsCorR1samples,1);
+cLIPbandsIncR1samplemeans = mean(cLIPbandsIncR1samples,1);
+y = [cLIPbandsCorR1samplemeans(1) cLIPbandsIncR1samplemeans(1); ...
+    cLIPbandsCorR1samplemeans(2) cLIPbandsIncR1samplemeans(2); ...
+    cLIPbandsCorR1samplemeans(3) cLIPbandsIncR1samplemeans(3); ...
+    cLIPbandsCorR1samplemeans(4) cLIPbandsIncR1samplemeans(4); ...
+    cLIPbandsCorR1samplemeans(5) cLIPbandsIncR1samplemeans(5); ...
+    cLIPbandsCorR1samplemeans(6) cLIPbandsIncR1samplemeans(6); ...
+    cLIPbandsCorR1samplemeans(7) cLIPbandsIncR1samplemeans(7); ...
+    cLIPbandsCorR1samplemeans(8) cLIPbandsIncR1samplemeans(8)];
+bar(10.*(log10(y)))
+% change the xticklabel with characters
+newXticklabel = {'δ','θ','α','β','Low γ','High γ1','High γ2','High γ3'};
+set(gca,'XtickLabel',newXticklabel,'FontSize',25);
+% xAx = get(gca,'XAxis');
+% set(xAx,'FontSize',25);
+% yAx = get(gca,'YAxis');
+% set(yAx,'FontSize',25);
+title('Clark LIP Delay-period');
+xlabel('Frequency Bands');
+ylabel('Baseline-normalized Power (dB)');
+legend('Correct Trials','Incorrect Trials');
