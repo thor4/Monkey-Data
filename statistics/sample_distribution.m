@@ -4,9 +4,9 @@ clear
 rng(42);
 %randomly sample with replacement and take the mean. do this 1,000 times to
 %build sample distribution
-cvPFCbandsCorR1samples = zeros(10000,8);
-cvPFCbandsIncR1samples = zeros(10000,8);
-for i=1:10000
+cvPFCbandsCorR1samples = zeros(1000,8);
+cvPFCbandsIncR1samples = zeros(1000,8);
+for i=1:1000
     cvPFCbandsidxCorR1 = randi(size(cvPFCbandsCorR1,1),size(cvPFCbandsIncR1,1),1);
     cvPFCbandsidxIncR1 = randi(size(cvPFCbandsIncR1,1),size(cvPFCbandsIncR1,1),1);
     cvPFCbandsCorR1samples(i,:) = mean(cvPFCbandsCorR1(cvPFCbandsidxCorR1,:),1);
