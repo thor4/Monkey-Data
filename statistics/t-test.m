@@ -5,9 +5,17 @@
 %sample distributions from same area
 
 %run ttest and get t statistic from stats struct
-[h,p,ci,stats] = ttest(c8BbandsCorR1samples,c8BbandsIncR1samples);
+[h,p,ci,stats] = ttest(bPGbandsCorR1sampled,bPGbandsIncR1);
 %standardize t statistic to z score
-z = (stats.tstat-mean(c8BbandsR1nullHypoDistrib,1))./std(c8BbandsR1nullHypoDistrib,1);
+bPGbandsR1z = (stats.tstat-mean(bPGbandsR1nullHypoDistrib,1))./std(bPGbandsR1nullHypoDistrib,1);
 %transform z score to p value by evaluating its position on a Gaussian
 %probability density
-p = normcdf(z); %this isn't right, work on this
+bPGbandsR1p = zeros(1,8);
+format long
+for i=1:8
+    if bPGbandsR1z(i) > 0
+        bPGbandsR1p(i) = 1-normcdf(bPGbandsR1z(i),mean(bPGbandsR1nullHypoDistrib(:,i),1),std(bPGbandsR1nullHypoDistrib(:,i),1));
+    else
+        bPGbandsR1p(i) = normcdf(bPGbandsR1z(i),mean(bPGbandsR1nullHypoDistrib(:,i),1),std(bPGbandsR1nullHypoDistrib(:,i),1));
+    end
+end

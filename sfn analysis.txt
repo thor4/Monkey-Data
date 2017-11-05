@@ -1,0 +1,27 @@
+1. Use crawler_LocResp.m to extract delay and baseline periods from each monkey. Broken down by region, rule and behavioral response. Only include stable (Nick notes in trial_info.txt) and good trials (no artifacts- need Nick notes on this)
+
+2. Use normalization.m to remove baseline period from all delay period trials. Use only rule 1 and save as new data files (.mat).
+
+3. Use sfn-spec-fft.m to extract power from all norm'd delay period trials from rule 1. Save as new .mat files along with variable holding frequencies
+
+4. Use sfn-spec-fft-bins.m to create frequency bins of interest for each norm'd delay period region for each monkey in rule 1. Select all frequencies from each band and avg over band. Save as new .mat file in "fft norm power bands" folder.
+
+5. Use equalize.m to randomly sample with replacement from each norm'd delay period region for each monkey in rule 1 from each frequency band from correct trials only. Randomly sample up to the total number of incorrect trials to equalize the behavioral response classes.
+
+6. Use nonparam_perm_null_hypo_distrib.m to create a null hypothesis distribution for each norm'd delay-period region. Shuffle correct/incorrect condition labels and calculate a t-statistic for the null hypothesis that the data in correct – incorrect comes from a normal distribution with mean equal to zero and unknown variance, using the paired-sample t-test. Do this 1,000 times to build the null hypothesis distribution. Plot the histogram as a sanity check to ensure a normal distribution.
+
+7. Use t-test.m to determine statistical significance of the observed correct/incorrect difference per region. Calculate a t-statistic for the observation with a null hypothesis that the data in correct – incorrect comes from a normal distribution with mean equal to zero and unknown variance, using the paired-sample t-test. Convert the observed t-statistic to standard deviation units of the null hypothesis distribuiton, a standard Z value. Finally, convert to a p-value by evaluating its position on a Gaussian probability density (normcdf in MATLAB). The p value is referred to a Pz since it is based on a Z distribuiton of null-hypothesis t-statistics.
+
+8. Use mult_comp_corr-fdr.m to correct for multiple comparisons per monkey. Combine all p-values from (7) then pass to fdr_bh function with a significance level of 0.05. With 64 tests (8 regions x 8 frequency bands), the critical p-value becomes 0.0038. The original Bejnamini & Hochberg FDR procedure was used (Benjamini & Hochberg 1995), which is guaranteed to be accurate if the individual tests are independent or positively dependent. 
+Benjamini, Y. & Hochberg, Y. (1995) Controlling the false discovery rate: A practical and powerful approach to multiple testing. Journal of the Royal Statistical Society, Series B (Methodological). 57(1), 289-300.
+
+Clark: Out of 64 tests, 7 are significant using a false discovery rate of 0.050000.
+Betty: Out of 64 tests, 20 are significant using a false discovery rate of 0.000100.
+
+---
+
+NOT USED
+
+5. Use sample_distribution.m to randomly sample with replacement from each norm'd delay period region for each monkey in rule 1 from each frequency band. Randomly sample up to the total number of incorrect trials to equalize the behavioral response classes. Then take the mean across all samples per frequency band. Do this 100 times to build a sample distribution. Plot the histogram as a sanity check to ensure a normal distribution. Don't do more than 100 times or most everything will be significant.
+
+6. Use TwoWayANOVAmatrix.m to build observation matrix: BehResp in rows and Brodmann area in columns. Rows: 1000xCorrect, 1000xIncorrect. Columns for Clark: 1=8B, 2=9L, 3=dPFC, 4=vPFC, 5=LIP, 6=MIP, 7=PEC, 8=PG.
