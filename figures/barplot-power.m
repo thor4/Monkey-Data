@@ -55,7 +55,7 @@ ci95 = [cLIPbandsCorR1sampleci95(1) cLIPbandsIncR1sampleci95(1); ...
     cLIPbandsCorR1sampleci95(8) cLIPbandsIncR1sampleci95(8)];
 
 figure
-barwitherr(ci95(1,:),y(1,:));
+b = barwitherr(ci95(1,:),y(1,:));
 ylim([3.9e8,5.5e8])
 newXticklabel = {'Correct','Incorrect'};
 set(gca,'XtickLabel',newXticklabel,'FontSize',25);

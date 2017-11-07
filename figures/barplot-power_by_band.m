@@ -56,9 +56,18 @@ n = size(cPGbandsIncR1,1); T_multiplier = tinv(1-alpha/2, n-1);
 cDeltaRegionsR1ci95(8,2) = T_multiplier.*std(cPGbandsIncR1(:,1))./sqrt(n);
 
 figure
-hb=barwitherr(cDeltaRegionsR1ci95,cDeltaRegionsR1mean);
+[hBar hErrorbar] = barwitherr(cDeltaRegionsR1ci95,cDeltaRegionsR1mean);
 %sigstar({'8B'{1},'8B'{2}})
 % sigstar({[1,2], [1,3]})
+% for k = 1:size(y,2)
+%     b(k).CData = k;
+% end
+hBar(1).FaceColor = [0 .271 .937]; hBar(2).FaceColor = 'red';
+hBar(1).LineStyle = 'none'; hBar(2).LineStyle = 'none';
+xticks([])
+ax = gca
+ax.YGrid = 'off'
+
 newXticklabel = {'8B','9L','dPFC','vPFC','LIP','MIP','PEC','PG'};
 set(gca,'XtickLabel',newXticklabel,'FontSize',25);
 title('Clark Delta Band Delay-period .95 CI');
