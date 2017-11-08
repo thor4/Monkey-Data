@@ -5,20 +5,20 @@ colorbar('Direction','reverse')
 cmin = 0;
 cmax = max(max(adj_p));
 figure
-im = imagesc(adj_p,[cmin cmax])
-colorbar('Direction','reverse')
-colorbar('Ticks',[.05:.05:cmax],...
-         'TickLabels',{'.05 (Significant)','.1','.15','.2','.25','.3','.35','.4','.45','.5'},...
-         'Direction','reverse')
+% im = imagesc(adj_p,[cmin cmax])
+im = imagesc(adj_p)
+colorbar('Direction','reverse','FontSize',24)
+% colorbar('Ticks',[.05:.05:cmax],...
+%          'TickLabels',{'0','.05 (Significant)','.1','.15','.2','.25','.3','.35','.4','.45','.5'},...
+%          'Direction','reverse')
+c = colorbar('Ticks',[.05:.05:cmax],...
+         'TickLabels',{'0','.05 (Sig)','.1','.15','.2','.25','.3','.35','.4','.45','.5'},...
+         'Direction','reverse',FontSize',24)
 axis off
-map = [0, .14, 0
-    0, .28 , 0
-    0, .42 , 0
-    0, .56, 0
-    0, .7, 0
-    0, .84, 0
-    0, .98,0]
-colormap(map)
+colormap(summer)
+brighten(.25)
+c.Label.String = 'Adjusted p';
+%summer brighten(1)
 %     0, 0, 0.6
 %     0, 0, 0.8
 %     0, 0, 1.0];

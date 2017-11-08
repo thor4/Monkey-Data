@@ -1,27 +1,22 @@
-figure
-pcolor(adj_p)
-colorbar('Direction','reverse')
+clear
 
 cmin = 0;
-cmax = max(max(adj_p));
+cmax = 0.001;
 figure
 im = imagesc(adj_p,[cmin cmax])
+%im = imagesc(adj_p)
 colorbar('Direction','reverse')
 % colorbar('Ticks',[.05:.05:cmax],...
 %          'TickLabels',{'0','.05 (Significant)','.1','.15','.2','.25','.3','.35','.4','.45','.5'},...
 %          'Direction','reverse')
-colorbar('Ticks',[.05:.05:cmax],...
-         'TickLabels',{'0','.05 (Sig)','.1','.15','.2','.25','.3','.35','.4','.45','.5'},...
-         'Direction','reverse')
+c = colorbar('Ticks',[0,0.0001,.00025,0.0005,.00075,.001],...
+         'TickLabels',{'0','.0001 (Sig)','.00025','.0005','.00075','.001'},...
+         'Direction','reverse','FontSize',24,'Box','off','TickLength',0.000001)
 axis off
-map = [0, .14, 0
-    0, .28 , 0
-    0, .42 , 0
-    0, .56, 0
-    0, .7, 0
-    0, .84, 0
-    0, .98,0]
-colormap(map)
+colormap(summer)
+brighten(.25)
+set(c, 'ylim', [0 .1])
+%summer brighten(1)
 %     0, 0, 0.6
 %     0, 0, 0.8
 %     0, 0, 1.0];

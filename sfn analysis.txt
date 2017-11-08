@@ -25,3 +25,5 @@ NOT USED
 5. Use sample_distribution.m to randomly sample with replacement from each norm'd delay period region for each monkey in rule 1 from each frequency band. Randomly sample up to the total number of incorrect trials to equalize the behavioral response classes. Then take the mean across all samples per frequency band. Do this 100 times to build a sample distribution. Plot the histogram as a sanity check to ensure a normal distribution. Don't do more than 100 times or most everything will be significant.
 
 6. Use TwoWayANOVAmatrix.m to build observation matrix: BehResp in rows and Brodmann area in columns. Rows: 1000xCorrect, 1000xIncorrect. Columns for Clark: 1=8B, 2=9L, 3=dPFC, 4=vPFC, 5=LIP, 6=MIP, 7=PEC, 8=PG.
+
+dPFC covers 46d and 9/46d, and vPFC covers 46v adn 9/46v.
