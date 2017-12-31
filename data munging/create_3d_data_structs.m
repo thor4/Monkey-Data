@@ -8,9 +8,12 @@ clark = { days_clark, "session02", "session03" };
 % data = zeros(25,7000,2000); %delay period total
 days_betty_num = [90615, 90616, 90617, 90618, 90622, 90625, 90626, 90629, 90701, 90702, 90706, 90708, 90709, 90901, 90903, 90916, 90917, 90921, 90923, 90924, 90928, 90929, 90930, 91001];
 days_clark_num = [60328, 60406, 60411, 60414, 60426, 60427, 60428, 60502, 60503, 60509, 60511, 60531, 60601, 60602, 60824, 60825, 60831, 60907, 61212, 61213, 61214, 61215, 61221];
-trial_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\trial_info.mat';
-recording_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\recording_info.mat';
-trial_lfp_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\%s%s%s.%04d.mat';
+% trial_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\trial_info.mat';
+% recording_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\recording_info.mat';
+% trial_lfp_path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\%s\\%s\\%s\\%s%s%s.%04d.mat';
+trial_path = '//home//bconkli4//Documents//data//original//%s//%s//%s//trial_info.mat';
+recording_path = '//home//bconkli4//Documents//data//original//%s//%s//%s//recording_info.mat';
+trial_lfp_path = '//home//bconkli4//Documents//data//original//%s//%s//%s//%s%s%s.%04d.mat';
 areas = ["9L", "8B", "6DR", "8AD", "vPFC", "dPFC", "LIP", "MIP", "PE", "PG", "PEC"];
 
 tic
@@ -26,7 +29,7 @@ for i=1:length(betty{1})
         load(trial_lfp_myfilename);
         [r,c] = size(lfp_data);
         bTrialLength(j,1) = c;
-%         lfp_data_mv = lfp_data .* 1000000; % convert to µV (1V = 10^6µV = 1,000,000µV)
+%         lfp_data_mv = lfp_data .* 1000000; % convert to ï¿½V (1V = 10^6ï¿½V = 1,000,000ï¿½V)
 %         data(1:r,1:c,j) = lfp_data_mv; %these columns don't dynamically update, they just grow so there are extra 0's. can't remove all 0's since some are signal
     end
     %creating cell within a struct for each recording session's data
@@ -54,7 +57,7 @@ for i=1:length(clark{1})
                 trial_lfp_myfilename = sprintf(trial_lfp_path,  monkeys(2), clark{1}{i}, clark{j}, monkeys(2), clark{1}{i}, clark{j}{1}(8:9), k);
                 load(trial_lfp_myfilename);
                 [r,c] = size(lfp_data);
-                lfp_data_mv = lfp_data .* 1000000; % convert to µV (1V = 10^6µV = 1,000,000µV)
+                lfp_data_mv = lfp_data .* 1000000; % convert to ï¿½V (1V = 10^6ï¿½V = 1,000,000ï¿½V)
                 delay_period = trial_info.MatchOnset(k)-trial_info.CueOffset(k);
                 %baseline_period = (trial_info.CueOnset(k) - 50) - (trial_info.CueOnset(k) - 450);
 %                 if (baseline_period ~= 400)
