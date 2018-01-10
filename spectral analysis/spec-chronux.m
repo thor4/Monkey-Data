@@ -72,3 +72,50 @@ colorbar;
 set(gca,'FontName','Times New Roman','Fontsize', 14);
 title({['LFP 1,  W=' num2str(params.tapers(1)/movingwin(1)) 'Hz']; ['moving window = ' num2str(movingwin(1)) 's, step = ' num2str(movingwin(2)) 's']});
 ylabel('frequency Hz');
+
+%time frequency coherence (uses mtspecgramc)
+%from Salazar supp: To evaluate the time course of the amplitude and synchronization between simultaneously
+%recorded fronto-parietal LFPs, we calculated the time-frequency power and coherency spectra (200 msec. 
+%sliding window stepped at 50 ms) using multi-taper spectral analysis (Mitra and Pesaran, 1999) implemented 
+%in the Chronux toolbox (Bokil et al., 2010) (http://www.chronux.org/chronux/) with three tapers and a 
+%time-bandwidth product of two (frequency resolution of 3.12 Hz and frequency smoothing of 12 Hz). 
+
+window = .500; %in s
+step = .050; %in s
+movingwin=[window step]; % set the moving window dimensions, step size
+params.Fs=1000; % sampling frequency
+params.fpass=[2 60]; % frequency of interest
+params.tapers=[3 5]; % tapers
+params.trialave=1; % average over trials
+params.err=0; % no error computation
+%
+tic
+% maxDb=25; %Limit power range to 15 Db
+[C,phi,S12,S1,S2,t,f]=cohgramc(lfp_data(1,:)',lfp_data(9,:)',movingwin,params);
+toc
+
+%spectrogram
+figure
+subplot(121)
+contourf(t,f,S1',40,'linecolor','none')
+colorbar
+%set(gca,'clim',[-3 3],'xlim',[-200 1000],'yscale','log','ytick',logspace(log10(min_freq),log10(max_freq),6),'yticklabel',round(logspace(log10(min_freq),log10(max_freq),6)*10)/10)
+%title('Logarithmic frequency scaling')
+
+subplot(122)
+contourf(t,f,S2',40,'linecolor','none')
+colorbar
+% subplot(122)
+% contourf(EEG.times,frex,eegpower,40,'linecolor','none')
+% set(gca,'clim',[-3 3],'xlim',[-200 1000])
+% title('Linear frequency scaling')
+
+%baseline normalization
+ % Average power over trials (this code performs baseline transform,
+ % which you will learn about in chapter 18)
+eegpower = zeros(num_frex,EEG.pnts); % frequencies X time X trials
+baseidx = dsearchn(EEG.times',[-500 -200]');
+temppower = mean(abs(reshape(eegconv,EEG.pnts,EEG.trials)).^2,2);
+eegpower(fi,:) = 10*log10(temppower./mean(temppower(baseidx(1):baseidx(2))));
+
+
