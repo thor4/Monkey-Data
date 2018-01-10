@@ -69,30 +69,36 @@ for i = 1
                     incorrectFrontalClark(zfi,1:1001) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     incorrectFrontalClark(zfi,1002:1811) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     zfi = zfi + 1;
-                elseif (clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.BehResp(j) == 1) && ...
-                        (clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.Rule(j) == 1) && ...
-                        (recordingRegion(k) == 'P') %only look at correct rule 1 parietal trials
-                    tempCorrectParietalClark(zpc,1:1001) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j})(k,1:1001);
-                    tempCorrectParietalClark(zpc,1002:1811) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j})(k,clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.CueOffset(j)+1:clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.CueOffset(j)+810);
+                elseif (clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
+                        (clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
+                        (recordingRegion(l) == 'P') %only look at correct rule 1 parietal trials
+                    correctParietalClark(zpc,1:1001) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
+                    correctParietalClark(zpc,1002:1811) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     zpc = zpc + 1;
-                elseif (clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.BehResp(j) == 0) && ...
-                        (clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.Rule(j) == 1) && ...
-                        (recordingRegion(k) == 'P') %only look at incorrect rule 1 parietal trials
-                    tempIncorrectParietalClark(zpi,1:1001) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j})(k,1:1001);
-                    tempIncorrectParietalClark(zpi,1002:1811) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j})(k,clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.CueOffset(j)+1:clarkGoodTrials.(fieldsClarkDays{i}).new_trial_info.CueOffset(j)+810);
+                elseif (clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 0) && ...
+                        (clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
+                        (recordingRegion(l) == 'P') %only look at incorrect rule 1 parietal trials
+                    incorrectParietalClark(zpi,1:1001) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
+                    incorrectParietalClark(zpi,1002:1811) = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     zpi = zpi + 1;
                 end
             end
+        end
     end
-    end
-    
-    recordingRegion = clarkGoodTrials.(fieldsClarkDays{i}).recording_info.cortex;
-    
 end
+ 
 toc
 
+%betty counts
 numCor = sum(bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.BehResp == 1); %number of correct trials
 numInc = sum(bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.BehResp == 0); %number of incorrect trials
 numRule1 = sum(bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.Rule == 1); %number of rule 1 trials
 numRule2 = sum(bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.Rule == 2); %number of rule 2 trials
-numCorRule1 = sum((bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.BehResp == 1) & (bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.Rule == 1));
+numCorRule1 = sum((bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.BehResp == 1) & (bettyGoodTrials.(fieldsBettyDays{i}).new_trial_info.Rule == 1)); %number of correct, rule 1 trials
+
+%clark counts
+numCor = sum(clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp == 1); %number of correct trials
+numInc = sum(clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp == 0); %number of incorrect trials
+numRule1 = sum(clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule == 1); %number of rule 1 trials
+numRule2 = sum(clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule == 2); %number of rule 2 trials
+numCorRule1 = sum((clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp == 1) & (clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule == 1)); %number of correct, rule 1 trials
