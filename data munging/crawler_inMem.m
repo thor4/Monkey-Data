@@ -1,13 +1,14 @@
 load('good_trials-betty.mat')
 load('good_trials-clark.mat')
 
-tic
+
 zfc = 1;
 zfi = 1;
 zpc = 1;
 zpi = 1;
 
 %betty
+tic
 fieldsBettyDays = fieldnames(bettyGoodTrials);
 for i = 1:numel(fieldsBettyDays)
     fieldsBettyTrials = fieldnames(bettyGoodTrials.(fieldsBettyDays{i}));
@@ -45,18 +46,15 @@ end
 toc
 
 %clark
+tic
 fieldsClarkDays = fieldnames(clarkGoodTrials);
-% for i = 1:numel(fieldsClarkDays)
-for i = 1
+for i = 1:numel(fieldsClarkDays)
     fieldsClarkSessions = fieldnames(clarkGoodTrials.(fieldsClarkDays{i}));
-%     for j = 1:numel(fieldsClarkSessions)
-    for j = 1
+    for j = 1:numel(fieldsClarkSessions)
         fieldsClarkTrials = fieldnames(clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}));
         recordingRegion = clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).recording_info.cortex;
-%         for k = 1:numel(fieldsClarkTrials)-2
-        for k = 1
-            for l = 1
-%             for l = 1:numel(recordingRegion)
+        for k = 1:numel(fieldsClarkTrials)-2
+            for l = 1:numel(recordingRegion)
                 if (clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
                         (clarkGoodTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingRegion(l) == 'F') %only look at correct rule 1 frontal trials
