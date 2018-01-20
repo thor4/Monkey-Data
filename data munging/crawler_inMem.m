@@ -1,5 +1,5 @@
-load('good_trials-betty.mat')
-load('good_trials-clark.mat')
+load('good_stable_trials-betty.mat')
+load('good_stable_trials-clark.mat')
 
 
 zfc = 1;
