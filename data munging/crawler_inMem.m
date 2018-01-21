@@ -18,26 +18,26 @@ for i = 1:numel(fieldsBettyDays)
             if (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == 1) && ...
                     (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == 1) && ...
                     (recordingRegion(k) == 'F') %only look at correct rule 1 frontal trials
-                tempCorrectFrontalBetty(zfc,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
-                tempCorrectFrontalBetty(zfc,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
+                correctFrontalBetty(zfc,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
+                correctFrontalBetty(zfc,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
                 zfc = zfc + 1;
             elseif (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == 0) && ...
                     (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == 1) && ...
                     (recordingRegion(k) == 'F') %only look at incorrect rule 1 frontal trials
-                tempIncorrectFrontalBetty(zfi,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
-                tempIncorrectFrontalBetty(zfi,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
+                incorrectFrontalBetty(zfi,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
+                incorrectFrontalBetty(zfi,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
                 zfi = zfi + 1;
             elseif (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == 1) && ...
                     (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == 1) && ...
                     (recordingRegion(k) == 'P') %only look at correct rule 1 parietal trials
-                tempCorrectParietalBetty(zpc,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
-                tempCorrectParietalBetty(zpc,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
+                correctParietalBetty(zpc,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
+                correctParietalBetty(zpc,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
                 zpc = zpc + 1;
             elseif (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == 0) && ...
                     (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == 1) && ...
                     (recordingRegion(k) == 'P') %only look at incorrect rule 1 parietal trials
-                tempIncorrectParietalBetty(zpi,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
-                tempIncorrectParietalBetty(zpi,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
+                incorrectParietalBetty(zpi,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
+                incorrectParietalBetty(zpi,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
                 zpi = zpi + 1;
             end
         end
