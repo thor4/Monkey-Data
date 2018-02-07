@@ -57,34 +57,34 @@ legend(traces4,'Correct Trials','Incorrect Trials');
 
 %all trials
 %figure
-Triggers = [0 500];
-time  = -500:size(correctFrontalBetty,2)-501; % time, from -500ms baseline
-figure
-subplot(2,2,1)
-traces1 = plot(time,correctFrontalClark,time,incorrectFrontalClark,':', 'LineWidth', 2);
-title('Trial-averaged Monkey 1 Frontal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
-set(gca,'box','off','Xlim',[time(1);time(end)]);
-y1 = get(gca,'ylim'); hold on
-triggers1 = plot([Triggers(1) Triggers(1)],y1,'--',[Triggers(2) Triggers(2)],y1,'--'); hold off 
-% legend(traces1,'Correct Trials','Incorrect Trials');
-subplot(2,2,3)
-traces2 = plot(time,correctParietalClark,time,incorrectParietalClark,':', 'LineWidth', 2);
-title('Trial-averaged Monkey 1 Parietal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)');
-set(gca,'box','off','Xlim',[time(1);time(end)]);
-y2 = get(gca,'ylim'); hold on
-triggers2 = plot([Triggers(1) Triggers(1)],y2,'--',[Triggers(2) Triggers(2)],y2,'--'); hold off
-% legend(traces2,'Correct Trials','Incorrect Trials');
-subplot(2,2,2)
-traces3 = plot(time,correctFrontalBetty,time,incorrectFrontalBetty,':', 'LineWidth', 2);
-title('Trial-averaged Monkey 2 Frontal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
-set(gca,'box','off','Xlim',[time(1);time(end)]);
-y1 = get(gca,'ylim'); hold on
-triggers3 = plot([Triggers(1) Triggers(1)],y1,'--',[Triggers(2) Triggers(2)],y1,'--'); hold off 
-% legend(traces3,'Correct Trials','Incorrect Trials');
-subplot(2,2,4)
-traces4 = plot(time,correctParietalBetty,time,incorrectParietalBetty,':', 'LineWidth', 2);
-title('Trial-averaged Monkey 2 Parietal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)');
-set(gca,'box','off','Xlim',[time(1);time(end)]);
-y2 = get(gca,'ylim'); hold on
-triggers4 = plot([Triggers(1) Triggers(1)],y2,'--',[Triggers(2) Triggers(2)],y2,'--'); hold off
-% legend(traces4,'Correct Trials','Incorrect Trials');
+% Triggers = [0 500];
+% time  = -500:size(correctFrontalBetty,2)-501; % time, from -500ms baseline
+% figure
+% subplot(2,2,1)
+% traces1 = plot(time,correctFrontalClark,time,incorrectFrontalClark,':', 'LineWidth', 2);
+% title('Trial-averaged Monkey 1 Frontal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+% set(gca,'box','off','Xlim',[time(1);time(end)]);
+% y1 = get(gca,'ylim'); hold on
+% triggers1 = plot([Triggers(1) Triggers(1)],y1,'--',[Triggers(2) Triggers(2)],y1,'--'); hold off 
+% % legend(traces1,'Correct Trials','Incorrect Trials');
+% subplot(2,2,3)
+% traces2 = plot(time,correctParietalClark,time,incorrectParietalClark,':', 'LineWidth', 2);
+% title('Trial-averaged Monkey 1 Parietal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)');
+% set(gca,'box','off','Xlim',[time(1);time(end)]);
+% y2 = get(gca,'ylim'); hold on
+% triggers2 = plot([Triggers(1) Triggers(1)],y2,'--',[Triggers(2) Triggers(2)],y2,'--'); hold off
+% % legend(traces2,'Correct Trials','Incorrect Trials');
+% subplot(2,2,2)
+% traces3 = plot(time,correctFrontalBetty,time,incorrectFrontalBetty,':', 'LineWidth', 2);
+% title('Trial-averaged Monkey 2 Frontal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+% set(gca,'box','off','Xlim',[time(1);time(end)]);
+% y1 = get(gca,'ylim'); hold on
+% triggers3 = plot([Triggers(1) Triggers(1)],y1,'--',[Triggers(2) Triggers(2)],y1,'--'); hold off 
+% % legend(traces3,'Correct Trials','Incorrect Trials');
+% subplot(2,2,4)
+% traces4 = plot(time,correctParietalBetty,time,incorrectParietalBetty,':', 'LineWidth', 2);
+% title('Trial-averaged Monkey 2 Parietal Region Time-series'); xlabel('Time (ms)'); ylabel('Voltage (µV)');
+% set(gca,'box','off','Xlim',[time(1);time(end)]);
+% y2 = get(gca,'ylim'); hold on
+% triggers4 = plot([Triggers(1) Triggers(1)],y2,'--',[Triggers(2) Triggers(2)],y2,'--'); hold off
+% % legend(traces4,'Correct Trials','Incorrect Trials');
