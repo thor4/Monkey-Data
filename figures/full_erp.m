@@ -1,7 +1,5 @@
-% load('good_trials-betty.mat')
-% load('good_trials-clark.mat')
-load('bettyGoodStableRule1-split_by_BehResp_and_Region.mat')
-load('clarkGoodStableRule1-split_by_BehResp_and_Region.mat')
+load('m1GoodStableRule1PingRej-split_by_BehResp_and_Region.mat')
+load('m2GoodStableRule1PingRej-split_by_BehResp_and_Region.mat')
 
 Triggers = [0 500]; 
 %BehResp x Region per Monkey ERP
