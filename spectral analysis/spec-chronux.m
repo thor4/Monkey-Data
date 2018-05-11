@@ -86,7 +86,7 @@ movingwin=[window step]; % set the moving window dimensions, step size
 params.Fs=1000; % sampling frequency
 params.fpass=[2 60]; % frequency of interest
 params.tapers=[3 5]; % tapers
-params.trialave=1; % average over trials
+params.trialave=0; % average over trials
 params.err=0; % no error computation
 %
 tic
@@ -96,8 +96,8 @@ toc
 
 %spectrogram
 figure
-subplot(121)
-contourf(t,f,S1',40,'linecolor','none')
+%subplot(121)
+contourf(t,f,C',40,'linecolor','none')
 colorbar
 %set(gca,'clim',[-3 3],'xlim',[-200 1000],'yscale','log','ytick',logspace(log10(min_freq),log10(max_freq),6),'yticklabel',round(logspace(log10(min_freq),log10(max_freq),6)*10)/10)
 %title('Logarithmic frequency scaling')
