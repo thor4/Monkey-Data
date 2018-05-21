@@ -183,91 +183,91 @@ for i = 1:numel(fieldsClarkDays)
                     m1IncorrectRule19L(m1I9l,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1IncorrectRule19L(m1I9l,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1I9l = m1I9l + 1;
-                    monkey(1).day(i).IncorrectRule1.a9L = m1IncorrectRule19L;
+                    monkey(1).day(i).CorrectRule1.a9L = m1IncorrectRule19L;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('dPFC')) %only look at correct rule 1 dPFC trials
                     m1CorrectRule1dPFC(m1Cdpfc,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1CorrectRule1dPFC(m1Cdpfc,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Cdpfc = m1Cdpfc + 1;
-                    monkey(1).day(i).CorrectRule1.adPFC = m1CorrectRule1dPFC;
+                    monkey(1).day(i).IncorrectRule1.adPFC = m1CorrectRule1dPFC;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 0) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('dPFC')) %only look at incorrect rule 1 dPFC trials
                     m1IncorrectRule1dPFC(m1Idpfc,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1IncorrectRule1dPFC(m1Idpfc,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Idpfc = m1Idpfc + 1;
-                    monkey(1).day(i).IncorrectRule1.adPFC = m1IncorrectRule1dPFC;
+                    monkey(1).(fieldsClarkDays{i}).Incorrect.Rule1.adPFC = m1IncorrectRule1dPFC;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('vPFC')) %only look at correct rule 1 vPFC trials
                     m1CorrectRule1vPFC(m1Cvpfc,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1CorrectRule1vPFC(m1Cvpfc,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Cvpfc = m1Cvpfc + 1;
-                    monkey(1).day(i).CorrectRule1.avPFC = m1CorrectRule1vPFC;
+                    monkey(1).(fieldsClarkDays{i}).Correct.Rule1.avPFC = m1CorrectRule1vPFC;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 0) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('vPFC')) %only look at incorrect rule 1 vPFC trials
                     m1IncorrectRule1vPFC(m1Ivpfc,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1IncorrectRule1vPFC(m1Ivpfc,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Ivpfc = m1Ivpfc + 1;
-                    monkey(1).day(i).IncorrectRule1.avPFC = m1IncorrectRule1vPFC;
+                    monkey(1).(fieldsClarkDays{i}).Incorrect.Rule1.avPFC = m1IncorrectRule1vPFC;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('LIP')) %only look at correct rule 1 LIP trials
                     m1CorrectRule1LIP(m1Clip,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1CorrectRule1LIP(m1Clip,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Clip = m1Clip + 1;
-                    monkey(1).day(i).CorrectRule1.aLIP = m1CorrectRule1LIP;
+                    monkey(1).(fieldsClarkDays{i}).Correct.Rule1.aLIP = m1CorrectRule1LIP;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 0) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('LIP')) %only look at incorrect rule 1 LIP trials
                     m1IncorrectRule1LIP(m1Ilip,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1IncorrectRule1LIP(m1Ilip,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Ilip = m1Ilip + 1;
-                    monkey(1).day(i).IncorrectRule1.aLIP = m1IncorrectRule1LIP;
+                    monkey(1).(fieldsClarkDays{i}).Incorrect.Rule1.aLIP = m1IncorrectRule1LIP;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('MIP')) %only look at correct rule 1 MIP trials
                     m1CorrectRule1MIP(m1Cmip,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1CorrectRule1MIP(m1Cmip,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Cmip = m1Cmip + 1;
-                    monkey(1).day(i).CorrectRule1.aMIP = m1CorrectRule1MIP;
+                    monkey(1).(fieldsClarkDays{i}).Correct.Rule1.aMIP = m1CorrectRule1MIP;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 0) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('MIP')) %only look at incorrect rule 1 MIP trials
                     m1IncorrectRule1MIP(m1Imip,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1IncorrectRule1MIP(m1Imip,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Imip = m1Imip + 1;
-                    monkey(1).day(i).IncorrectRule1.aMIP = m1IncorrectRule1MIP;
+                    monkey(1).(fieldsClarkDays{i}).Incorrect.Rule1.aMIP = m1IncorrectRule1MIP;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('PEC')) %only look at correct rule 1 PEC trials
                     m1CorrectRule1PEC(m1Cpec,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1CorrectRule1PEC(m1Cpec,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Cpec = m1Cpec + 1;
-                    monkey(1).day(i).CorrectRule1.aPEC = m1CorrectRule1PEC;
+                    monkey(1).(fieldsClarkDays{i}).Correct.Rule1.aPEC = m1CorrectRule1PEC;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 0) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('PEC')) %only look at incorrect rule 1 PEC trials
                     m1IncorrectRule1PEC(m1Ipec,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1IncorrectRule1PEC(m1Ipec,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Ipec = m1Ipec + 1;
-                    monkey(1).day(i).IncorrectRule1.aPEC = m1IncorrectRule1PEC;
+                    monkey(1).(fieldsClarkDays{i}).Incorrect.Rule1.aPEC = m1IncorrectRule1PEC;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 1) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('PG')) %only look at correct rule 1 PG trials
                     m1CorrectRule1PG(m1Cpg,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1CorrectRule1PG(m1Cpg,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Cpg = m1Cpg + 1;
-                    monkey(1).day(i).CorrectRule1.aPG = m1CorrectRule1PG;
+                    monkey(1).(fieldsClarkDays{i}).Correct.Rule1.aPG = m1CorrectRule1PG;
                 elseif (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.BehResp(k) == 0) && ...
                         (clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.Rule(k) == 1) && ...
                         (recordingArea{l} == string('PG')) %only look at incorrect rule 1 PG trials
                     m1IncorrectRule1PG(m1Ipg,1:1001) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,1:1001);
                     m1IncorrectRule1PG(m1Ipg,1002:1811) = clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).(fieldsClarkTrials{k})(l,clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+1:clarkGoodStableTrials.(fieldsClarkDays{i}).(fieldsClarkSessions{j}).new_trial_info.CueOffset(k)+810);
                     m1Ipg = m1Ipg + 1;
-                    monkey(1).day(i).IncorrectRule1.aPG = m1IncorrectRule1PG;
+                    monkey(1).(fieldsClarkDays{i}).Incorrect.Rule1.aPG = m1IncorrectRule1PG;
                 end
             end
         end

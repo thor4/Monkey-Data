@@ -1,0 +1,8 @@
+%function for ping rejection
+%data should be a matrix of instances(trials) x samples(time)
+%upper and lower are the bounds within which data will be kept
+%they are measured in terms of the sample metric (microvolts in LFP data)
+function noping = ping_rej(data,upper,lower)
+    %this will average across all baseline samples for each instance
+    norm = data - mean(baseline,2);
+end
