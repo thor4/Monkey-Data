@@ -1,6 +1,8 @@
 Monkey 1 (M1) = Clark
 Monkey 2 (M2) = Betty
 
+-----Good/Stable-----
+
 1. use create_3d_data_structs.m to create .mat files for betty and clark containing all "good" & "stable" trials shifted to a -500ms start time. That is, 500ms before sample onset. Now new trial_info markers/triggers are contained within new .mat files and start with a 501ms sample onset (CueOnset). Also saved recording_info into new .mat files. [good_stable_trials-betty.mat & good_stable_trials-clark.mat]
 [upload data files to koko for processing]
 
@@ -10,7 +12,7 @@ Monkey 2 (M2) = Betty
 ["ping" artifact rejection]
 1.2. plot all trials in one graph (time x voltage x BehResp) for each Monkey x Region. So that's 4 total graphs (Frontal/Parietal for M1/M2), with correct vs incorrect in each graph. Identify the outliers as trials where noise caused the voltage to go abnormally high or low. Throw out these trials entirely. Based on the graphs, it looks like +/-750 for M1 and +/-350 for M2. Any trials outside these ranges are thrown out. There were 2 trials for M1 correct frontal thrown out, 0 for M1 incorrect frontal. There were 165 trials for M1 correct parietal thrown out, 54 for M1 incorrect parietal. There were 0 trials for M2 frontal and parietal, correct and incorrect thrown out. [saved 4 revised clark files as m1GoodStableRule1PingRej-split_by_BehResp_and_Region.mat & renamed 4 original betty files as m2GoodStableRule1PingRej-split_by_BehResp_and_Region.mat]
 
-1.3. avg across all rule 1 trials within each BehResp x Region for each monkey [1,811] x 8 files. shift each avg to start at 0 by subtracting out the voltage of first sample from each of 8 files. plot each avg along with 0ms and 500ms event triggers in 4 separate panes for Monkey x Region with both BehResp traces shown within each pane. [saved as full.jpg and full.eps]
+1.3. [use full_erp.m] avg across all rule 1 trials within each BehResp x Region for each monkey [1,811] x 8 files. shift each avg to start at 0 by subtracting out the voltage of first sample from each of 8 files. plot each avg along with 0ms and 500ms event triggers in 4 separate panes for Monkey x Region with both BehResp traces shown within each pane. [saved as full.jpg and full.eps]
 ----------------
 
 -----TF POWER-----
@@ -25,3 +27,11 @@ https://www.mathworks.com/help/matlab/ref/getfield.html
 https://blogs.mathworks.com/loren/2005/12/13/use-dynamic-field-references/
 
 2. create analytic (time-frequency) signal using chronux for frequency bins: 2-60Hz (500ms window, 50ms step), 61-120Hz (200ms window, 20ms step), 121-180Hz (100ms window, 10ms step), 181-240Hz (50ms window, 5ms step). This will create 4 separate traces/spectrograms per trial per session per day. Save all within the same .mat file, try to append within trial cell {eg: t32}
+
+
+-------Within Session----
+
+1. Used crawler_inMem-recordingArea-per_session.m with [good_stable_trials-betty.mat & good_stable_trials-clark.mat] files. Choose from only rule 1: pull out first 1001 time points as [1,500] for prestimulus, [501,1001] for stimulus. then pull out CueOffset+1 through 810ms after [1002,1811]. Save each trial in a nested data structure of the form monkey(1-2).day(23,24).(CorrectRule1,IncorrectRule1).(aMonkey1Areas,aMonkey2Areas). save counts in counts.xlsx. save nested variable "monkey" in file mGoodStableRule1-split_by_Day_BehResp_and_Area.mat on koko
+
+["ping rejection"]
+2. Used pingRejNested.m in conjunction with ping_rej function to remove all pings outside the [-750,750] microvolt range for Monkey 1. This range was determined after viewing the earlier plot where all time series were graphed on top of each other. Copied the "monkey" variable as "monkeyNew" and re-wrote the areas that had pings removed. Renamed "monkeyNew" back to "monkey" and saved in file mGoodStableRule1PingRej-split_by_Day_BehResp_and_Area.mat on koko
