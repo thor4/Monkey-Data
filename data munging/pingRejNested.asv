@@ -10,7 +10,9 @@ for i=1:numel(monkey(1).day)
                 monkeyNew(1).day(i).correct.(chan{k})(idx,:) = [];
             end
             %keep track of total number of pings per area per day
-            counts.day(i).correct.(chan{j}) = pings;
+            if (counts.day(i).(chan{j}))
+                counts.day(i).(chan{j}) = counts.day(i).(chan{j}) + pings
+            counts.day(i).(chan{j}) = pings;
         end
     end
 end
@@ -23,10 +25,10 @@ for i=1:numel(monkey(1).day)
         if (pings > 0)
             %pull out all the pings from each channel
             for k=1:numel(chan)
-                monkeyNew(1).day(i).incorrect.(chan{k})(idx,:) = [];
+                monkeyNew(1).day(i).correct.(chan{k})(idx,:) = [];
             end
             %keep track of total number of pings per area per day
-            counts.day(i).incorrect.(chan{j}) = pings;
+            counts.day(i).(chan{j}) = pings;
         end
     end
 end
