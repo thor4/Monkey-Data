@@ -35,3 +35,5 @@ https://blogs.mathworks.com/loren/2005/12/13/use-dynamic-field-references/
 
 ["ping rejection"]
 2. Used pingRejNested.m in conjunction with ping_rej function to remove all pings outside the [-750,750] microvolt range for Monkey 1. This range was determined after viewing the earlier plot where all time series were graphed on top of each other. Copied the "monkey" variable as "monkeyNew" and re-wrote the areas that had pings removed. Renamed "monkeyNew" back to "monkey" and saved in file mGoodStableRule1PingRej-split_by_Day_BehResp_and_Area.mat on koko
+
+3. Used session_erp.m function to build ERPs for each day in analysis.m. 
