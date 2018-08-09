@@ -44,3 +44,7 @@ https://blogs.mathworks.com/loren/2005/12/13/use-dynamic-field-references/
 
 ["python transfer"]
 1. used mat_to_python.m to break up the large m1GoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat file into smaller .mat files: m1GoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat contains monkey1 variable which has correct and incorrect split for monkey 1. m2FirstHalfCorrectGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat contains monkey2C1st which has days 1-12 correct-only for monkey 2. m2SecondHalfCorrectGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat contains monkey2C2nd which has days 13-24 correct-only for monkey 2. m2FirstHalfIncorrectGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat contains monkey2I1st which has days 1-12 incorrect-only for monkey 2. m2SecondHalfIncorrectGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat contains monkey2I2nd which has days 13-24 incorrect-only for monkey 2.
+
+
+["new h5 python transfer"]
+1. used create_hdf5.m to create uncompressed h5 file by crawling through the monkey data structure from the m1GoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat file. Saved the 4gb h5 file as mGoodStableRule1PingRej.h5
