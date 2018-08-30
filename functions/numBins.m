@@ -32,4 +32,4 @@ end
 % entropy in all conditions, electrodes, and subjects. This is demonstrated in section 29.9.
 % Thus, a recommended strategy is to compute the optimal number of bins for each variable,
 % take the ceiling (i.e., round up) of the average of the optimal number of bins, and then apply
-% this to all variables. This procedure is used in the online Matlab code.
+% this to all variables. 
