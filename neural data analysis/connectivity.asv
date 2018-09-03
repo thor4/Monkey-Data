@@ -28,7 +28,7 @@ d = 'd%i';
 
 %% Step 1: compute optimal number of bins for each variable
 tic
-%monkey1
+%monkey 1
 for i=1:numel(monkey(1).day)
     for j=1:numel(resp)
         chan = fieldnames(monkey(1).day(i).(resp{j}));

@@ -118,4 +118,13 @@ baseidx = dsearchn(EEG.times',[-500 -200]');
 temppower = mean(abs(reshape(eegconv,EEG.pnts,EEG.trials)).^2,2);
 eegpower(fi,:) = 10*log10(temppower./mean(temppower(baseidx(1):baseidx(2))));
 
-
+% 2-10Hz
+% window=0.5s (500ms) (2Hz freq resolution)
+% step=0.1s (100ms)
+% t=window
+% w=4 (4 Hz freq smoothing) (check if this is good)
+% num_tapers=3
+% p=2tw-num_tapers (1)
+% 10Hz = 10 cycles / 1 second = 1 cycle / .1 seconds = 1 cycle / 100 milliseconds
+% 3.12Hz = 3.12 cycles / 1 second = 1 cycle / 0.32051282051282051282051282051282 seconds = 1 cycle / ~321 milliseconds
+% 2tw-p = num_tapers

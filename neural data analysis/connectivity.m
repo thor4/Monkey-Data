@@ -28,20 +28,19 @@ d = 'd%i';
 
 %% Step 1: compute optimal number of bins for each variable
 tic
-%monkey1
+%monkey 1
 for i=1:numel(monkey(1).day)
     for j=1:numel(resp)
         chan = fieldnames(monkey(1).day(i).(resp{j}));
         %C = combnk(v,k) returns all combinations of the n elements in v taken k at a time.
         C = combnk(chan,2); %all chan combinations
-        size(C,1); %total number of combinations
         day = sprintf(d, i);
-        for k=1:size(C,1)
+        for k=1:size(C,1) %total number of combinations
             for timei = 1:length(times2save)
                 %pull out channel combination
-                data1 = monkey(1).day(i).(resp{j}).(C{j,1});
+                data1 = monkey(1).day(i).(resp{j}).(C{k,1});
                 monkeyData1 = data1(:,times2saveidx(timei)-timewindowidx:times2saveidx(timei)+timewindowidx);
-                data2 = monkey(1).day(i).(resp{j}).(C{j,2});
+                data2 = monkey(1).day(i).(resp{j}).(C{k,2});
                 monkeyData2 = data1(:,times2saveidx(timei)-timewindowidx:times2saveidx(timei)+timewindowidx);
                 % compute optimal number of bins for each variable
                 numbins(1,timei,k) = numBins(monkeyData1(:));
@@ -59,14 +58,13 @@ for i=1:numel(monkey(2).day)
         chan = fieldnames(monkey(2).day(i).(resp{j}));
         %C = combnk(v,k) returns all combinations of the n elements in v taken k at a time.
         C = combnk(chan,2); %all chan combinations
-        size(C,1); %total number of combinations
         day = sprintf(d, i);
-        for k=1:size(C,1)
+        for k=1:size(C,1) %total number of combinations
             for timei = 1:length(times2save)
                 %pull out channel combination
-                data1 = monkey(2).day(i).(resp{j}).(C{j,1});
+                data1 = monkey(2).day(i).(resp{j}).(C{k,1});
                 monkeyData1 = data1(:,times2saveidx(timei)-timewindowidx:times2saveidx(timei)+timewindowidx);
-                data2 = monkey(2).day(i).(resp{j}).(C{j,2});
+                data2 = monkey(2).day(i).(resp{j}).(C{k,2});
                 monkeyData2 = data1(:,times2saveidx(timei)-timewindowidx:times2saveidx(timei)+timewindowidx);
                 % compute optimal number of bins for each variable
                 numbins(1,timei,k) = numBins(monkeyData1(:));
