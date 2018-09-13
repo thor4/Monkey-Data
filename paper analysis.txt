@@ -28,6 +28,9 @@ https://blogs.mathworks.com/loren/2005/12/13/use-dynamic-field-references/
 
 2. create analytic (time-frequency) signal using chronux for frequency bins: 2-60Hz (500ms window, 50ms step), 61-120Hz (200ms window, 20ms step), 121-180Hz (100ms window, 10ms step), 181-240Hz (50ms window, 5ms step). This will create 4 separate traces/spectrograms per trial per session per day. Save all within the same .mat file, try to append within trial cell {eg: t32}
 
+WAVELETS
+2. Had to start at 3Hz wavelets since 2Hz wavelets didn't taper to 0 back to the [-500,0] baseline epoch.
+
 
 -------Within Session----
 
