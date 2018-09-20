@@ -3,25 +3,26 @@
 %initialize variables
 srate = 1000; % 1,000Hz
 % -500:0 baseline, 1:500 sample, 501:1310 delay (all in ms)
-wavelet_time = -.5:1/srate:.5; % in seconds 
+wavet = -.5:1/srate:.5; % in seconds 
 min_freq =  3;
 max_freq = 235;
 num_frex = 120;
 frex = logspace(log10(min_freq),log10(max_freq),num_frex);
 s    = logspace(log10(3),log10(12),num_frex)./(2*pi*frex); %width of gaussian
+fwhm = logspace(.8,.7,nfrex); %logspace or linspace for fwhm?
 
 %% Check wavelets to ensure they taper to 0 at either end
 
 % make wavelet
 for fi=1:num_frex
-    wavelet(fi,:) = exp(2*1i*pi*frex(fi).*wavelet_time) .* exp(-wavelet_time.^2./(2*(s(fi)^2)));
+    wavelet(fi,:) = exp(2*1i*pi*frex(fi).*wavet) .* exp(-wavet.^2./(2*(s(fi)^2)));
 end
 
 % now plot wavelets in groups of 10 at a time..
 figure
 for fi=1:5
     subplot(5,1,fi)
-    plot(wavelet_time,real(wavelet(fi,:)))
+    plot(wavet,real(wavelet(fi,:)))
     title(sprintf('Wavelet at %fHz, s=%f number of cycles',frex(fi),s(fi)*(2*pi*frex(fi))));
 end
 
