@@ -7,11 +7,102 @@ wavet = -.5:1/srate:.5; % in seconds
 min_freq =  3;
 max_freq = 235;
 num_frex = 120;
+N     = length(wavet);
+hz    = linspace(0,srate/2,floor(N/2)+1); % pos frequencies (not neg) up to Nyquist
+hzf = linspace(0,srate,N); % total frequencies from fft
 frex = logspace(log10(min_freq),log10(max_freq),num_frex);
 s    = logspace(log10(3),log10(12),num_frex)./(2*pi*frex); %width of gaussian
 fwhm = logspace(.8,.7,nfrex); %logspace or linspace for fwhm?
 
-%% Check wavelets to ensure they taper to 0 at either end
+%% Make wavelets, ensure they taper to 0 at either end in time domain and
+% ensure Gaussian in frequency domain
+
+% Cohen's code from Google group (using n-cycles)
+srate = 1000;
+frex  = linspace(.5,200,50);
+s2 = 2*(linspace(5,25,length(frex))./(2*pi*frex)).^2;
+
+wavet = -.5:1/srate:.5;
+
+for fi=1:length(frex)
+    waves(fi,:) = exp(2*1i*pi*frex(fi)*wavet).*exp(-wavet.^2/s2(fi));
+end
+
+subplot(211), plot(wavet,real(waves))
+
+% fft all the wavelets
+for ffti=1:size(waves,1)
+    waves_fft(ffti,:) = fft(waves(ffti,:));
+end
+
+subplot(212)
+plot(linspace(0,srate,length(wavet)),abs(waves_fft).^2)
+set(gca,'xlim',[30 62])
+% ----------------
+
+%% now using fwhm-specified in time domain
+frex  = logspace(log10(3.5),log10(200),50);
+fwhm = logspace(log10(.350),log10(.025),length(frex)); % in seconds
+midp = dsearchn(wavet',0);
+wavpts = length(wavet);
+hz = linspace(0,srate/2,floor(wavpts/2)+1);
+% outputs
+empfwhmT = zeros(length(frex),1);
+% loop over frequencies
+for fi=1:length(frex)
+    % create the Gaussian using the FWHM formula (equation 3)
+    gwin = exp( (-4*log(2)*wavet.^2) ./ fwhm(fi)^2 );
+    % measure the empirical fwhm (time domain)
+    empfwhmT(fi) = wavet(midp-1+dsearchn(gwin(midp:end)',.5)) - ...
+    wavet(dsearchn(gwin(1:midp)',.5));
+end 
+% empirical is pretty close to specified
+% now make the wavelets and visualize them in time and frequency domains in
+% addition to computing their fwhm 
+
+empfwhmF = zeros(length(frex),1);
+
+for fi=1:length(frex)
+    wavelets(fi,:) = exp(2*1i*pi*frex(fi)*wavet).*exp( (-4*log(2)*wavet.^2) ./ fwhm(fi)^2 );
+    wavelets_fft(fi,:) = fft(wavelets(fi,:)); % frequency domain
+    wavelets_fft(fi,:) = wavelets_fft(fi,:)./max(wavelets_fft(fi,:)); % normalize 
+    % measure the empirical fwhm (frequency domain)
+    magnitude = abs(wavelets_fft(fi,1:length(hz)));
+     % find left and right 1/2
+    [~,peakx]  = max(wavelets_fft(fi,:)); 
+    [~,left5]  = min(abs(wavelets_fft(fi,1:peakx)-.5));
+    [~,right5] = min(abs(wavelets_fft(fi,peakx:end)-.5));
+    right5 = right5+peakx-1;
+    empfwhmF(fi) = hz(right5)-hz(left5);
+end
+
+% plot wavelets in time domain- ensure all taper to 0 (or very close)
+figure(1), clf
+subplot(211), plot(wavet,real(wavelets))
+% plot(time,signal,'k','linew',2)
+xlabel('Time (s)'), ylabel('Amplitude (gain)')
+title('Time domain')
+% plot wavelets in frequency domain- ensure all are symmetric about their
+% peak frequency and they taper to 0 on the ends
+subplot(212)
+plot(hz,abs(wavelets_fft(:,1:length(hz))).^2)
+set(gca,'xlim',[0 250])
+xlabel('Frequency (Hz)'), ylabel('Normalized Power')
+title('Frequency domain')
+
+% plot FWHM in time domain to show how much temporal smoothing occurs
+figure(2), clf
+subplot(211), plot(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
+set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmT)*1000*1.05])
+xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (ms)')
+title('Time domain')
+% plot FWHM in frequency domain to show how much spectral smoothing occurs
+subplot(212)
+plot(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
+set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05])
+xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (Hz)')
+title('Frequency domain')
+
 
 % make wavelet
 for fi=1:num_frex
