@@ -42,7 +42,7 @@ set(gca,'xlim',[30 62])
 
 %% now using fwhm-specified in time domain
 frex  = logspace(log10(3.5),log10(200),50);
-fwhm = logspace(log10(.350),log10(.025),length(frex)); % in seconds
+fwhm = logspace(log10(.350),log10(.025),length(frex)); % in seconds **TRY WITH 25ms and with 50ms**
 midp = dsearchn(wavet',0);
 wavpts = length(wavet);
 hz = linspace(0,srate/2,floor(wavpts/2)+1);
