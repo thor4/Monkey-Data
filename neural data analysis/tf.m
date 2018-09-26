@@ -4,48 +4,55 @@
 srate = 1000; % 1,000Hz
 % -500:0 baseline, 1:500 sample, 501:1310 delay (all in ms)
 wavet = -.5:1/srate:.5; % in seconds 
-min_freq =  3;
-max_freq = 235;
-num_frex = 120;
-N     = length(wavet);
-hz    = linspace(0,srate/2,floor(N/2)+1); % pos frequencies (not neg) up to Nyquist
-hzf = linspace(0,srate,N); % total frequencies from fft
+min_freq = 3.5;
+max_freq = 200;
+num_frex = 50;
+min_fwhm = .350; % in seconds
+max_fwhm = .050; % in seconds
+wavpts = length(wavet);
+hz = linspace(0,srate/2,floor(wavpts/2)+1); % pos frequencies (not neg) up to Nyquist
+% hzf = linspace(0,srate,N); % total frequencies from fft
 frex = logspace(log10(min_freq),log10(max_freq),num_frex);
 s    = logspace(log10(3),log10(12),num_frex)./(2*pi*frex); %width of gaussian
-fwhm = logspace(.8,.7,nfrex); %logspace or linspace for fwhm?
+fwhm = logspace(log10(min_fwhm),log10(max_fwhm),length(frex)); % in seconds **TRY SPECTROGRAMS WITH 25ms and with 50ms**
+
+% %% Make wavelets, ensure they taper to 0 at either end in time domain and
+% % ensure Gaussian in frequency domain
+% 
+% % Using n-cycles (Cohen's code from Google group)
+% srate = 1000;
+% frex  = linspace(.5,200,50);
+% s2 = 2*(linspace(5,25,length(frex))./(2*pi*frex)).^2;
+% 
+% wavet = -.5:1/srate:.5;
+% 
+% for fi=1:length(frex)
+%     waves(fi,:) = exp(2*1i*pi*frex(fi)*wavet).*exp(-wavet.^2/s2(fi));
+% end
+% 
+% subplot(211), plot(wavet,real(waves))
+% 
+% % fft all the wavelets
+% for ffti=1:size(waves,1)
+%     waves_fft(ffti,:) = fft(waves(ffti,:));
+% end
+% 
+% subplot(212)
+% plot(linspace(0,srate,length(wavet)),abs(waves_fft).^2)
+% set(gca,'xlim',[30 62])
+% % now plot wavelets in groups of 10 at a time..
+% figure
+% for fi=1:5
+%     subplot(5,1,fi)
+%     plot(wavet,real(wavelet(fi,:)))
+%     title(sprintf('Wavelet at %fHz, s=%f number of cycles',frex(fi),s(fi)*(2*pi*frex(fi))));
+% end
 
 %% Make wavelets, ensure they taper to 0 at either end in time domain and
 % ensure Gaussian in frequency domain
 
-% Cohen's code from Google group (using n-cycles)
-srate = 1000;
-frex  = linspace(.5,200,50);
-s2 = 2*(linspace(5,25,length(frex))./(2*pi*frex)).^2;
-
-wavet = -.5:1/srate:.5;
-
-for fi=1:length(frex)
-    waves(fi,:) = exp(2*1i*pi*frex(fi)*wavet).*exp(-wavet.^2/s2(fi));
-end
-
-subplot(211), plot(wavet,real(waves))
-
-% fft all the wavelets
-for ffti=1:size(waves,1)
-    waves_fft(ffti,:) = fft(waves(ffti,:));
-end
-
-subplot(212)
-plot(linspace(0,srate,length(wavet)),abs(waves_fft).^2)
-set(gca,'xlim',[30 62])
-% ----------------
-
-%% now using fwhm-specified in time domain
-frex  = logspace(log10(3.5),log10(200),50);
-fwhm = logspace(log10(.350),log10(.025),length(frex)); % in seconds **TRY SPECTROGRAMS WITH 25ms and with 50ms**
+% now using fwhm-specified in time domain
 midp = dsearchn(wavet',0);
-wavpts = length(wavet);
-hz = linspace(0,srate/2,floor(wavpts/2)+1);
 % outputs
 empfwhmT = zeros(length(frex),1);
 % loop over frequencies
@@ -103,43 +110,7 @@ set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05])
 xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (Hz)')
 title('Frequency domain')
 
-
-% make wavelet
-for fi=1:num_frex
-    wavelet(fi,:) = exp(2*1i*pi*frex(fi).*wavet) .* exp(-wavet.^2./(2*(s(fi)^2)));
-end
-
-% now plot wavelets in groups of 10 at a time..
-figure
-for fi=1:5
-    subplot(5,1,fi)
-    plot(wavet,real(wavelet(fi,:)))
-    title(sprintf('Wavelet at %fHz, s=%f number of cycles',frex(fi),s(fi)*(2*pi*frex(fi))));
-end
-
-
-%% check the frequency representation of the wavelets
-
-figure(5), clf
-
-% hz vector
-hz = linspace(0,srate/2,floor(length(wavtime)/2)-1);
-
-for fi=1:nFrex
-    
-    % create wavelet
-    cmw = exp(  2*1i*pi*frex(fi)*wavtime - (wavtime.^2)/(2*s(fi)^2) );
-    cmwX = fft(cmw,nConv);
-    
-    % plot wavelet and its power spectrum
-    subplot(211), plot(real(cmw))
-    subplot(212), plot(hz,2*abs(cmwX(1:length(hz))));
-    
-    title([ 'Frequency = ' num2str(frex(fi)) ])
-    set(gca,'xlim',[0 80])
-    pause % only the user can continue
-end
-
+%% Create analytic signal using the complex morlet wavelet family
 
 
 %% Time-frequency decomposition via chronux
