@@ -111,7 +111,12 @@ xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (Hz)')
 title('Frequency domain')
 
 %% Create analytic signal using the complex morlet wavelet family for both 
-% monkeys, both conditions, all days, all channels and all trials
+% monkeys, both conditions
+% % create wavelet
+% frequency = 6; % in Hz, as usual
+% time = -1:1/EEG.srate:1;
+% s    = (4/(2*pi*frequency))^2; % note that s is squared here rather than in the next line...
+% wavelet = exp(2*1i*pi*frequency.*time) .* exp(-time.^2./(2*s)/frequency);
 
 % load monkey data
 load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
