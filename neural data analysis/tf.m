@@ -195,15 +195,21 @@ for i=1:numel(monkey(monkeyN).day)
 end
 toc
 
+%% Visualizations
 
+figure(8), clf
 
+subplot(211)
+plot(signalt,mean(signal,2))
+% set(gca,'ylim',[-.05 1.05])
+ylabel('Amplitude'), title('ERP')
 
+subplot(212)
+contourf(sigtime,frex,tf,40,'linecolor','none')
+set(gca,'clim',[0 .1])
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), 
+% ylabel('Raw power (\muV^2)') colorbar label
 
-
-convolution_result_fft = ifft(fft_wavelet.*fft_data,n_convolution) * sqrt(s);
-
-% cut off edges
-convolution_result_fft = convolution_result_fft(half_of_wavelet_size+1:end-half_of_wavelet_size);
 
 % plot for comparison
 figure
@@ -222,41 +228,6 @@ plot(EEG.times,angle(convolution_result_fft))
 xlabel('Time (ms)'), ylabel('Phase angle (rad.)')
 title([ 'Angle of vector is phase angle time series at ' num2str(frequency) ' Hz.' ])
 
-%% Time-frequency decomposition via chronux
-%load monkey data
-load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat') 
-mwindow = 0.5; %in seconds
-%allow for a step size with 75% overlap
-movingwin=[mwindow mwindow*.05]; % set the moving window dimensions, 500ms window 50ms step
-params.Fs=1000; % sampling frequency
-params.fpass=[3 60]; % frequency of interest
-params.tapers=[5 9]; % tapers
-params.trialave=1; % average over trials
-params.err=0; % no error computation
-
-%initialize all variables
-i=1; %day 1
-j=1; %resp 1
-k=1; %chan 1
-l=1; %trial 1
-resp = fieldnames(monkey(1).day(1));
-monkeyTime = -500:1:1310; %total trial time (ms)
-times2save = -500+(movingwin(1)*1000)/2-1:movingwin(2)*1000:1310-(movingwin(1)*1000)/2; 
-%allows room for half of time_window on front & back
-
-% define baseline period
-baselinetime = [ -400 -100 ]; % in ms
-
-% convert baseline window time to indices
-[~,baselineidx(1)]=min(abs(times2save-baselinetime(1)));
-[~,baselineidx(2)]=min(abs(times2save-baselinetime(2)));
-
-chan = fieldnames(monkey(1).day(i).(resp{j}));
-chan_combo = combnk(chan,2); %all chan combinations
-size(chan_combo,1); %total number of combinations
-%pull out channel combination
-data1 = monkey(1).day(i).(resp{j}).(chan_combo{k,1});
-data2 = monkey(1).day(i).(resp{j}).(chan_combo{k,2});
 
 %compute coherence (S1 & S2 only hold the power, not analytic signal)
 [C,phi,S12,S1,S2,t,f] = cohgramc(data1',data2',movingwin,params);
@@ -303,5 +274,3 @@ set(gca,'clim',[-.075 .075],'yscale','log','ytick',round(logspace(log10(frex(1))
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), title('MI Based on Power')
 c = colorbar; set(get(c,'label'),'string','MI (baseline subtracted)');    
 
-%% Time-frequency decomposition via wavelets
-%load monkey data
