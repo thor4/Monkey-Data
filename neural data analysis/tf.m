@@ -121,13 +121,14 @@ signalt = -.5:1/srate:1.31; % in seconds
 % begin definining convolution parameters
 n_wavelet = length(wavet);
 half_of_wavelet_size = floor(length(wavet)/2)+1;
-monkeyN = 1; % which monkey (1 or 2)
+monkeyN = 2; % which monkey (1 or 2)
 
 % get signal
 d = 'd%i';
 tic
+% numel(monkey(monkeyN).day)
 %correct
-for i=1:numel(monkey(monkeyN).day)
+for i=17:numel(monkey(monkeyN).day)
     chan = fieldnames(monkey(monkeyN).day(i).correct);
     day = sprintf(d, i);
     for j=1:numel(chan)
@@ -159,7 +160,9 @@ for i=1:numel(monkey(monkeyN).day)
         clear as % start anew with this var for ea. loop
     end
 end
+toc
 
+tic
 %incorrect
 for i=1:numel(monkey(monkeyN).day)
     chan = fieldnames(monkey(monkeyN).day(i).incorrect);
