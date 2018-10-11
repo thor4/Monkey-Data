@@ -118,19 +118,24 @@ load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
 
 % initialize variables
 signalt = -.5:1/srate:1.31; % in seconds
+% setup response structs
+monkey(1).correct=[];
+monkey(1).incorrect=[];
 % begin definining convolution parameters
 n_wavelet = length(wavet);
 half_of_wavelet_size = floor(length(wavet)/2)+1;
-monkeyN = 2; % which monkey (1 or 2)
+monkeyN = 1; % which monkey (1 or 2)
+m1chans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
+m1chansa = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
 
 % get signal
-d = 'd%i';
-tic
+% d = 'd%i';
 % numel(monkey(monkeyN).day)
+tic
 %correct
-for i=17:numel(monkey(monkeyN).day)
+for i=1:numel(monkey(monkeyN).day)
     chan = fieldnames(monkey(monkeyN).day(i).correct);
-    day = sprintf(d, i);
+%     day = sprintf(d, i);
     for j=1:numel(chan)
         signal = monkey(monkeyN).day(i).correct.(chan{j})'; % change to time-by-trials
         signal_alltrials = reshape(signal,1,[]); % reshape to 1D time-trials
@@ -139,34 +144,46 @@ for i=17:numel(monkey(monkeyN).day)
         n_convolution = n_wavelet+n_data-1;
         % step 2: take FFTs
         fft_data = fft(signal_alltrials,n_convolution); % all trials for chan
-        for fi=1:length(frex)
-            % FFT of wavelet
-            fft_wavelet = fft(wavelets(fi,:),n_convolution);
-            % step 3: normalize kernel by scaling amplitudes to one in the 
-            % frequency domain. prevents amplitude from decreasing with 
-            % increasing frequency. diff from 1/f scaling
-            fft_wavelet = fft_wavelet ./ max(fft_wavelet);
-            % step 4: point-wise multiply and take iFFT
-            as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
-            % step 5: trim wings
-            as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
-            % step 6: reshape back to time-by-trials
-            as_ = reshape(as_,size(signal,1),size(signal,2));
-            as(:,:,fi) = as_; % store analytic signal for each frequency
-            clear fft_wavelet as_ % start anew with these var's ea. loop
+        for k=1:numel(m1chans)
+            if endsWith(chan{j},m1chans{k}) %which chan
+                for fi=1:length(frex)
+                    % FFT of wavelet
+                    fft_wavelet = fft(wavelets(fi,:),n_convolution);
+                    % step 3: normalize kernel by scaling amplitudes to one in the 
+                    % frequency domain. prevents amplitude from decreasing with 
+                    % increasing frequency. diff from 1/f scaling
+                    fft_wavelet = fft_wavelet ./ max(fft_wavelet);
+                    % step 4: point-wise multiply and take iFFT
+                    as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
+                    % step 5: trim wings
+                    as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
+                    % step 6: reshape back to time-by-trials
+                    as_ = reshape(as_,size(signal,1),size(signal,2));
+                    as(fi,:,:) = abs( as_ ).^2; % store power for each frequency
+                    clear fft_wavelet as_ % start anew with these var's ea. loop
+                end
+                if isfield(monkey(monkeyN).correct,(m1chansa{k})) % field exists?
+                    aTrials = size(monkey(monkeyN).correct.(m1chansa{k}),3);
+                    monkey(monkeyN).correct.(m1chansa{k})(:,:,aTrials+1:aTrials+size(signal,2)) = as;
+                else
+                    monkey(monkeyN).correct.(m1chansa{k}) = as; % freq x time x trials
+                end
+                clear as % start anew with this var ea. loop
+            end
         end
-        % store analytic signal for all frequencies for each channel
-        monkey(monkeyN).day(i).correct.(chan{j}) = as;
-        clear as % start anew with this var for ea. loop
+            % store analytic signal for all frequencies for each channel
+%         monkey(monkeyN).day(i).correct.(chan{j}) = as;
+%         clear as % start anew with this var for ea. loop
     end
 end
 toc
+
 
 tic
 %incorrect
 for i=1:numel(monkey(monkeyN).day)
     chan = fieldnames(monkey(monkeyN).day(i).incorrect);
-    day = sprintf(d, i);
+%     day = sprintf(d, i);
     for j=1:numel(chan)
         signal = monkey(monkeyN).day(i).incorrect.(chan{j})'; % change to time-by-trials
         signal_alltrials = reshape(signal,1,[]); % reshape to 1D time-trials
@@ -175,28 +192,350 @@ for i=1:numel(monkey(monkeyN).day)
         n_convolution = n_wavelet+n_data-1;
         % step 2: take FFTs
         fft_data = fft(signal_alltrials,n_convolution); % all trials for chan
-        for fi=1:length(frex)
-            % FFT of wavelet
-            fft_wavelet = fft(wavelets(fi,:),n_convolution);
-            % step 3: normalize kernel by scaling amplitudes to one in the 
-            % frequency domain. prevents amplitude from decreasing with 
-            % increasing frequency. diff from 1/f scaling
-            fft_wavelet = fft_wavelet ./ max(fft_wavelet);
-            % step 4: point-wise multiply and take iFFT
-            as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
-            % step 5: trim wings
-            as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
-            % step 6: reshape back to time-by-trials
-            as_ = reshape(as_,size(signal,1),size(signal,2));
-            as(:,:,fi) = as_; % store analytic signal for each frequency
-            clear fft_wavelet as_ % start anew with these var's ea. loop
+        for k=1:numel(m1chans)
+            if endsWith(chan{j},m1chans{k}) %which chan
+                for fi=1:length(frex)
+                    % FFT of wavelet
+                    fft_wavelet = fft(wavelets(fi,:),n_convolution);
+                    % step 3: normalize kernel by scaling amplitudes to one in the 
+                    % frequency domain. prevents amplitude from decreasing with 
+                    % increasing frequency. diff from 1/f scaling
+                    fft_wavelet = fft_wavelet ./ max(fft_wavelet);
+                    % step 4: point-wise multiply and take iFFT
+                    as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
+                    % step 5: trim wings
+                    as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
+                    % step 6: reshape back to time-by-trials
+                    as_ = reshape(as_,size(signal,1),size(signal,2));
+                    as(fi,:,:) = abs( as_ ).^2; % store power for each frequency
+                    clear fft_wavelet as_ % start anew with these var's ea. loop
+                end
+                if isfield(monkey(monkeyN).incorrect,(m1chansa{k})) % field exists?
+                    aTrials = size(monkey(monkeyN).incorrect.(m1chansa{k}),3);
+                    monkey(monkeyN).incorrect.(m1chansa{k})(:,:,aTrials+1:aTrials+size(signal,2)) = as;
+                else
+                    monkey(monkeyN).incorrect.(m1chansa{k}) = as; % freq x time x trials
+                end
+                clear as % start anew with this var ea. loop
+            end
         end
-        % store analytic signal for all frequencies for each channel
-        monkey(monkeyN).day(i).incorrect.(chan{j}) = as;
-        clear as % start anew with this var for ea. loop
+            % store analytic signal for all frequencies for each channel
+%         monkey(monkeyN).day(i).correct.(chan{j}) = as;
+%         clear as % start anew with this var for ea. loop
     end
 end
 toc
+
+%% Aggregate power for each area
+
+% load data
+% monkey 1 all days correct + incorrect
+tic
+load('m1GoodStableRule1PingRejAnSig-AllDays_Cor_Inc_Allchans.mat')
+toc
+
+monkeyN = 1; %which monkey
+m1chans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
+m1chansa = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
+% setup matrix as area x condition x frequency x time x trial using fake
+% data so that cat function below will work
+monkey18B = repmat(1i,[8 2 50 1811 2]);
+% % remove extra rows created during initialization
+% monkey18B(2,:,:,:,:)=[]; monkey18B(:,2,:,:,:)=[]; monkey18B(:,:,2,:,:)=[]; 
+% monkey18B(:,:,:,2,:)=[]; monkey18B(:,:,:,:,2)=[]; monkey18B(1,:,:,:,:)=[]; 
+% monkey18B(:,1,:,:,:)=[]; monkey18B(:,:,1,:,:)=[]; monkey18B(:,:,:,1,:)=[]; 
+% monkey18B(:,:,:,:,1)=[]; 
+
+% initialize signal variable
+signal = zeros(8,2,50,1811,2);
+
+% for k=1:numel(m1chans) % initialize variables
+%     m1.correct.(m1chansa{k})=ones(1811,1,50);
+%     m1.incorrect.(m1chansa{k})=ones(1811,1,50);
+% end
+
+tic
+% correct
+for i=1:numel(monkey1.day)
+    chan = fieldnames(monkey1.day(i).correct);
+    for j=1:numel(chan)
+        k=1; % which chan
+        if endsWith(chan{j},m1chans{k}) %which chan
+            % change to area x cond x freq x time x trial
+            data = permute(monkey1.day(i).correct.(chan{j}),[3 1 2]);
+            signal = zeros(8,2,50,1811,size(data,3));
+            signal(7,1,:,:,:) = permute(monkey1.day(i).correct.(chan{j}),[3 1 2]);
+            % save in aggregate data structure
+            monkey18B = cat(5,monkey18B,signal);
+            m1.correct.(m1chansa{k}) = cat(2,m1.correct.(m1chansa{k}),);
+        end
+        end
+    end
+    monkey1.day(i).correct = []; %remove day to free-up memory
+end
+signal = monkey1.day(1).correct.chan1PEC;
+signal_ = permute(signal,[3 2 1]);
+signal(1,1,45)
+signal_(45,1,1)
+% incorrect
+for i=1:numel(monkey1.day)
+    chan = fieldnames(monkey1.day(i).incorrect);
+    for j=1:numel(chan)
+        for k=1:numel(m1chans) % initialize variables
+            if endsWith(chan{j},m1chans{k}) %which chan
+                % save in aggregate data structure
+                m1.incorrect.(m1chansa{k}) = cat(2,m1.incorrect.(m1chansa{k}),monkey1.day(i).incorrect.(chan{j}));
+            end
+        end
+    end
+    monkey1.day(i).incorrect = []; %remove day to free-up memory
+end
+toc
+
+% initialize output time-frequency data
+% notice that here we save all trials
+tf = zeros(2,num_frex,length(times2save),ntrials);
+
+for fi=1:num_frex
+    
+    % run convolution
+    as1 = ifft(cmwX(fi,:).*dataX1);
+    as1 = as1(half_wav+1:end-half_wav);
+    as1 = reshape(as1,npnts,ntrials);
+    
+    % power on all trials from channel "1"
+    % only from times2saveidx!
+    tf(1,fi,:,:) = abs( as1(times2saveidx,:) ).^2;
+    
+    
+    % run convolution
+    as2 = ifft(cmwX(fi,:).*dataX2);
+    as2 = as2(half_wav+1:end-half_wav);
+    as2 = reshape(as2,npnts,ntrials);
+    
+    % power on all trials from channel "2"
+    % only from times2saveidx!
+    tf(2,fi,:,:) = 
+end
+
+% for convenience, compute the difference in power between the two channels
+diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
+
+
+%% plotting the raw data
+
+clim = [0 20000];
+
+figure(1), clf
+subplot(221)
+imagesc(times2save,frex,squeeze(mean( tf(1,:,:,:),4 )))
+set(gca,'clim',clim,'ydir','n','xlim',xlim)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title([ 'Channel ' num2str(chan1idx) ])
+
+subplot(222)
+imagesc(times2save,frex,squeeze(mean( tf(2,:,:,:),4 )))
+set(gca,'clim',clim,'ydir','n','xlim',xlim)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title([ 'Channel ' num2str(chan2idx) ])
+
+subplot(223)
+imagesc(times2save,frex,diffmap)
+set(gca,'clim',[-mean(clim) mean(clim)],'ydir','n','xlim',xlim)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title([ 'Difference: channels ' num2str(chan2idx) ' - ' num2str(chan1idx) ])
+
+%% statistics via permutation testing
+
+% p-value
+pval = 0.05;
+
+% convert p-value to Z value
+zval = abs(norminv(pval));
+
+% number of permutations
+n_permutes = 1000;
+
+% initialize null hypothesis maps
+permmaps = zeros(n_permutes,num_frex,length(times2save));
+
+% for convenience, tf power maps are concatenated
+%   in this matrix, trials 1:ntrials are from channel "1" 
+%   and trials ntrials+1:end are from channel "2"
+tf3d = cat(3,squeeze(tf(1,:,:,:)),squeeze(tf(2,:,:,:)));
+
+
+% generate maps under the null hypothesis
+for permi = 1:n_permutes
+    
+    % randomize trials, which also randomly assigns trials to channels
+    randorder = randperm(size(tf3d,3));
+    temp_tf3d = tf3d(:,:,randorder);
+    
+    % compute the "difference" map
+    % what is the difference under the null hypothesis?
+    permmaps(permi,:,:) = squeeze( mean(temp_tf3d(:,:,1:ntrials),3) - mean(temp_tf3d(:,:,ntrials+1:end),3) );
+end
+
+%% show non-corrected thresholded maps
+
+% compute mean and standard deviation maps
+mean_h0 = squeeze(mean(permmaps));
+std_h0  = squeeze(std(permmaps));
+
+% now threshold real data...
+% first Z-score
+zmap = (diffmap-mean_h0) ./ std_h0;
+
+% threshold image at p-value, by setting subthreshold values to 0
+zmap(abs(zmap)<zval) = 0;
+
+
+% now some plotting...
+
+figure(2), clf
+
+subplot(221)
+imagesc(times2save,frex,diffmap);
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','nor')
+title('TF map of real power values')
+
+subplot(222)
+imagesc(times2save,frex,diffmap);
+hold on
+contour(times2save,frex,logical(zmap),1,'linecolor','k');
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
+title('Power values and outlined significance regions')
+
+subplot(223)
+imagesc(times2save,frex,zmap);
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+set(gca,'clim',[-10 10],'xlim',xlim,'ydir','no')
+title('Thresholded TF map of Z-values')
+
+%% 
+
+
+
+
+
+
+%% corrections for multiple comparisons
+
+% initialize matrices for cluster-based correction
+max_cluster_sizes = zeros(1,n_permutes);
+% ... and for maximum-pixel based correction
+max_val = zeros(n_permutes,2); % "2" for min/max
+
+% loop through permutations
+for permi = 1:n_permutes
+    
+    % take each permutation map, and transform to Z
+    threshimg = squeeze(permmaps(permi,:,:));
+    threshimg = (threshimg-mean_h0)./std_h0;
+    
+    % threshold image at p-value
+    threshimg(abs(threshimg)<zval) = 0;
+    
+    
+    % find clusters (need image processing toolbox for this!)
+    islands = bwconncomp(threshimg);
+    if numel(islands.PixelIdxList)>0
+        
+        % count sizes of clusters
+        tempclustsizes = cellfun(@length,islands.PixelIdxList);
+        
+        % store size of biggest cluster
+        max_cluster_sizes(permi) = max(tempclustsizes);
+    end
+    
+    
+    % get extreme values (smallest and largest)
+    temp = sort( reshape(permmaps(permi,:,:),1,[] ));
+    max_val(permi,:) = [ min(temp) max(temp) ];
+    
+end
+
+%% show histograph of maximum cluster sizes
+
+figure(3), clf
+hist(max_cluster_sizes,20);
+xlabel('Maximum cluster sizes'), ylabel('Number of observations')
+title('Expected cluster sizes under the null hypothesis')
+
+
+% find cluster threshold (need image processing toolbox for this!)
+% based on p-value and null hypothesis distribution
+cluster_thresh = prctile(max_cluster_sizes,100-(100*pval));
+
+%% plots with multiple comparisons corrections
+
+% now find clusters in the real thresholded zmap
+% if they are "too small" set them to zero
+islands = bwconncomp(zmap);
+for i=1:islands.NumObjects
+    % if real clusters are too small, remove them by setting to zero!
+    if numel(islands.PixelIdxList{i}==i)<cluster_thresh
+        zmap(islands.PixelIdxList{i})=0;
+    end
+end
+
+% plot tresholded results
+figure(4), clf
+subplot(221)
+imagesc(times2save,frex,diffmap)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title('TF power, no thresholding') 
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
+
+subplot(222)
+imagesc(times2save,frex,diffmap)
+hold on
+contour(times2save,frex,logical(zmap),1,'linecolor','k')
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title('TF power with contour')
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
+
+subplot(223)
+imagesc(times2save,frex,zmap)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title('z-map, thresholded')
+set(gca,'clim',[-13 13],'xlim',xlim,'ydir','normal')
+
+%% now with max-pixel-based thresholding
+
+% find the threshold for lower and upper values
+thresh_lo = prctile(max_val(:,1),100-100*pval); % what is the
+thresh_hi = prctile(max_val(:,2),100-100*pval); % true p-value?
+
+% threshold real data
+zmap = diffmap;
+zmap(zmap>thresh_lo & zmap<thresh_hi) = 0;
+
+figure(5), clf
+subplot(221)
+imagesc(times2save,frex,diffmap)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title('tf power map, no thresholding') 
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','n')
+
+subplot(222)
+imagesc(times2save,frex,diffmap)
+hold on
+contour(times2save,frex,logical(zmap),1,'linecolor','k')
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title('tf power map with contour')
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','normal')
+
+subplot(223)
+imagesc(times2save,frex,zmap)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title('tf power map, thresholded')
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','no')
+
+%% end.
 
 %% Visualizations
 
