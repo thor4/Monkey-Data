@@ -138,6 +138,10 @@ for i=1:numel(monkey(monkeyN).day)
 %     day = sprintf(d, i);
     for j=1:numel(chan)
         signal = monkey(monkeyN).day(i).correct.(chan{j})'; % change to time-by-trials
+        % reflect the signal
+        reflectsig = [ signal(length(wavet):-1:1) signal signal(end:-1:end-(length(wavet)+1) ];
+            %chop off reflected parts
+            fsignal = reflectsig(length(wavet)+1:end-length(wavet));
         signal_alltrials = reshape(signal,1,[]); % reshape to 1D time-trials
         % step 1: finish defining convolution parameters
         n_data = length(signal_alltrials); % time*trials
