@@ -143,28 +143,36 @@ for i=1:numel(monkey(monkeyN).day)
 %     day = sprintf(d, i);
     for j=1:numel(chan)
         signal = monkey(monkeyN).day(i).correct.(chan{j})'; % change to time-by-trials
-        % reflect the signal
-        reflectsig = [ signal(n_wavelet:-1:1,1); signal(:,1); signal(end:-1:end-n_wavelet+1,1); ];
-        % plot original signal
-        figure(1), clf
-        subplot(211)
-        plot(signal(:,1)')
-        set(gca,'xlim',[0 numel(reflectsig)]-numel(signal(:,1)))
-        % plot reflected signal
-        subplot(212)
-        plot(length(signal(:,1))+1:2*length(signal(:,1)),signal(:,1),'k:')
-        hold on
-        plot(reflectsig)
-        set(gca,'xlim',[0 numel(reflectsig)])
-        legend({'original';'reflected'})
-        %chop off reflected parts
-        fsignal = reflectsig(length(wavet)+1:end-length(wavet));
-        signal_alltrials = reshape(signal,1,[]); % reshape to 1D time-trials
+        reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
+        % reflect all signals
+        for signalN=1:size(signal,2)
+            reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
+            reflectsig_all(:,signalN) = reflectsig;
+        end
+        % concatenate into a super-trial
+        reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
+%         % plot original signal
+%         figure(1), clf
+%         subplot(211)
+%         plot(signal(:,1)','LineWidth',2)
+%         set(gca,'xlim',[0 numel(reflectsig)]-n_wavelet)
+%         ylabel('Voltage (\muV)','FontSize',14)
+%         title('Original Signal','FontSize',16)
+%         % plot reflected signal
+%         subplot(212)
+%         plot(n_wavelet+1:length(signal(:,1))+n_wavelet,signal(:,1),'LineWidth',5,'color','g')
+%         hold on
+%         plot(reflectsig,'LineWidth',2)
+%         set(gca,'xlim',[0 numel(reflectsig)])
+%         title('Reflected Signal')
+%         xlabel('Time step (ms)','FontSize',14), ylabel('Voltage (\muV)','FontSize',14)
+%         title('Reflected Signal','FontSize',16)
+%         legend({'original';'reflected'},'FontSize',14,'Location','best')
         % step 1: finish defining convolution parameters
-        n_data = length(signal_alltrials); % time*trials
+        n_data = length(reflectsig_supertri); % time*trials
         n_convolution = n_wavelet+n_data-1;
         % step 2: take FFTs
-        fft_data = fft(signal_alltrials,n_convolution); % all trials for chan
+        fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
         for k=1:numel(m1chans)
             if endsWith(chan{j},m1chans{k}) %which chan
                 for fi=1:length(frex)
@@ -178,13 +186,16 @@ for i=1:numel(monkey(monkeyN).day)
                     as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
                     % step 5: trim wings
                     as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
-                    % step 6: reshape back to time-by-trials
-                    as_ = reshape(as_,size(signal,1),size(signal,2));
-                    as(fi,:,:) = abs( as_ ).^2; % store power for each frequency
+                    % step 6: reshape back to reflected time-by-trials
+                    as_ = reshape(as_,size(reflectsig_all,1),size(reflectsig_all,2));
+                    % step 7: chop off the reflections
+                    as_ = as_(n_wavelet+1:end-n_wavelet,:);
+                    as(fi,:,:) = abs( as_ ).^2; % store mean power for each frequency
                     clear fft_wavelet as_ % start anew with these var's ea. loop
                 end
                 if isfield(monkey(monkeyN).correct,(m1chansa{k})) % field exists?
                     aTrials = size(monkey(monkeyN).correct.(m1chansa{k}),3);
+                    % append trials for area
                     monkey(monkeyN).correct.(m1chansa{k})(:,:,aTrials+1:aTrials+size(signal,2)) = as;
                 else
                     monkey(monkeyN).correct.(m1chansa{k}) = as; % freq x time x trials
@@ -198,7 +209,6 @@ for i=1:numel(monkey(monkeyN).day)
     end
 end
 toc
-
 
 tic
 %incorrect
@@ -214,6 +224,7 @@ for i=1:numel(monkey(monkeyN).day)
         % step 2: take FFTs
         fft_data = fft(signal_alltrials,n_convolution); % all trials for chan
         for k=1:numel(m1chans)
+            [x]=endsWith(chan{j},m1chans);
             if endsWith(chan{j},m1chans{k}) %which chan
                 for fi=1:length(frex)
                     % FFT of wavelet
@@ -228,9 +239,11 @@ for i=1:numel(monkey(monkeyN).day)
                     as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
                     % step 6: reshape back to time-by-trials
                     as_ = reshape(as_,size(signal,1),size(signal,2));
-                    as(fi,:,:) = abs( as_ ).^2; % store power for each frequency
+                    as(k,fi,:) = mean( abs( as_ ).^2, 2 ); % store trial-averaged power for each frequency
                     clear fft_wavelet as_ % start anew with these var's ea. loop
                 end
+                % how to store as sessions? endsWith skips earlier values
+                % of k if parietal area comes first in chan1 ie
                 if isfield(monkey(monkeyN).incorrect,(m1chansa{k})) % field exists?
                     aTrials = size(monkey(monkeyN).incorrect.(m1chansa{k}),3);
                     monkey(monkeyN).incorrect.(m1chansa{k})(:,:,aTrials+1:aTrials+size(signal,2)) = as;
@@ -246,6 +259,9 @@ for i=1:numel(monkey(monkeyN).day)
     end
 end
 toc
+
+%% dB-normalize the session data
+
 
 %% Aggregate power for each area
 
