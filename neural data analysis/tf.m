@@ -118,12 +118,17 @@ load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
 
 % initialize variables
 signalt = -.5:1/srate:1.31; % in seconds
+% vector of time points to save in post-analysis downsampling
+times2save = -500:10:1310; % in ms
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+
 % setup response structs
-monkey(1).correct=[];
-monkey(1).incorrect=[];
+% monkey(1).correct=[];
+% monkey(1).incorrect=[];
 % begin definining convolution parameters
 n_wavelet = length(wavet);
-half_of_wavelet_size = floor(length(wavet)/2)+1;
+half_of_wavelet_size = floor(n_wavelet/2)+1;
 monkeyN = 1; % which monkey (1 or 2)
 m1chans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
 m1chansa = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
@@ -139,9 +144,21 @@ for i=1:numel(monkey(monkeyN).day)
     for j=1:numel(chan)
         signal = monkey(monkeyN).day(i).correct.(chan{j})'; % change to time-by-trials
         % reflect the signal
-        reflectsig = [ signal(length(wavet):-1:1) signal signal(end:-1:end-(length(wavet)+1) ];
-            %chop off reflected parts
-            fsignal = reflectsig(length(wavet)+1:end-length(wavet));
+        reflectsig = [ signal(n_wavelet:-1:1,1); signal(:,1); signal(end:-1:end-n_wavelet+1,1); ];
+        % plot original signal
+        figure(1), clf
+        subplot(211)
+        plot(signal(:,1)')
+        set(gca,'xlim',[0 numel(reflectsig)]-numel(signal(:,1)))
+        % plot reflected signal
+        subplot(212)
+        plot(length(signal(:,1))+1:2*length(signal(:,1)),signal(:,1),'k:')
+        hold on
+        plot(reflectsig)
+        set(gca,'xlim',[0 numel(reflectsig)])
+        legend({'original';'reflected'})
+        %chop off reflected parts
+        fsignal = reflectsig(length(wavet)+1:end-length(wavet));
         signal_alltrials = reshape(signal,1,[]); % reshape to 1D time-trials
         % step 1: finish defining convolution parameters
         n_data = length(signal_alltrials); % time*trials
