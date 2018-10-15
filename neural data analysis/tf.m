@@ -116,27 +116,19 @@ title('Frequency domain')
 % load monkey data
 load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
 
-% initialize variables
-signalt = -.5:1/srate:1.31; % in seconds
-% vector of time points to save in post-analysis downsampling
-times2save = -500:10:1310; % in ms
-% time vector converted to indices
-times2saveidx = dsearchn((signalt.*1000)',times2save');
-
 % begin definining convolution parameters
 n_wavelet = length(wavet);
 half_of_wavelet_size = floor(n_wavelet/2)+1;
-monkeyN = 1; % which monkey (1 or 2)
+monkeyN = 2; % which monkey (1 or 2)
 m1chans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
 m1areas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
+m2chans = {'6DR', '8AD', '8B', 'dPFC', 'LIP', 'PE', 'PEC', 'PG'};
+m2areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'};
 
 % setup response structs
 monkey(monkeyN).correct=[];
 monkey(monkeyN).incorrect=[];
 
-% get signal
-% d = 'd%i';
-% numel(monkey(monkeyN).day)
 tic
 %correct
 for i=1:numel(monkey(monkeyN).day)
@@ -175,8 +167,8 @@ for i=1:numel(monkey(monkeyN).day)
         % step 2: take FFTs
         fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
         % which area is this chan
-        for k=1:numel(m1areas)
-            if endsWith(chan{j},m1chans{k}) %which chan
+        for k=1:numel(m2areas)
+            if endsWith(chan{j},m2chans{k}) %which chan
                 area=k;
             end
         end
@@ -199,74 +191,136 @@ for i=1:numel(monkey(monkeyN).day)
             as(fi,:) = mean( abs( as_ ).^2, 2); 
             clear fft_wavelet as_ % start anew with these var's ea. loop
         end
-        if isfield(monkey(monkeyN).correct,(m1areas{area})) % field exists?
+        if isfield(monkey(monkeyN).correct,(m2areas{area})) % field exists?
             % yes, field exists..
-            aTrials = size(monkey(monkeyN).correct.(m1areas{area}),3);
+            aTrials = size(monkey(monkeyN).correct.(m2areas{area}),3);
             % append session for area in freq x time x session struct
-            monkey(monkeyN).correct.(m1areas{area})(:,:,aTrials+1) = as;
+            monkey(monkeyN).correct.(m2areas{area})(:,:,aTrials+1) = as;
         else
-            monkey(monkeyN).correct.(m1areas{area}) = as; % freq x time x sesh
+            monkey(monkeyN).correct.(m2areas{area}) = as; % freq x time x sesh
         end
         clear as % start anew with this var ea. loop
-            % store analytic signal for all frequencies for each channel
-%         monkey(monkeyN).day(i).correct.(chan{j}) = as;
-%         clear as % start anew with this var for ea. loop
     end
 end
-toc
 
-tic
 %incorrect
 for i=1:numel(monkey(monkeyN).day)
     chan = fieldnames(monkey(monkeyN).day(i).incorrect);
-%     day = sprintf(d, i);
     for j=1:numel(chan)
         signal = monkey(monkeyN).day(i).incorrect.(chan{j})'; % change to time-by-trials
-        signal_alltrials = reshape(signal,1,[]); % reshape to 1D time-trials
+        reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
+        % reflect all signals
+        for signalN=1:size(signal,2)
+            reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
+            reflectsig_all(:,signalN) = reflectsig;
+        end
+        % concatenate into a super-trial
+        reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
         % step 1: finish defining convolution parameters
-        n_data = length(signal_alltrials); % time*trials
+        n_data = length(reflectsig_supertri); % time*trials
         n_convolution = n_wavelet+n_data-1;
         % step 2: take FFTs
-        fft_data = fft(signal_alltrials,n_convolution); % all trials for chan
-        for k=1:numel(m1chans)
-            [x]=endsWith(chan{j},m1chans);
-            if endsWith(chan{j},m1chans{k}) %which chan
-                for fi=1:length(frex)
-                    % FFT of wavelet
-                    fft_wavelet = fft(wavelets(fi,:),n_convolution);
-                    % step 3: normalize kernel by scaling amplitudes to one in the 
-                    % frequency domain. prevents amplitude from decreasing with 
-                    % increasing frequency. diff from 1/f scaling
-                    fft_wavelet = fft_wavelet ./ max(fft_wavelet);
-                    % step 4: point-wise multiply and take iFFT
-                    as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
-                    % step 5: trim wings
-                    as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
-                    % step 6: reshape back to time-by-trials
-                    as_ = reshape(as_,size(signal,1),size(signal,2));
-                    as(k,fi,:) = mean( abs( as_ ).^2, 2 ); % store trial-averaged power for each frequency
-                    clear fft_wavelet as_ % start anew with these var's ea. loop
-                end
-                % how to store as sessions? endsWith skips earlier values
-                % of k if parietal area comes first in chan1 ie
-                if isfield(monkey(monkeyN).incorrect,(m1chansa{k})) % field exists?
-                    aTrials = size(monkey(monkeyN).incorrect.(m1chansa{k}),3);
-                    monkey(monkeyN).incorrect.(m1chansa{k})(:,:,aTrials+1:aTrials+size(signal,2)) = as;
-                else
-                    monkey(monkeyN).incorrect.(m1chansa{k}) = as; % freq x time x trials
-                end
-                clear as % start anew with this var ea. loop
+        fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
+        % which area is this chan
+        for k=1:numel(m2areas)
+            if endsWith(chan{j},m2chans{k}) %which chan
+                area=k;
             end
         end
-            % store analytic signal for all frequencies for each channel
-%         monkey(monkeyN).day(i).correct.(chan{j}) = as;
-%         clear as % start anew with this var for ea. loop
+        for fi=1:length(frex)
+            % FFT of wavelet
+            fft_wavelet = fft(wavelets(fi,:),n_convolution);
+            % step 3: normalize kernel by scaling amplitudes to one in the 
+            % frequency domain. prevents amplitude from decreasing with 
+            % increasing frequency. diff from 1/f scaling
+            fft_wavelet = fft_wavelet ./ max(fft_wavelet);
+            % step 4: point-wise multiply and take iFFT
+            as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
+            % step 5: trim wings
+            as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
+            % step 6: reshape back to reflected time-by-trials
+            as_ = reshape(as_,size(reflectsig_all,1),size(reflectsig_all,2));
+            % step 7: chop off the reflections
+            as_ = as_(n_wavelet+1:end-n_wavelet,:);
+            % store mean raw power for each frequency in freq x time
+            as(fi,:) = mean( abs( as_ ).^2, 2); 
+            clear fft_wavelet as_ % start anew with these var's ea. loop
+        end
+        if isfield(monkey(monkeyN).incorrect,(m2areas{area})) % field exists?
+            % yes, field exists..
+            aTrials = size(monkey(monkeyN).incorrect.(m2areas{area}),3);
+            % append session for area in freq x time x session struct
+            monkey(monkeyN).incorrect.(m2areas{area})(:,:,aTrials+1) = as;
+        else
+            monkey(monkeyN).incorrect.(m2areas{area}) = as; % freq x time x sesh
+        end
+        clear as % start anew with this var ea. loop
     end
 end
 toc
 
 %% dB-normalize the session data
 
+% define trial timeline
+signalt = -.5:1/srate:1.31; % in seconds
+% vector of time points to save in post-analysis downsampling
+times2save = -500:10:1310; % in ms
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+% define baseline time
+baset = [-.4 -.1]; % in seconds
+baseidx = dsearchn(signalt',baset');
+
+% compute condition-averaged baseline for each area in each monkey
+% mean over sessions then baseline time period
+% stored as freq x time x session
+monkeyN=1; % monkey 1
+for areaN=1:numel(m1areas)
+    cor = mean( mean( monkey(monkeyN).correct.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    inc = mean( mean( monkey(monkeyN).incorrect.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    base = mean([cor inc],1);
+    monkey(monkeyN).baseline.(m1areas{area}) = base;
+end
+
+monkeyN=2; % monkey 2
+for areaN=1:numel(m1areas)
+    cor = mean( mean( monkey(monkeyN).correct.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    inc = mean( mean( monkey(monkeyN).incorrect.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    base = mean([cor inc],1);
+    monkey(monkeyN).baseline.(m1areas{area}) = base;
+end
+
+% dB-baseline corrected
+baseline_power = mean(S1(baselineidx(1):baselineidx(2),:,:),1);
+dbconverted = 10*log10( bsxfun(@rdivide,S1,baseline_power));
+
+zmin = mean(dbconverted(:)) - 2*std(dbconverted(:));
+zmax = mean(dbconverted(:)) + 2*std(dbconverted(:));
+zrange = round((zmax - zmin)/2);
+
+%now plot, need baseline corrected dB code
+% x = 1 x samples
+% y = 1 x frequencies
+% z = frequencies x samples
+% contourf(x,y,z,...)
+W_ = params.tapers(1)/movingwin(1);
+figure
+contourf(t,f,dbconverted','linecolor','none')
+set(gca,'ytick',round(logspace(log10(f(1)),log10(f(end)),10)*100)/100,'yscale','log','clim',[-zrange zrange])
+% set(gca,'xlim',[monkeyTime(1) monkeyTime(end)])
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title(sprintf('Power via multitaper from Monkey %d, Day %d, Resp %s, Channel %s\n W = %dHz, moving window = %dms, step = %dms',i,day(i),resp{j},chan_combo{k,1},W_,movingwin(1)*1000,movingwin(2)*1000));
+cbar = colorbar; set(get(cbar,'label'),'string','dB change from baseline');   
+%title(sprintf('%s\n', labels{:}))
+
+
+% plot tresholded results
+figure(4), clf
+subplot(221)
+imagesc(times2save,frex,diffmap)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title('TF power, no thresholding') 
+set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
 
 %% Aggregate power for each area
 
