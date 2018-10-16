@@ -125,6 +125,16 @@ m1areas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
 m2chans = {'6DR', '8AD', '8B', 'dPFC', 'LIP', 'PE', 'PEC', 'PG'};
 m2areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'};
 
+% define trial timeline
+signalt = -.5:1/srate:1.31; % in seconds
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1300; % in ms
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+% define baseline time
+baset = [-.4 -.1]; % in seconds
+baseidx = dsearchn(signalt',baset');
+
 % setup response structs
 monkey(monkeyN).correct=[];
 monkey(monkeyN).incorrect=[];
@@ -133,7 +143,6 @@ tic
 %correct
 for i=1:numel(monkey(monkeyN).day)
     chan = fieldnames(monkey(monkeyN).day(i).correct);
-%     day = sprintf(d, i);
     for j=1:numel(chan)
         signal = monkey(monkeyN).day(i).correct.(chan{j})'; % change to time-by-trials
         reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
@@ -167,8 +176,8 @@ for i=1:numel(monkey(monkeyN).day)
         % step 2: take FFTs
         fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
         % which area is this chan
-        for k=1:numel(m2areas)
-            if endsWith(chan{j},m2chans{k}) %which chan
+        for k=1:numel(m1areas)
+            if endsWith(chan{j},m1chans{k}) %which chan
                 area=k;
             end
         end
@@ -180,26 +189,31 @@ for i=1:numel(monkey(monkeyN).day)
             % increasing frequency. diff from 1/f scaling
             fft_wavelet = fft_wavelet ./ max(fft_wavelet);
             % step 4: point-wise multiply and take iFFT
-            as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
+            as = ifft( fft_data.*fft_wavelet ); % analytic signal
             % step 5: trim wings
-            as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
+            as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
             % step 6: reshape back to reflected time-by-trials
-            as_ = reshape(as_,size(reflectsig_all,1),size(reflectsig_all,2));
+            as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
             % step 7: chop off the reflections
-            as_ = as_(n_wavelet+1:end-n_wavelet,:);
-            % store mean raw power for each frequency in freq x time
-            as(fi,:) = mean( abs( as_ ).^2, 2); 
-            clear fft_wavelet as_ % start anew with these var's ea. loop
+            as = as(n_wavelet+1:end-n_wavelet,:);
+            % as_ is now a time x trial complex matrix
+            % compute baseline power averaged over trials then timepoints
+            basePow = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
+            % store dB-norm'd down-sampled power for each frequency in freq
+            % x time x trials
+            dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
+            % mean( abs( as_ ).^2, 2);
+            clear fft_wavelet as % start anew with these var's ea. loop
         end
-        if isfield(monkey(monkeyN).correct,(m2areas{area})) % field exists?
+        if isfield(monkey(monkeyN).correct,(m1areas{area})) % field exists?
             % yes, field exists..
-            aTrials = size(monkey(monkeyN).correct.(m2areas{area}),3);
-            % append session for area in freq x time x session struct
-            monkey(monkeyN).correct.(m2areas{area})(:,:,aTrials+1) = as;
+            aTrials = size(monkey(monkeyN).correct.(m1areas{area}),3);
+            % append session for area in freq x time x trial struct
+            monkey(monkeyN).correct.(m1areas{area})(:,:,aTrials+1:aTrials+size(dbpow,3)) = dbpow;
         else
-            monkey(monkeyN).correct.(m2areas{area}) = as; % freq x time x sesh
+            monkey(monkeyN).correct.(m1areas{area}) = dbpow; % freq x time x trial
         end
-        clear as % start anew with this var ea. loop
+        clear dbpow % start anew with this var ea. loop
     end
 end
 
@@ -222,8 +236,8 @@ for i=1:numel(monkey(monkeyN).day)
         % step 2: take FFTs
         fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
         % which area is this chan
-        for k=1:numel(m2areas)
-            if endsWith(chan{j},m2chans{k}) %which chan
+        for k=1:numel(m1areas)
+            if endsWith(chan{j},m1chans{k}) %which chan
                 area=k;
             end
         end
@@ -235,28 +249,34 @@ for i=1:numel(monkey(monkeyN).day)
             % increasing frequency. diff from 1/f scaling
             fft_wavelet = fft_wavelet ./ max(fft_wavelet);
             % step 4: point-wise multiply and take iFFT
-            as_ = ifft( fft_data.*fft_wavelet ); % analytic signal
+            as = ifft( fft_data.*fft_wavelet ); % analytic signal
             % step 5: trim wings
-            as_ = as_(half_of_wavelet_size:end-half_of_wavelet_size+1);
+            as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
             % step 6: reshape back to reflected time-by-trials
-            as_ = reshape(as_,size(reflectsig_all,1),size(reflectsig_all,2));
+            as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
             % step 7: chop off the reflections
-            as_ = as_(n_wavelet+1:end-n_wavelet,:);
-            % store mean raw power for each frequency in freq x time
-            as(fi,:) = mean( abs( as_ ).^2, 2); 
-            clear fft_wavelet as_ % start anew with these var's ea. loop
+            as = as(n_wavelet+1:end-n_wavelet,:);
+            % as_ is now a time x trial complex matrix
+            % compute baseline power averaged over trials then timepoints
+            basePow = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
+            % store dB-norm'd down-sampled power for each frequency in freq
+            % x time x trials
+            dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
+            % mean( abs( as_ ).^2, 2);
+            clear fft_wavelet as % start anew with these var's ea. loop
         end
-        if isfield(monkey(monkeyN).incorrect,(m2areas{area})) % field exists?
+        if isfield(monkey(monkeyN).incorrect,(m1areas{area})) % field exists?
             % yes, field exists..
-            aTrials = size(monkey(monkeyN).incorrect.(m2areas{area}),3);
-            % append session for area in freq x time x session struct
-            monkey(monkeyN).incorrect.(m2areas{area})(:,:,aTrials+1) = as;
+            aTrials = size(monkey(monkeyN).incorrect.(m1areas{area}),3);
+            % append session for area in freq x time x trial struct
+            monkey(monkeyN).incorrect.(m1areas{area})(:,:,aTrials+1:aTrials+size(dbpow,3)) = dbpow;
         else
-            monkey(monkeyN).incorrect.(m2areas{area}) = as; % freq x time x sesh
+            monkey(monkeyN).incorrect.(m1areas{area}) = dbpow; % freq x time x trial
         end
-        clear as % start anew with this var ea. loop
+        clear dbpow % start anew with this var ea. loop
     end
 end
+
 toc
 
 %% dB-normalize the session data
