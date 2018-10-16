@@ -261,6 +261,13 @@ toc
 
 %% dB-normalize the session data
 
+% load raw mean power monkey data
+loadload('mGoodStableRule1PingRejRawMeanPow-AllDays_Cor_Inc_Allchans.mat')
+
+% re-define areas if skipped analytic signal area
+m1areas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
+m2areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'};
+
 % define trial timeline
 signalt = -.5:1/srate:1.31; % in seconds
 % vector of time points to save in post-analysis downsampling
@@ -276,51 +283,87 @@ baseidx = dsearchn(signalt',baset');
 % stored as freq x time x session
 monkeyN=1; % monkey 1
 for areaN=1:numel(m1areas)
-    cor = mean( mean( monkey(monkeyN).correct.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
-    inc = mean( mean( monkey(monkeyN).incorrect.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
-    base = mean([cor inc],1);
-    monkey(monkeyN).baseline.(m1areas{area}) = base;
+    cor = mean( mean( monkey(monkeyN).correct.(m1areas{areaN})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    inc = mean( mean( monkey(monkeyN).incorrect.(m1areas{areaN})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    base = mean([cor inc],2); % condition-averaged (c-a) baseline
+    % dB-normalize the session data with condition-averaged baseline
+    raw_pow_cor = monkey(monkeyN).correct.(m1areas{areaN});
+    raw_pow_inc = monkey(monkeyN).correct.(m1areas{areaN});
+    % divide ea frequency's time x sesh by its respective c-a baseline,
+    % then db transform
+    db_base_pow_cor = 10*log10( raw_pow_cor./base ); 
+    db_base_pow_inc = 10*log10( raw_pow_inc./base ); 
+    monkey_(monkeyN).correct.(m1areas{areaN}) = db_base_pow_cor;
+    monkey_(monkeyN).incorrect.(m1areas{areaN}) = db_base_pow_inc ;
 end
 
 monkeyN=2; % monkey 2
-for areaN=1:numel(m1areas)
-    cor = mean( mean( monkey(monkeyN).correct.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
-    inc = mean( mean( monkey(monkeyN).incorrect.(m1areas{area})(:,baseidx(1):baseidx(2),:),3 ),2 );
-    base = mean([cor inc],1);
-    monkey(monkeyN).baseline.(m1areas{area}) = base;
+for areaN=1:numel(m2areas)
+    cor = mean( mean( monkey(monkeyN).correct.(m2areas{areaN})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    inc = mean( mean( monkey(monkeyN).incorrect.(m2areas{areaN})(:,baseidx(1):baseidx(2),:),3 ),2 );
+    base = mean([cor inc],2);
+    % dB-normalize the session data with condition-averaged baseline
+    raw_pow_cor = monkey(monkeyN).correct.(m2areas{areaN});
+    raw_pow_inc = monkey(monkeyN).correct.(m2areas{areaN});
+    % divide ea frequency's time x sesh by its respective c-a baseline,
+    % then db transform
+    db_base_pow_cor = 10*log10( raw_pow_cor./base ); 
+    db_base_pow_inc = 10*log10( raw_pow_inc./base ); 
+    monkey_(monkeyN).correct.(m2areas{areaN}) = db_base_pow_cor;
+    monkey_(monkeyN).incorrect.(m2areas{areaN}) = db_base_pow_inc ;
 end
-
-% dB-baseline corrected
-baseline_power = mean(S1(baselineidx(1):baselineidx(2),:,:),1);
-dbconverted = 10*log10( bsxfun(@rdivide,S1,baseline_power));
 
 zmin = mean(dbconverted(:)) - 2*std(dbconverted(:));
 zmax = mean(dbconverted(:)) + 2*std(dbconverted(:));
 zrange = round((zmax - zmin)/2);
+
+% average db normalized power over sessions yielding freq x time
+rawpowC = mean( monkey_pow(monkeyN).correct.(m2areas{areaN}),3 );
+rawpowI = mean( monkey_pow(monkeyN).incorrect.(m2areas{areaN}),3 );
 
 %now plot, need baseline corrected dB code
 % x = 1 x samples
 % y = 1 x frequencies
 % z = frequencies x samples
 % contourf(x,y,z,...)
-W_ = params.tapers(1)/movingwin(1);
-figure
-contourf(t,f,dbconverted','linecolor','none')
-set(gca,'ytick',round(logspace(log10(f(1)),log10(f(end)),10)*100)/100,'yscale','log','clim',[-zrange zrange])
+figure(4), clf
+subplot(221)
+contourf(signalt,frex,mean( monkey(monkeyN).correct.(m2areas{areaN}),3 ),'linecolor','none')
+set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3 3])
+ylabel('Frequency (Hz)')
+title(sprintf('dB-Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m2areas{areaN}));
+subplot(223)
+contourf(signalt,frex,mean( monkey(monkeyN).incorrect.(m2areas{areaN}),3 ),'linecolor','none')
+% contourf(signalt(times2saveidx),frex,pow(:,times2saveidx),'linecolor','none')
+set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3 3])
 % set(gca,'xlim',[monkeyTime(1) monkeyTime(end)])
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title(sprintf('Power via multitaper from Monkey %d, Day %d, Resp %s, Channel %s\n W = %dHz, moving window = %dms, step = %dms',i,day(i),resp{j},chan_combo{k,1},W_,movingwin(1)*1000,movingwin(2)*1000));
-cbar = colorbar; set(get(cbar,'label'),'string','dB change from baseline');   
-%title(sprintf('%s\n', labels{:}))
+title(sprintf('dB-Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m2areas{areaN}));
+cbar = colorbar; set(get(cbar,'label'),'string','dB change from condition-averaged baseline');   
+subplot(222)
+contourf(signalt,frex,rawpowC,'linecolor','none')
+set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3*std(rawpowC(:)) 3*std(rawpowC(:))])
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m2areas{areaN}));
+cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
+subplot(224)
+contourf(signalt,frex,mean( monkey(monkeyN).incorrect.(m2areas{areaN}),3 ),'linecolor','none')
+set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3*std(rawpowI(:)) 3*std(rawpowI(:))])
+xlabel('Time (ms)')
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m2areas{areaN}));
+% title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect \n Freq Step = %d, temporal FWHM %dms to %.0dms, spectral FWHM %dHz - %dHz',monkeyN,m2areas{areaN},length(frex),empfwhmT(1)*1000,empfwhmT(end)*1000,empfwhmF(1),empfwhmF(end)));
+cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
+suptitle(sprintf('Freq Step = %d, temporal FWHM %dms to %1.0fms, spectral FWHM %dHz to %dHz',length(frex),empfwhmT(1)*1000,empfwhmT(end)*1000,empfwhmF(1),empfwhmF(end)));
 
 
 % plot tresholded results
-figure(4), clf
-subplot(221)
-imagesc(times2save,frex,diffmap)
+figure(3), clf
+% imagesc(times2save,frex,diffmap)
+imagesc(times2save,frex,pow(:,times2saveidx))
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title('TF power, no thresholding') 
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
+% title('TF power, no thresholding') 
+title(sprintf('Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct \n Freq Step = %d, temporal FWHM %dms to %.0dms, spectral FWHM %dHz - %dHz',monkeyN,m2areas{areaN},length(frex),empfwhmT(1)*1000,empfwhmT(end)*1000,empfwhmF(1),empfwhmF(end)));
+% set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
+set(gca,'clim',[-3 3],'xlim',[-.4 1.25],'ydir','norm')
 
 %% Aggregate power for each area
 
