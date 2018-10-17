@@ -119,7 +119,7 @@ load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
 % begin definining convolution parameters
 n_wavelet = length(wavet);
 half_of_wavelet_size = floor(n_wavelet/2)+1;
-monkeyN = 1; % which monkey (1 or 2)
+monkeyN = 2; % which monkey (1 or 2)
 m1chans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
 m1areas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
 m2chans = {'6DR', '8AD', '8B', 'dPFC', 'LIP', 'PE', 'PEC', 'PG'};
@@ -176,8 +176,8 @@ for i=1:numel(monkey(monkeyN).day)
         % step 2: take FFTs
         fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
         % which area is this chan
-        for k=1:numel(m1areas)
-            if endsWith(chan{j},m1chans{k}) %which chan
+        for k=1:numel(m2areas)
+            if endsWith(chan{j},m2chans{k}) %which chan
                 area=k;
             end
         end
@@ -207,13 +207,13 @@ for i=1:numel(monkey(monkeyN).day)
             % mean( abs( as_ ).^2, 2);
             clear fft_wavelet as % start anew with these var's ea. loop
         end
-        if isfield(monkey(monkeyN).correct,(m1areas{area})) % field exists?
+        if isfield(monkey(monkeyN).correct,(m2areas{area})) % field exists?
             % yes, field exists..
-            aTrials = size(monkey(monkeyN).correct.(m1areas{area}),3);
+            aTrials = size(monkey(monkeyN).correct.(m2areas{area}),3);
             % append session for area in freq x time x trial struct
-            monkey(monkeyN).correct.(m1areas{area})(:,:,aTrials+1:aTrials+size(pow,3)) = pow;
+            monkey(monkeyN).correct.(m2areas{area})(:,:,aTrials+1:aTrials+size(pow,3)) = pow;
         else
-            monkey(monkeyN).correct.(m1areas{area}) = pow; % freq x time x trial
+            monkey(monkeyN).correct.(m2areas{area}) = pow; % freq x time x trial
         end
         clear pow % start anew with this var ea. loop
     end
@@ -238,8 +238,8 @@ for i=1:numel(monkey(monkeyN).day)
         % step 2: take FFTs
         fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
         % which area is this chan
-        for k=1:numel(m1areas)
-            if endsWith(chan{j},m1chans{k}) %which chan
+        for k=1:numel(m2areas)
+            if endsWith(chan{j},m2chans{k}) %which chan
                 area=k;
             end
         end
@@ -269,13 +269,13 @@ for i=1:numel(monkey(monkeyN).day)
             % mean( abs( as_ ).^2, 2);
             clear fft_wavelet as % start anew with these var's ea. loop
         end
-        if isfield(monkey(monkeyN).incorrect,(m1areas{area})) % field exists?
+        if isfield(monkey(monkeyN).incorrect,(m2areas{area})) % field exists?
             % yes, field exists..
-            aTrials = size(monkey(monkeyN).incorrect.(m1areas{area}),3);
+            aTrials = size(monkey(monkeyN).incorrect.(m2areas{area}),3);
             % append session for area in freq x time x trial struct
-            monkey(monkeyN).incorrect.(m1areas{area})(:,:,aTrials+1:aTrials+size(pow,3)) = pow;
+            monkey(monkeyN).incorrect.(m2areas{area})(:,:,aTrials+1:aTrials+size(pow,3)) = pow;
         else
-            monkey(monkeyN).incorrect.(m1areas{area}) = pow; % freq x time x trial
+            monkey(monkeyN).incorrect.(m2areas{area}) = pow; % freq x time x trial
         end
         clear pow % start anew with this var ea. loop
     end
