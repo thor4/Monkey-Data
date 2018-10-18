@@ -196,7 +196,7 @@ for i=1:numel(monkey(monkeyN).day)
             as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
             % step 7: chop off the reflections
             as = as(n_wavelet+1:end-n_wavelet,:);
-            % as_ is now a time x trial complex matrix
+            % as is now a time x trial complex matrix
 %             % compute baseline power averaged over trials then timepoints
 %             basePow = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
             % store dB-norm'd down-sampled power for each frequency in freq
@@ -341,172 +341,95 @@ end
 rawpowC = mean( monkey_pow(monkeyN).correct.(m2areas{areaN}),3 );
 rawpowI = mean( monkey_pow(monkeyN).incorrect.(m2areas{areaN}),3 );
 
-%% Visualize db-normalized power
+%% Visualize power
 
-%now plot, need baseline corrected dB code
+% load data
+% both monkeys dB-normalized power by area
+tic
+load('mGoodStableRule1PingRejdBPow-AllDays_Cor_Inc_Allchans.mat')
+toc
+% both monkeys raw power by area
+tic
+load('mGoodStableRule1PingRejRawPow-AllDays_Cor_Inc_Allchans.mat')
+toc
+
+% contourf plot template:
 % x = 1 x samples
 % y = 1 x frequencies
 % z = frequencies x samples
 % contourf(x,y,z,...)
+monkeyN = 2;
 areaN = 1;
 
-figure(4), clf
+figure(6), clf
 subplot(221)
-contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).correct.(m2areas{areaN}),3 ),'linecolor','none')
-set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3 3])
+contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).correct.(m1areas{areaN}),3 ),'linecolor','none')
+% ,'clim',[-3 3]
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 ylabel('Frequency (Hz)')
-title(sprintf('dB-Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m2areas{areaN}));
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m1areas{areaN}));
+cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
 subplot(223)
-contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).incorrect.(m2areas{areaN}),3 ),'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).incorrect.(m1areas{areaN}),3 ),'linecolor','none')
 % contourf(signalt(times2saveidx),frex,pow(:,times2saveidx),'linecolor','none')
-set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3 3])
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 % set(gca,'xlim',[monkeyTime(1) monkeyTime(end)])
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title(sprintf('dB-Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m2areas{areaN}));
-cbar = colorbar; set(get(cbar,'label'),'string','dB change from baseline');   
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m1areas{areaN}));
+cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
 subplot(222)
-contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).correct.(m2areas{areaN+5}),3 ),'linecolor','none')
-set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3 3])
-title(sprintf('dB-Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m2areas{areaN+5}));
-% cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
+contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).correct.(m1areas{areaN+5}),3 ),'linecolor','none')
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m1areas{areaN+5}));
+% cbar = colorbar; set(get(cbar,'label'),'string','dB change from baseline');   
+cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
 subplot(224)
-contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).incorrect.(m2areas{areaN+5}),3 ),'linecolor','none')
-set(gca,'xlim',[-.4 1.25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','clim',[-3 3])
+contourf(signalt(times2saveidx),frex,mean( monkey(monkeyN).incorrect.(m1areas{areaN+5}),3 ),'linecolor','none')
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (ms)')
-title(sprintf('dB-Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m2areas{areaN+5}));
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m1areas{areaN+5}));
 % title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect \n Freq Step = %d, temporal FWHM %dms to %.0dms, spectral FWHM %dHz - %dHz',monkeyN,m2areas{areaN},length(frex),empfwhmT(1)*1000,empfwhmT(end)*1000,empfwhmF(1),empfwhmF(end)));
-cbar = colorbar; set(get(cbar,'label'),'string','dB change from baseline');   
+cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
 suptitle(sprintf('Freq Step = %d, temporal FWHM %dms to %1.0fms, spectral FWHM %dHz to %dHz',length(frex),empfwhmT(1)*1000,empfwhmT(end)*1000,empfwhmF(1),empfwhmF(end)));
 
 
-% plot thresholded results
-figure(3), clf
-% imagesc(times2save,frex,diffmap)
-imagesc(times2save,frex,pow(:,times2saveidx))
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-% title('TF power, no thresholding') 
-title(sprintf('Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct \n Freq Step = %d, temporal FWHM %dms to %.0dms, spectral FWHM %dHz - %dHz',monkeyN,m2areas{areaN},length(frex),empfwhmT(1)*1000,empfwhmT(end)*1000,empfwhmF(1),empfwhmF(end)));
-% set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
-set(gca,'clim',[-3 3],'xlim',[-.4 1.25],'ydir','norm')
+%% Permutation test
 
-%% Aggregate power for each area
+m2aPE_cor = mean( monkey(monkeyN).correct.(m2areas{areaN+3}),3 );
+m2aPE_inc = mean( monkey(monkeyN).incorrect.(m2areas{areaN+3}),3 );
 
-% load data
-% monkey 1 all days correct + incorrect
-tic
-load('m1GoodStableRule1PingRejAnSig-AllDays_Cor_Inc_Allchans.mat')
-toc
-
-monkeyN = 1; %which monkey
-m1chans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
-m1chansa = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
-% setup matrix as area x condition x frequency x time x trial using fake
-% data so that cat function below will work
-monkey18B = repmat(1i,[8 2 50 1811 2]);
-% % remove extra rows created during initialization
-% monkey18B(2,:,:,:,:)=[]; monkey18B(:,2,:,:,:)=[]; monkey18B(:,:,2,:,:)=[]; 
-% monkey18B(:,:,:,2,:)=[]; monkey18B(:,:,:,:,2)=[]; monkey18B(1,:,:,:,:)=[]; 
-% monkey18B(:,1,:,:,:)=[]; monkey18B(:,:,1,:,:)=[]; monkey18B(:,:,:,1,:)=[]; 
-% monkey18B(:,:,:,:,1)=[]; 
-
-% initialize signal variable
-signal = zeros(8,2,50,1811,2);
-
-% for k=1:numel(m1chans) % initialize variables
-%     m1.correct.(m1chansa{k})=ones(1811,1,50);
-%     m1.incorrect.(m1chansa{k})=ones(1811,1,50);
-% end
-
-tic
-% correct
-for i=1:numel(monkey1.day)
-    chan = fieldnames(monkey1.day(i).correct);
-    for j=1:numel(chan)
-        k=1; % which chan
-        if endsWith(chan{j},m1chans{k}) %which chan
-            % change to area x cond x freq x time x trial
-            data = permute(monkey1.day(i).correct.(chan{j}),[3 1 2]);
-            signal = zeros(8,2,50,1811,size(data,3));
-            signal(7,1,:,:,:) = permute(monkey1.day(i).correct.(chan{j}),[3 1 2]);
-            % save in aggregate data structure
-            monkey18B = cat(5,monkey18B,signal);
-            m1.correct.(m1chansa{k}) = cat(2,m1.correct.(m1chansa{k}),);
-        end
-        end
-    end
-    monkey1.day(i).correct = []; %remove day to free-up memory
-end
-signal = monkey1.day(1).correct.chan1PEC;
-signal_ = permute(signal,[3 2 1]);
-signal(1,1,45)
-signal_(45,1,1)
-% incorrect
-for i=1:numel(monkey1.day)
-    chan = fieldnames(monkey1.day(i).incorrect);
-    for j=1:numel(chan)
-        for k=1:numel(m1chans) % initialize variables
-            if endsWith(chan{j},m1chans{k}) %which chan
-                % save in aggregate data structure
-                m1.incorrect.(m1chansa{k}) = cat(2,m1.incorrect.(m1chansa{k}),monkey1.day(i).incorrect.(chan{j}));
-            end
-        end
-    end
-    monkey1.day(i).incorrect = []; %remove day to free-up memory
-end
-toc
-
-% initialize output time-frequency data
-% notice that here we save all trials
-tf = zeros(2,num_frex,length(times2save),ntrials);
-
-for fi=1:num_frex
-    
-    % run convolution
-    as1 = ifft(cmwX(fi,:).*dataX1);
-    as1 = as1(half_wav+1:end-half_wav);
-    as1 = reshape(as1,npnts,ntrials);
-    
-    % power on all trials from channel "1"
-    % only from times2saveidx!
-    tf(1,fi,:,:) = abs( as1(times2saveidx,:) ).^2;
-    
-    
-    % run convolution
-    as2 = ifft(cmwX(fi,:).*dataX2);
-    as2 = as2(half_wav+1:end-half_wav);
-    as2 = reshape(as2,npnts,ntrials);
-    
-    % power on all trials from channel "2"
-    % only from times2saveidx!
-    tf(2,fi,:,:) = 
-end
-
-% for convenience, compute the difference in power between the two channels
-diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
+% for convenience, compute the difference in power between the two
+% conditions, correct-incorrect
+% diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
+m2aPE_diffmap = m2aPE_cor - m2aPE_inc;
 
 
 %% plotting the raw data
 
-clim = [0 20000];
+clim = [0 25];
 
-figure(1), clf
+figure(7), clf
 subplot(221)
-imagesc(times2save,frex,squeeze(mean( tf(1,:,:,:),4 )))
-set(gca,'clim',clim,'ydir','n','xlim',xlim)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title([ 'Channel ' num2str(chan1idx) ])
+imagesc(times2save,[],m2aPE_cor)
+%*****get(gca,'clim')
+set(gca,'clim',clim,'ydir','n')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m2areas{areaN+3}));
 
 subplot(222)
-imagesc(times2save,frex,squeeze(mean( tf(2,:,:,:),4 )))
-set(gca,'clim',clim,'ydir','n','xlim',xlim)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title([ 'Channel ' num2str(chan2idx) ])
+imagesc(times2save,[],m2aPE_inc)
+set(gca,'clim',clim,'ydir','n')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
+title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m2areas{areaN+3}));
 
 subplot(223)
-imagesc(times2save,frex,diffmap)
-set(gca,'clim',[-mean(clim) mean(clim)],'ydir','n','xlim',xlim)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title([ 'Difference: channels ' num2str(chan2idx) ' - ' num2str(chan1idx) ])
+imagesc(times2save,[],m2aPE_diffmap)
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','n')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
+title(sprintf('Raw Power Difference Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}));
 
 %% statistics via permutation testing
 
@@ -522,18 +445,22 @@ n_permutes = 1000;
 % initialize null hypothesis maps
 permmaps = zeros(n_permutes,num_frex,length(times2save));
 
-% for convenience, tf power maps are concatenated
-%   in this matrix, trials 1:ntrials are from channel "1" 
-%   and trials ntrials+1:end are from channel "2"
-tf3d = cat(3,squeeze(tf(1,:,:,:)),squeeze(tf(2,:,:,:)));
-
+% total number of incorrect trials for area
+ntrials = size( monkey(monkeyN).incorrect.(m2areas{areaN+3}),3 );
 
 % generate maps under the null hypothesis
 for permi = 1:n_permutes
+    % randomly sample from correct trials (decimation) to match incorrect
+    randcoridx = randperm( size( monkey(monkeyN).correct.(m2areas{areaN+3}),3 ),ntrials );
+    temp_cor = monkey(monkeyN).correct.(m2areas{areaN+3})(:,:,randcoridx);
+    % concatenate conditions: trials1:ntrials are from correct, trials
+    % ntrials+1:end are from incorrect
+    tf3d = cat(3,temp_cor,monkey(monkeyN).incorrect.(m2areas{areaN+3}));
     
-    % randomize trials, which also randomly assigns trials to channels
-    randorder = randperm(size(tf3d,3));
-    temp_tf3d = tf3d(:,:,randorder);
+    % randomize trials, which also randomly assigns trials to conditions,
+    % correct vs incorrect
+    randtf3didx = randperm(size(tf3d,3));
+    temp_tf3d = tf3d(:,:,randtf3didx);
     
     % compute the "difference" map
     % what is the difference under the null hypothesis?
@@ -548,7 +475,7 @@ std_h0  = squeeze(std(permmaps));
 
 % now threshold real data...
 % first Z-score
-zmap = (diffmap-mean_h0) ./ std_h0;
+zmap = (m2aPE_diffmap-mean_h0) ./ std_h0;
 
 % threshold image at p-value, by setting subthreshold values to 0
 zmap(abs(zmap)<zval) = 0;
@@ -556,34 +483,30 @@ zmap(abs(zmap)<zval) = 0;
 
 % now some plotting...
 
-figure(2), clf
+figure(8), clf
 
 subplot(221)
-imagesc(times2save,frex,diffmap);
+imagesc(times2save,[],m2aPE_diffmap);
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','nor')
-title('TF map of real power values')
+title(sprintf('TF map of real power differences Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}));
 
 subplot(222)
-imagesc(times2save,frex,diffmap);
+imagesc(times2save,[],m2aPE_diffmap);
 hold on
 contour(times2save,frex,logical(zmap),1,'linecolor','k');
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
-title('Power values and outlined significance regions')
+title(sprintf('Power values and outlined significance regions Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
 
 subplot(223)
-imagesc(times2save,frex,zmap);
+imagesc(times2save,[],zmap);
+set(gca,'clim',[-5 5],'ydir','no')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-set(gca,'clim',[-10 10],'xlim',xlim,'ydir','no')
-title('Thresholded TF map of Z-values')
-
-%% 
-
-
-
-
-
+title(sprintf('Thresholded TF map of Z-values Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
 
 %% corrections for multiple comparisons
 
@@ -623,7 +546,7 @@ end
 
 %% show histograph of maximum cluster sizes
 
-figure(3), clf
+figure(9), clf
 hist(max_cluster_sizes,20);
 xlabel('Maximum cluster sizes'), ylabel('Number of observations')
 title('Expected cluster sizes under the null hypothesis')
@@ -645,27 +568,31 @@ for i=1:islands.NumObjects
     end
 end
 
-% plot tresholded results
-figure(4), clf
+% plot thresholded results
+figure(10), clf
 subplot(221)
-imagesc(times2save,frex,diffmap)
+imagesc(times2save,[],m2aPE_diffmap)
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title('TF power, no thresholding') 
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
+title(sprintf('TF power, no thresholding Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}));
 
 subplot(222)
-imagesc(times2save,frex,diffmap)
+imagesc(times2save,[],m2aPE_diffmap)
 hold on
 contour(times2save,frex,logical(zmap),1,'linecolor','k')
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title('TF power with contour')
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','norm')
+title(sprintf('Cluster-corrected TF power with contour Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
 
 subplot(223)
-imagesc(times2save,frex,zmap)
+imagesc(times2save,[],zmap)
+set(gca,'clim',[-5 5],'xlim',xlim,'ydir','normal')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title('z-map, thresholded')
-set(gca,'clim',[-13 13],'xlim',xlim,'ydir','normal')
+title(sprintf('Cluster-corrected & thresholded TF z-map Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
+
 
 %% now with max-pixel-based thresholding
 
@@ -674,29 +601,32 @@ thresh_lo = prctile(max_val(:,1),100-100*pval); % what is the
 thresh_hi = prctile(max_val(:,2),100-100*pval); % true p-value?
 
 % threshold real data
-zmap = diffmap;
+zmap = m2aPE_diffmap;
 zmap(zmap>thresh_lo & zmap<thresh_hi) = 0;
 
-figure(5), clf
+figure(11), clf
 subplot(221)
-imagesc(times2save,frex,diffmap)
+imagesc(times2save,[],m2aPE_diffmap)
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title('tf power map, no thresholding') 
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','n')
+title(sprintf('TF power map, no thresholding Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}));
 
 subplot(222)
-imagesc(times2save,frex,diffmap)
+imagesc(times2save,[],m2aPE_diffmap)
 hold on
 contour(times2save,frex,logical(zmap),1,'linecolor','k')
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title('tf power map with contour')
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','normal')
+title(sprintf('Max-pixel-corrected TF power with contour Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
 
 subplot(223)
-imagesc(times2save,frex,zmap)
+imagesc(times2save,[],zmap)
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title('tf power map, thresholded')
-set(gca,'clim',[-mean(clim) mean(clim)],'xlim',xlim,'ydir','no')
+title(sprintf('Max-pixel-corrected & thresholded TF z-map Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
 
 %% end.
 
