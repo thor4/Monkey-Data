@@ -434,7 +434,7 @@ title(sprintf('Raw Power Difference Monkey %d, Area %s, Correct - Incorrect',mon
 %% statistics via permutation testing
 
 % p-value
-pval = 0.05;
+pval = 0.05/8;
 
 % convert p-value to Z value
 zval = abs(norminv(pval));
@@ -591,7 +591,7 @@ imagesc(times2save,[],zmap)
 set(gca,'clim',[-5 5],'xlim',xlim,'ydir','normal')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title(sprintf('Cluster-corrected & thresholded TF z-map Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
+title(sprintf('Cluster-corrected & thresholded TF z-map Monkey %d, Area %s, p-val %f',monkeyN,m2areas{areaN+3},pval));
 
 
 %% now with max-pixel-based thresholding
