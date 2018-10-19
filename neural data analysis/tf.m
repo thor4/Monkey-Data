@@ -433,8 +433,11 @@ title(sprintf('Raw Power Difference Monkey %d, Area %s, Correct - Incorrect',mon
 
 %% statistics via permutation testing
 
+% number of tests
+n_tests = 8;
+
 % p-value
-pval = 0.05/8;
+pval = 0.05/n_tests;
 
 % convert p-value to Z value
 zval = abs(norminv(pval));
@@ -484,6 +487,37 @@ zmap(abs(zmap)<zval) = 0;
 % now some plotting...
 
 figure(8), clf
+
+% contourf plot template:
+% x = 1 x samples
+% y = 1 x frequencies
+% z = frequencies x samples
+% contourf(x,y,z,...)
+
+figure(12), clf
+subplot(221)
+contourf(signalt(times2saveidx),frex,m2aPE_diffmap,'linecolor','none')
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+cbar = colorbar; cbar.Label.String = 'Power (\muV^2)';
+lim = get(cbar,'Limits'); pos = get(cbar,'Position');
+cbar.Ticks=lim; cbar.Label.Position=[pos(1)/1.2 pos(2)];
+cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('TF map of real power differences Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}));
+
+subplot(222)
+contourf(signalt(times2saveidx),frex,m2aPE_diffmap,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap),1,'linecolor','k');
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title(sprintf('Power values and outlined significance regions Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
+
+subplot(223)
+contourf(signalt(times2saveidx),frex,zmap,'linecolor','none')
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (ms)'), ylabel('Frequency (Hz)')
+title(sprintf('Thresholded TF map of Z-values Monkey %d, Area %s',monkeyN,m2areas{areaN+3}));
 
 subplot(221)
 imagesc(times2save,[],m2aPE_diffmap);
@@ -596,9 +630,9 @@ title(sprintf('Cluster-corrected & thresholded TF z-map Monkey %d, Area %s, p-va
 
 %% now with max-pixel-based thresholding
 
-% find the threshold for lower and upper values
-thresh_lo = prctile(max_val(:,1),100-100*pval); % what is the
-thresh_hi = prctile(max_val(:,2),100-100*pval); % true p-value?
+% find the threshold for lower and upper values, two-tailed
+thresh_lo = prctile(max_val(:,1),100*(pval/2)); % pval/2 percentile of smallest values
+thresh_hi = prctile(max_val(:,2),100-100*(pval/2)); % pval/2 percentile of largest values
 
 % threshold real data
 zmap = m2aPE_diffmap;
