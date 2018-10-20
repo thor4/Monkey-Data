@@ -358,7 +358,7 @@ toc
 % y = 1 x frequencies
 % z = frequencies x samples
 % contourf(x,y,z,...)
-monkeyN = 2;
+monkeyN = 1;
 areaN = 1;
 
 figure(6), clf
@@ -441,8 +441,19 @@ zval = abs(norminv(pval));
 % number of permutations
 n_permutes = 1000;
 
+tic
 % generate maps under the null hypothesis
-[area_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
+[m1_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
+toc
+string(m1areas) == string(areas) % true
+
+monkeyN = 2; % now monkey 2
+tic
+% generate maps under the null hypothesis
+[m2_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
+toc
+string(m2areas) == string(areas) % true
+
 
 %% show non-corrected thresholded maps
 

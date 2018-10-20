@@ -29,7 +29,7 @@ function [area_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,
         for permi = 1:n_permutes
             % randomly sample from condition1 trials (decimation) to match
             % condition2
-            randcoridx = randperm( size( monkey(monkeyN).correct.(m2areas{areaN+3}),3 ),ntrials );
+            randcoridx = randperm( size( monkey(monkeyN).correct.(areas{areaN}),3 ),ntrials );
             temp_cor = monkey(monkeyN).correct.(areas{areaN})(:,:,randcoridx);
             % concatenate conditions: trials1:ntrials are from correct, 
             % trials ntrials+1:end are from incorrect
