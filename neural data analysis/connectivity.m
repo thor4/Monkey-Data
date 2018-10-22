@@ -32,7 +32,7 @@ tic
 for i=1:numel(monkey(1).day)
     for j=1:numel(resp)
         chan = fieldnames(monkey(1).day(i).(resp{j}));
-        %C = combnk(v,k) returns all combinations of the n elements in v taken k at a time.
+        % C = combnk(v,k) returns all combinations of the n elements in v taken k at a time.
         C = combnk(chan,2); %all chan combinations
         day = sprintf(d, i);
         for k=1:size(C,1) %total number of combinations

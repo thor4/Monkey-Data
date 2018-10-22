@@ -395,14 +395,6 @@ suptitle(sprintf('Freq Step = %d, temporal FWHM %dms to %1.0fms, spectral FWHM %
 
 %% plotting the raw difference data
 
-cor = mean( monkey(monkeyN).correct.(m2areas{areaN+3}),3 );
-inc = mean( monkey(monkeyN).incorrect.(m2areas{areaN+3}),3 );
-
-% for convenience, compute the difference in power between the two
-% conditions, correct-incorrect
-% diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
-m2aPE_diffmap = cor - inc;
-
 clim = [0 25];
 
 figure(7), clf
@@ -421,7 +413,7 @@ xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
 title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m2areas{areaN+3}(2:end)));
 
 subplot(223)
-imagesc(times2save,[],m2aPE_diffmap)
+imagesc(times2save,[],diffmap)
 set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
@@ -441,33 +433,17 @@ zval = abs(norminv(pval));
 % number of permutations
 n_permutes = 1000;
 
-tic
 % generate maps under the null hypothesis
 [m1_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
-toc
 string(m1areas) == string(areas) % true
 
 monkeyN = 2; % now monkey 2
-tic
 % generate maps under the null hypothesis
 [m2_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
-toc
 string(m2areas) == string(areas) % true
 
 
 %% show non-corrected thresholded maps
-
-% compute mean and standard deviation maps
-mean_h0 = squeeze(mean(permmaps));
-std_h0  = squeeze(std(permmaps));
-
-% now threshold real data...
-% first Z-score
-zmap = (m2aPE_diffmap-mean_h0) ./ std_h0;
-
-% threshold image at p-value, by setting subthreshold values to 0
-zmap(abs(zmap)<zval) = 0;
-
 
 % now some plotting...
 
@@ -481,7 +457,7 @@ figure(8), clf
 
 figure(8), clf
 subplot(221)
-contourf(signalt(times2saveidx),frex,m2aPE_diffmap,'linecolor','none')
+contourf(signalt(times2saveidx),frex,diffmap,'linecolor','none')
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 pos = get(cbar,'Position'); lim = get(cbar,'Limits'); cbar.Ticks=lim;
@@ -490,7 +466,7 @@ cbar.TickLabels = ({'Incorrect','Correct'});
 title(sprintf('TF Map Monkey %d, Area %s, Correct > Incorrect',monkeyN,m2areas{areaN+3}(2:end)));
 
 subplot(222)
-contourf(signalt(times2saveidx),frex,m2aPE_diffmap,'linecolor','none')
+contourf(signalt(times2saveidx),frex,diffmap,'linecolor','none')
 hold on
 contour(signalt(times2saveidx),frex,logical(zmap),1,'linecolor','k');
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -512,38 +488,99 @@ title(sprintf('Thresholded Z-values Monkey %d, Area %s, Correct > Incorrect',mon
 
 %% corrections for multiple comparisons
 
-% initialize matrices for cluster-based correction
-max_cluster_sizes = zeros(1,n_permutes);
-% ... and for maximum-pixel based correction
-max_val = zeros(n_permutes,2); % "2" for min/max
+% load permutation maps for all areas. 
+% 4-d: area x permutation x freq x down-sampled time points
+load('permmaps.mat')
 
-% loop through permutations
-for permi = 1:n_permutes
-    
-    % take each permutation map, and transform to Z
-    threshimg = squeeze(permmaps(permi,:,:));
-    threshimg = (threshimg-mean_h0)./std_h0;
-    
-    % threshold image at p-value
-    threshimg(abs(threshimg)<zval) = 0;
-    
-    
-    % find clusters (need image processing toolbox for this!)
-    islands = bwconncomp(threshimg);
-    if numel(islands.PixelIdxList)>0
-        
-        % count sizes of clusters
-        tempclustsizes = cellfun(@length,islands.PixelIdxList);
-        
-        % store size of biggest cluster
-        max_cluster_sizes(permi) = max(tempclustsizes);
+monkeyN = 2; % which monkey: 1 or 2
+
+if monkeyN==1
+    areas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'}; %monkey1
+    permmaps = m1_permmaps;
+else
+    areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'}; %monkey2
+    permmaps = m2_permmaps;
+end
+
+for areaN = 1:numel(m1chans)
+    cor = mean( monkey(monkeyN).correct.(areas{areaN}),3 );
+    inc = mean( monkey(monkeyN).incorrect.(areas{areaN}),3 );
+
+    % for convenience, compute the difference in power between the two
+    % conditions, correct-incorrect
+    % diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
+    diffmap = cor - inc;
+
+    % initialize matrices for cluster-based correction
+    max_cluster_sizes = zeros(1,n_permutes);
+    % ... and for maximum-pixel based correction
+    max_val = zeros(n_permutes,2); % "2" for min/max
+
+    % compute mean and standard deviation maps under the null hypothesis
+    mean_h0 = squeeze(mean(permmaps(areaN,:,:,:)));
+    std_h0  = squeeze(std(permmaps(areaN,:,:,:)));
+
+    % now change data to zmap
+    zmap = (diffmap-mean_h0) ./ std_h0;
+
+    % threshold image at p-value, by setting subthreshold values to 0
+    zmap(abs(zmap)<zval) = 0;
+    zmap_cluster = zmap; % initialize for cluster-correction
+
+    % loop through permutations
+    for permi = 1:n_permutes
+
+        % take each permutation map, and transform to Z
+        threshimg = squeeze(permmaps(areaN,permi,:,:));
+        threshimg = (threshimg-mean_h0)./std_h0;
+
+        % threshold image at p-value
+        threshimg(abs(threshimg)<zval) = 0;
+
+
+        % find clusters (need image processing toolbox for this!)
+        islands = bwconncomp(threshimg);
+        if numel(islands.PixelIdxList)>0
+
+            % count sizes of clusters
+            tempclustsizes = cellfun(@length,islands.PixelIdxList);
+
+            % store size of biggest cluster
+            max_cluster_sizes(permi) = max(tempclustsizes);
+        end
+
+
+        % get extreme values (smallest and largest)
+        temp = sort( reshape(permmaps(areaN,permi,:,:),1,[] ));
+        max_val(permi,:) = [ min(temp) max(temp) ];
+
     end
-    
-    
-    % get extreme values (smallest and largest)
-    temp = sort( reshape(permmaps(permi,:,:),1,[] ));
-    max_val(permi,:) = [ min(temp) max(temp) ];
-    
+    % find cluster threshold (need image processing toolbox for this!)
+    % based on p-value and null hypothesis distribution
+    cluster_thresh = prctile(max_cluster_sizes,100-(100*pval));
+    % now find clusters in the real thresholded zmap
+    % if they are "too small" set them to zero
+    islands = bwconncomp(zmap);
+    for i=1:islands.NumObjects
+        % if real clusters are too small, remove them by setting to zero!
+        if numel(islands.PixelIdxList{i}==i)<cluster_thresh
+            zmap_cluster(islands.PixelIdxList{i})=0;
+        end
+    end
+    % find the pixel threshold for lower and upper values, two-tailed
+    thresh_lo = prctile(max_val(:,1),100*(pval/2)); % pval/2 percentile of smallest values
+    thresh_hi = prctile(max_val(:,2),100-100*(pval/2)); % pval/2 percentile of largest values
+    % threshold real data
+    pixel_threshmap = diffmap;
+    pixel_threshmap(pixel_threshmap>thresh_lo & pixel_threshmap<thresh_hi) = 0;
+    if find(pixel_threshmap~=0) % significance left after pixel correction
+        signif.(areas{areaN}).zmap_pixel = pixel_threshmap; 
+        if find(zmap_cluster~=0) % now check cluster correction
+            signif.(areas{areaN}).zmap_cluster = zmap_cluster;
+        end
+    elseif find(zmap_cluster~=0) % sig left after cluster correction
+        signif.(areas{areaN}).zmap_cluster = zmap_cluster;
+    end
 end
 
 %% show histograph of maximum cluster sizes
@@ -553,47 +590,71 @@ hist(max_cluster_sizes,20);
 xlabel('Maximum cluster sizes'), ylabel('Number of observations')
 title('Expected cluster sizes under the null hypothesis')
 
-
-% find cluster threshold (need image processing toolbox for this!)
-% based on p-value and null hypothesis distribution
-cluster_thresh = prctile(max_cluster_sizes,100-(100*pval));
-
 %% plots with multiple comparisons corrections
 
-% now find clusters in the real thresholded zmap
-% if they are "too small" set them to zero
-islands = bwconncomp(zmap);
-for i=1:islands.NumObjects
-    % if real clusters are too small, remove them by setting to zero!
-    if numel(islands.PixelIdxList{i}==i)<cluster_thresh
-        zmap(islands.PixelIdxList{i})=0;
-    end
+% load significant areas that survived multiple comparison correction
+load('m2_significant_areas.mat')
+
+monkeyN = 2; % only monkey 2 was significant
+% significant areas: 8B, dPFC
+
+if monkeyN==1
+    areas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'}; %monkey1
+    permmaps = m1_permmaps;
+else
+    areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'}; %monkey2
+    permmaps = m2_permmaps;
 end
 
-% plot thresholded results
-figure(10), clf
+areaN = 3; % area 8B
+areaN = 4; % area dPFC
+
+cor = mean( monkey(monkeyN).correct.(areas{areaN}),3 );
+inc = mean( monkey(monkeyN).incorrect.(areas{areaN}),3 );
+
+% compute the difference in power between the two conditions
+diffmap = cor - inc;
+% extract mult comp correction maps if they exist
+zmap_cluster = signif.(areas{areaN}).zmap_cluster; % 8B, dPFC 
+zmap_pixel = signif.(areas{areaN}).zmap_pixel; %  dPFC
+
+figure(13), clf
 subplot(221)
-imagesc(times2save,[],m2aPE_diffmap)
-set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
-set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title(sprintf('TF power, no thresholding Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}(2:end)));
+contourf(signalt(times2saveidx),frex,diffmap,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','k');
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+pos = get(cbar,'Position'); lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Power (\muV^2)'; cbar.Label.Position=[pos(1)+1 pos(2)];
+cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Cluster-corrected Sig Regions Outlined Monkey %d, Area %s, p=%f',monkeyN,areas{areaN}(2:end),pval));
 
 subplot(222)
-imagesc(times2save,[],m2aPE_diffmap)
+contourf(signalt(times2saveidx),frex,diffmap,'linecolor','none')
 hold on
-contour(times2save,frex,logical(zmap),1,'linecolor','k')
-set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
-set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title(sprintf('Cluster-corrected TF power with contour Monkey %d, Area %s',monkeyN,m2areas{areaN+3}(2:end)));
+contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','k');
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+pos = get(cbar,'Position'); lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Power (\muV^2)'; cbar.Label.Position=[pos(1)+1 pos(2)];
+cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Cluster-corrected Sig Regions Outlined Monkey %d, Area %s, p=%f',monkeyN,areas{areaN}(2:end),pval));
 
 subplot(223)
-imagesc(times2save,[],zmap)
-set(gca,'clim',[-5 5],'xlim',xlim,'ydir','normal')
-set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title(sprintf('Cluster-corrected & thresholded TF z-map Monkey %d, Area %s, p-val %f',monkeyN,m2areas{areaN+3}(2:end),pval));
+contourf(signalt(times2saveidx),frex,diffmap,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_pixel),1,'linecolor','k');
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+% Create arrow
+xa = [0.409895833333333 0.427395833333333]; ya = [0.158878504672897 0.114730010384216];
+annotation('arrow',xa,ya)
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+pos = get(cbar,'Position'); lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Power (\muV^2)'; cbar.Label.Position=[pos(1)+1 pos(2)];
+cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Pixel-corrected Significant Regions Outlined Monkey %d, Area %s, p=%f',monkeyN,areas{areaN}(2:end),pval));
+
 
 
 %% now with max-pixel-based thresholding
@@ -603,19 +664,19 @@ thresh_lo = prctile(max_val(:,1),100*(pval/2)); % pval/2 percentile of smallest 
 thresh_hi = prctile(max_val(:,2),100-100*(pval/2)); % pval/2 percentile of largest values
 
 % threshold real data
-zmap = m2aPE_diffmap;
+zmap = diffmap;
 zmap(zmap>thresh_lo & zmap<thresh_hi) = 0;
 
 figure(11), clf
 subplot(221)
-imagesc(times2save,[],m2aPE_diffmap)
+imagesc(times2save,[],diffmap)
 set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
 title(sprintf('TF power map, no thresholding Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}(2:end)));
 
 subplot(222)
-imagesc(times2save,[],m2aPE_diffmap)
+imagesc(times2save,[],diffmap)
 hold on
 contour(times2save,frex,logical(zmap),1,'linecolor','k')
 set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
