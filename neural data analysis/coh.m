@@ -55,8 +55,8 @@ end
 load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
 
 % choose which monkey and response you want to pull out
-monkeyN = 1; % which monkey (1 or 2)
-resp = 1; % 1 = correct, 0 = incorrect
+monkeyN = 2; % which monkey (1 or 2)
+% resp = 2; % 1 = correct, 0 = incorrect
 
 % begin definining convolution parameters
 n_wavelet = length(wavet);
@@ -69,9 +69,9 @@ else
     areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'}; %monkey2
     chans = {'6DR', '8AD', '8B', 'dPFC', 'LIP', 'PE', 'PEC', 'PG'};
 end
-if resp==1, response = 'correct';
-else, response = 'incorrect';
-end
+% if resp==1, response = 'correct';
+% else, response = 'incorrect';
+% end
 
 % define trial timeline
 signalt = -.5:1/srate:1.31; % in seconds
@@ -86,97 +86,102 @@ baseidx = dsearchn(signalt',baset');
 % setup response structs
 monkey(monkeyN).correct=[];
 monkey(monkeyN).incorrect=[];
+% setup response vector
+responses=[{'correct'},{'incorrect'}];
 
 tic
-% pull out spectral coherence across all days and append per session,
-% per condition, averaged across trials
-for i=1:numel(monkey(monkeyN).day)
-    chan = fieldnames(monkey(monkeyN).day(i).(response));
-    % initialize mat to save ea analytic signal for all channels
-    % chan x freq x time x trials
-    chan_as = zeros(numel(chan),num_frex,length(signalt),size(monkey(monkeyN).day(i).(response).(chan{1})',2));
-    for j=1:numel(chan)
-        signal = monkey(monkeyN).day(i).(response).(chan{j})'; % change to time-by-trials
-        reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
-        % reflect all signals
-        for signalN=1:size(signal,2)
-            reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
-            reflectsig_all(:,signalN) = reflectsig;
-        end
-        % concatenate into a super-trial
-        reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
-        % step 1: finish defining convolution parameters
-        n_data = length(reflectsig_supertri); % time*trials
-        n_convolution = n_wavelet+n_data-1;
-        % step 2: take FFTs
-        fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
-        % initialize mat to save ea analytic signal for all frex
-        % freq x time x trials
-        as_ = zeros(num_frex,length(signalt),size(signal,2));
-        for fi=1:length(frex)
-            % FFT of wavelet
-            fft_wavelet = fft(wavelets(fi,:),n_convolution);
-            % step 3: normalize kernel by scaling amplitudes to one in the 
-            % frequency domain. prevents amplitude from decreasing with 
-            % increasing frequency. diff from 1/f scaling
-            fft_wavelet = fft_wavelet ./ max(fft_wavelet);
-            % step 4: point-wise multiply and take iFFT
-            as = ifft( fft_data.*fft_wavelet ); % analytic signal
-            % step 5: trim wings
-            as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
-            % step 6: reshape back to reflected time-by-trials
-            as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
-            % step 7: chop off the reflections
-            as = as(n_wavelet+1:end-n_wavelet,:);
-            % as_ is now a time x trial complex matrix
-            % save as for ea freq x time x trials 
-            as_(fi,:,:) = as;
-        end
-        chan_as(j,:,:,:) = as_; % save as for ea chan x freq x time x trial
-    end
-    chancombo = combnk(chan,2); %all chan combinations
-    chancomboidx = combnk(1:numel(chan),2); %all chan index combinations
-    for j=1:size(chancombo,1) %total number of combinations
-        for k=1:numel(areas)
-            if endsWith(chancombo{j,1},chans{k}) %which chan
-                area1=k;
+for responseN=1:length(responses) % loop through correct + incorrect
+    response = responses{responseN}; % which response
+    % pull out spectral coherence across all days and append per session,
+    % per condition, averaged across trials
+    for i=1:numel(monkey(monkeyN).day)
+        chan = fieldnames(monkey(monkeyN).day(i).(response));
+        % initialize mat to save ea analytic signal for all channels
+        % chan x freq x time x trials
+        chan_as = zeros(numel(chan),num_frex,length(signalt),size(monkey(monkeyN).day(i).(response).(chan{1})',2));
+        for j=1:numel(chan)
+            signal = monkey(monkeyN).day(i).(response).(chan{j})'; % change to time-by-trials
+            reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
+            % reflect all signals
+            for signalN=1:size(signal,2)
+                reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
+                reflectsig_all(:,signalN) = reflectsig;
             end
-            if endsWith(chancombo{j,2},chans{k}) %which chan
-                area2=k;
+            % concatenate into a super-trial
+            reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
+            % step 1: finish defining convolution parameters
+            n_data = length(reflectsig_supertri); % time*trials
+            n_convolution = n_wavelet+n_data-1;
+            % step 2: take FFTs
+            fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
+            % initialize mat to save ea analytic signal for all frex
+            % freq x time x trials
+            as_ = zeros(num_frex,length(signalt),size(signal,2));
+            for fi=1:length(frex)
+                % FFT of wavelet
+                fft_wavelet = fft(wavelets(fi,:),n_convolution);
+                % step 3: normalize kernel by scaling amplitudes to one in the 
+                % frequency domain. prevents amplitude from decreasing with 
+                % increasing frequency. diff from 1/f scaling
+                fft_wavelet = fft_wavelet ./ max(fft_wavelet);
+                % step 4: point-wise multiply and take iFFT
+                as = ifft( fft_data.*fft_wavelet ); % analytic signal
+                % step 5: trim wings
+                as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
+                % step 6: reshape back to reflected time-by-trials
+                as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
+                % step 7: chop off the reflections
+                as = as(n_wavelet+1:end-n_wavelet,:);
+                % as_ is now a time x trial complex matrix
+                % save as for ea freq x time x trials 
+                as_(fi,:,:) = as;
             end
+            chan_as(j,:,:,:) = as_; % save as for ea chan x freq x time x trial
         end
-        if area1~=area2 % ensure not finding coherence within same area
-            % initialize coherence matrix for all frex for area
-            spectcoh = zeros(length(frex),length(times2save));
-            % pull out analytic signal from each channel
-            as1 = squeeze(chan_as(chancomboidx(2,1),:,:,:)); % squeeze to frex x time x trial
-            as2 = squeeze(chan_as(chancomboidx(2,2),:,:,:)); % squeeze to frex x time x trial
-            for fi=1:length(frex) %compute spectral coherence for ea freq
-                sig1 = squeeze(as1(fi,:,:));
-                sig2 = squeeze(as2(fi,:,:));
-                % sig1 & sig2 are now a time x trial complex matrix
-                % compute avg power and avg cross-spectral power over trials
-                spec1 = mean(sig1.*conj(sig1),2); % faster to compute power than abs.^2
-                spec2 = mean(sig2.*conj(sig2),2);
-                specX = abs(mean(sig1.*conj(sig2),2)).^2;
-                % yields three time x 1 matrices, setting up for coherence over trials
-                % to show connectivity evolution over time
-                % compute spectral coherence, using only requested time points
-                spectcoh(fi,:) = specX(times2saveidx)./(spec1(times2saveidx).*spec2(times2saveidx));
+        chancombo = combnk(chan,2); %all chan combinations
+        chancomboidx = combnk(1:numel(chan),2); %all chan index combinations
+        for j=1:size(chancombo,1) %total number of combinations
+            for k=1:numel(areas)
+                if endsWith(chancombo{j,1},chans{k}) %which chan
+                    area1=k;
+                end
+                if endsWith(chancombo{j,2},chans{k}) %which chan
+                    area2=k;
+                end
             end
-            combo = sprintf('%s_%s',areas{area1},areas{area2});
-            combo_rev = sprintf('%s_%s',areas{area2},areas{area1});  
-            if isfield(monkey(monkeyN).(response),(combo)) % field exists?
-                % yes, field exists..
-                aTrials = size(monkey(monkeyN).(response).(combo),3);
-                % append session for area in freq x time struct
-                monkey(monkeyN).(response).(combo)(:,:,aTrials+1) = spectcoh;
-            elseif isfield(monkey(monkeyN).(response),(combo_rev))
-                aTrials = size(monkey(monkeyN).(response).(combo_rev),3);
-                % append session for area in freq x time struct
-                monkey(monkeyN).(response).(combo_rev)(:,:,aTrials+1) = spectcoh;
-            else
-                monkey(monkeyN).(response).(combo) = spectcoh; % freq x time x trial
+            if area1~=area2 % ensure not finding coherence within same area
+                % initialize coherence matrix for all frex for area
+                spectcoh = zeros(length(frex),length(times2save));
+                % pull out analytic signal from each channel
+                as1 = squeeze(chan_as(chancomboidx(2,1),:,:,:)); % squeeze to frex x time x trial
+                as2 = squeeze(chan_as(chancomboidx(2,2),:,:,:)); % squeeze to frex x time x trial
+                for fi=1:length(frex) %compute spectral coherence for ea freq
+                    sig1 = squeeze(as1(fi,:,:));
+                    sig2 = squeeze(as2(fi,:,:));
+                    % sig1 & sig2 are now a time x trial complex matrix
+                    % compute avg power and avg cross-spectral power over trials
+                    spec1 = mean(sig1.*conj(sig1),2); % faster to compute power than abs.^2
+                    spec2 = mean(sig2.*conj(sig2),2);
+                    specX = abs(mean(sig1.*conj(sig2),2)).^2;
+                    % yields three time x 1 matrices, setting up for coherence over trials
+                    % to show connectivity evolution over time
+                    % compute spectral coherence, using only requested time points
+                    spectcoh(fi,:) = specX(times2saveidx)./(spec1(times2saveidx).*spec2(times2saveidx));
+                end
+                combo = sprintf('%s_%s',areas{area1},areas{area2});
+                combo_rev = sprintf('%s_%s',areas{area2},areas{area1});  
+                if isfield(monkey(monkeyN).(response),(combo)) % field exists?
+                    % yes, field exists..
+                    aTrials = size(monkey(monkeyN).(response).(combo),3);
+                    % append session for area in freq x time struct
+                    monkey(monkeyN).(response).(combo)(:,:,aTrials+1) = spectcoh;
+                elseif isfield(monkey(monkeyN).(response),(combo_rev))
+                    aTrials = size(monkey(monkeyN).(response).(combo_rev),3);
+                    % append session for area in freq x time struct
+                    monkey(monkeyN).(response).(combo_rev)(:,:,aTrials+1) = spectcoh;
+                else
+                    monkey(monkeyN).(response).(combo) = spectcoh; % freq x time x trial
+                end
             end
         end
     end
