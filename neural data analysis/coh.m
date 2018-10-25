@@ -306,7 +306,7 @@ title(sprintf('Baseline-subtracted Coherence Difference Monkey %d, Area %s, Corr
 %% statistics via permutation testing
 
 % p-value
-pval = 0.05;
+pval = 0.01;
 
 % convert p-value to Z value
 zval = abs(norminv(pval));
@@ -374,10 +374,6 @@ zmap_group(abs(zmap_group)<zval) = 0;
 
 %% show non-corrected thresholded maps
 
-% now some plotting...
-
-fppair = 1; % which pair?
-
 % contourf plot template:
 % x = 1 x samples
 % y = 1 x frequencies
@@ -385,7 +381,7 @@ fppair = 1; % which pair?
 % contourf(x,y,z,...)
 clim=[-.04,.04];
 
-figure(17), clf
+figure(19), clf
 subplot(221)
 contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),15,'linecolor','none')
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -408,7 +404,7 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
 % cbar.TickLabels = ({'Incorrect','Correct'});
-title(sprintf('Significant Regions Outlined, Avg FP Coherence, Monkey %d, Correct > Incorrect',monkeyN));
+title(sprintf('Significant Regions Outlined, Avg FP Coherence, Monkey %d, Cor > Inc p=%1.2f',monkeyN,pval));
 
 subplot(223)
 contourf(signalt(times2saveidx),frex,zmap_group,15,'linecolor','none')
@@ -416,9 +412,9 @@ set(gca,'clim',clim.*100,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Z-score'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-.6 pos(2)];
+cbar.Label.Position=[pos(1)-.8 pos(2)];
 % cbar.TickLabels = ({'Incorrect','Correct'});
-title(sprintf('Thresholded Uncorrected Z-values Avg FP Coh, Monkey %d, Correct > Incorrect',monkeyN));
+title(sprintf('Thresholded Uncorrected Z-values Avg FP Coh, Monkey %d, Correct > Incorrect p=%1.2f',monkeyN,pval));
 
 %% corrections for multiple comparisons
 
@@ -489,7 +485,7 @@ pixel_threshmap(pixel_threshmap>thresh_lo & pixel_threshmap<thresh_hi) = 0;
 
 %% show histograph of maximum cluster sizes
 
-figure(18), clf
+figure(20), clf
 hist(max_cluster_sizes,20);
 xlabel('Maximum cluster sizes'), ylabel('Number of observations')
 title('Expected cluster sizes under the null hypothesis')
@@ -497,7 +493,7 @@ title('Expected cluster sizes under the null hypothesis')
 
 %% plots with multiple comparisons corrections
 
-figure(18), clf
+figure(20), clf
 subplot(221)
 contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),15,'linecolor','none')
 hold on
