@@ -193,7 +193,7 @@ toc
 % load coherence data for both monkeys
 load('mGoodStableRule1PingRejCoh-AllDays_Cor_Inc_Allchans.mat')
 
-monkeyN = 1; %which monkey? 1 or 2
+monkeyN = 2; %which monkey? 1 or 2
 responses = [{'correct'},{'incorrect'}]; 
 responseN = 1; %which response? 1 or 2
 
@@ -209,7 +209,7 @@ if monkeyN==1
     combos = fieldnames(monkey(monkeyN).(responses{responseN}));
 else
     areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'}; %monkey2
-    combos = fieldnames(monkey(monkeyN).(response{responseN}));
+    combos = fieldnames(monkey(monkeyN).(responses{responseN}));
 end
 fpidx = []; %initialize fp_pairs matrix for each monkey
 % pull out only frontal-parietal or parietal-frontal pairs for testing
@@ -245,14 +245,14 @@ imagesc(times2save,[],cor)
 set(gca,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Coherence from Monkey %d, Area %s, Resp Correct',monkeyN,combos{subplotN}(2:end)));
+title(sprintf('Coherence from Monkey %d, Area %s, Resp Correct',monkeyN,combos{fpidx(1)}(2:end)));
 
 subplot(222)
 imagesc(times2save,[],inc)
 set(gca,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Coherence from Monkey %d, Area %s, Resp Incorrect',monkeyN,combos{subplotN}(2:end)));
+title(sprintf('Coherence from Monkey %d, Area %s, Resp Incorrect',monkeyN,combos{fpidx(1)}(2:end)));
 
 subplot(223)
 imagesc(times2save,[],diffmap)
@@ -262,7 +262,7 @@ xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar;
 pos = get(cbar,'Position'); lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; cbar.Label.Position=[pos(1)+1 pos(3)-.02];
 cbar.TickLabels = ({'-0.04','0.04'});
-title(sprintf('Coherence Difference Monkey %d, Area %s, Correct > Incorrect',monkeyN,combos{subplotN}(2:end)));
+title(sprintf('Coherence Difference Monkey %d, Area %s, Correct > Incorrect',monkeyN,combos{fpidx(1)}(2:end)));
 
 % plot examples showing correct, incorrect and their difference for
 % baseline-corrected
