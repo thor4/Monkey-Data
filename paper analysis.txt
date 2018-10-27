@@ -54,3 +54,43 @@ https://blogs.mathworks.com/loren/2005/12/13/use-dynamic-field-references/
 
 ["new h5 python transfer"]
 1. used create_hdf5.m to create uncompressed h5 file by crawling through the monkey data structure from the m1GoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat file. Saved the 4gb h5 file as mGoodStableRule1PingRej.h5
+
+-----Coherence------
+M1 - 12 frontoparietal pairs
+	'aPEC_adPFC'	'aPG_a8B'	'aPG_adPFC'	'aPEC_a8B'	'aPEC_a9L'	'aPG_a9L'	'aPG_avPFC'	'aPEC_avPFC'	'aMIP_adPFC'	'aLIP_adPFC'	'aLIP_a8B'	'aMIP_a8B'
+
+M2 - 16 frontoparietal pairs
+    'a6DR_aPE'	'a6DR_aPG'	'a8B_aPE'	'a8B_aPG'	'a6DR_aPEC'	'a8AD_aPEC'	'a8AD_aPG'	'adPFC_aPEC'	'adPFC_aPG'	'a8B_aPEC'	'adPFC_aPE'	'a8AD_aPE'	'a8B_aLIP'	'a8AD_aLIP'	'a6DR_aLIP'	'adPFC_aLIP'
+
+
+RESULTS
+
+M1 Power
+
+No time-frequency conditon-differenced power elements from any recording areas were significant after correcting for multiple comparisons using the cluster and pixel methods for M1, p<0.05, Bonferonni-adjusted p<0.00625. 
+
+M2 Power
+
+High-delta to mid-alpha (3.5-10Hz) conditon-differenced power from baseline through stimulus onset was significant in recording area dPFC after correcting for multiple comparisons using the cluster method for M1, p<0.05, Bonferonni-adjusted p<0.00625. [raw_power_sig_areas_corrected.eps]
+
+High-delta (3.5Hz) conditon-differenced power from the end of the delay period was significant in recording area dPFC after correcting for multiple comparisons using the pixel method for M1, p<0.05, Bonferonni-adjusted p<0.00625. [raw_power_sig_areas_corrected.eps]
+
+High-delta to high-theta (3.5-8Hz) conditon-differenced power from the delay period was significant in recording area 8B after correcting for multiple comparisons using the cluster method for M1, p<0.05, Bonferonni-adjusted p<0.00625. 
+[raw_power_sig_areas_corrected.eps]
+
+M1 Coherence
+{choose p<0.01 or p<0.05}
+
+p<0.05
+
+High-beta/low-gamma during baseline and low-beta on stimulus onset from conditon-differenced coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the pixel method for M1, p<0.05. [coh_m1_fp_cor_inc_thresh_mcc.eps]
+
+Gamma activity (30-170Hz) throughout the trial from conditon-differenced coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the cluster method for M1, p<0.05. [coh_m1_fp_cor_inc_thresh_mcc.eps]
+
+p<0.01
+
+Low-beta on stimulus onset from conditon-differenced coherence over all frontoparietal combinations was significant after correcting for multiple comparisons using the pixel method for M1, p<0.01. [coh_m1_fp_cor_inc_thresh_mcc_p=.01.eps]
+
+Gamma activity (70-170Hz) throughout the trial from conditon-differenced coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the cluster method for M1, p<0.01. [coh_m1_fp_cor_inc_thresh_mcc_p=.01.eps]
+
+No time-frequency elements from baseline-subtracted coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the cluster or pixel methods for M1, p<0.05. 
