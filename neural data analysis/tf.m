@@ -85,7 +85,9 @@ end
 
 % plot wavelets in time domain- ensure all taper to 0 (or very close)
 figure(1), clf
-subplot(211), plot(wavet,real(wavelets))
+plot(wavet,real(wavelets))
+axis off
+export_fig test2.png -transparent % no background
 % plot(time,signal,'k','linew',2)
 xlabel('Time (s)'), ylabel('Amplitude (gain)')
 title('Time domain')
@@ -392,32 +394,76 @@ toc
 % cbar = colorbar; set(get(cbar,'label'),'string','Raw power (\muV^2)');   
 % suptitle(sprintf('Freq Step = %d, temporal FWHM %dms to %1.0fms, spectral FWHM %dHz to %dHz',length(frex),empfwhmT(1)*1000,empfwhmT(end)*1000,empfwhmF(1),empfwhmF(end)));
 
+%% initialize variables
+
+load('mGoodStableRule1PingRejRawPow-AllDays_Cor_Inc_Allchans.mat')
+
+monkeyN = 2; %which monkey? 1 or 2
+responses = [{'correct'},{'incorrect'}]; 
+responseN = 1; %which response? 1 or 2
+
+% define trial timeline
+signalt = -.5:1/srate:1.31; % in seconds
+times2save = -400:10:1200; % in ms
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+% define baseline time
+baset = [-400 -100]; % in ms
+baseidx = dsearchn(times2save',baset'); % search down-sampled time
+
+% which areas depends on monkeyN
+areas = fieldnames(monkey(monkeyN).(responses{responseN}));
+n_areas = length(areas);
+
 
 %% plotting the raw difference data
 
-clim = [0 25];
+areaN = 2; %plot which area?
+clim = [0 90];
 
-figure(7), clf
+%pull out correct & incorrect power avg over trials
+cor = mean( monkey(monkeyN).(responses{1}).(areas{areaN}),3 ); 
+inc = mean( monkey(monkeyN).(responses{2}).(areas{areaN}),3 );
+% compute the difference in power between the two conditions
+% diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
+diffmap = cor - inc;
+
+figure(9), clf
 subplot(221)
 imagesc(times2save,[],cor)
+hold on %vertical line
+yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Correct',monkeyN,m2areas{areaN+3}(2:end)));
+xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1 pos(2)];
+title(sprintf('Monkey %d, Area %s, Resp Correct',monkeyN,areas{areaN}(2:end)));
 
 subplot(222)
 imagesc(times2save,[],inc)
+hold on %vertical line
+yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Raw Power via Morlet Wavelet from Monkey %d, Area %s, Resp Incorrect',monkeyN,m2areas{areaN+3}(2:end)));
+xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1 pos(2)];
+title(sprintf('Monkey %d, Area %s, Resp Incorrect',monkeyN,areas{areaN}(2:end)));
 
 subplot(223)
-imagesc(times2save,[],diffmap)
+imagesc(times2save,[], diffmap)
+hold on %vertical line
+yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Raw Power Difference Monkey %d, Area %s, Correct - Incorrect',monkeyN,m2areas{areaN+3}(2:end)));
+xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1 pos(2)];
+title(sprintf('Monkey %d, Area %s, Correct - Incorrect',monkeyN,areas{areaN}(2:end)));
 
 %% statistics via permutation testing
 
@@ -502,7 +548,7 @@ else
     permmaps = m2_permmaps;
 end
 
-for areaN = 1:numel(m1chans)
+for areaN = 1:numel(areas)
     cor = mean( monkey(monkeyN).correct.(areas{areaN}),3 );
     inc = mean( monkey(monkeyN).incorrect.(areas{areaN}),3 );
 
@@ -510,21 +556,20 @@ for areaN = 1:numel(m1chans)
     % conditions, correct-incorrect
     % diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
     diffmap = cor - inc;
-
+    % compute mean and standard deviation maps under the null hypothesis
+    mean_h0 = squeeze(mean(permmaps(areaN,:,:,:)));
+    std_h0  = squeeze(std(permmaps(areaN,:,:,:)));
+    % now change data to zmap
+    zmap = (diffmap-mean_h0) ./ std_h0;
+    % threshold image at p-value, by setting subthreshold values to 0, this
+    % is uncorrected zmap
+    zmap(abs(zmap)<zval) = 0;
+    
+    % now for cluster and pixel correction
     % initialize matrices for cluster-based correction
     max_cluster_sizes = zeros(1,n_permutes);
     % ... and for maximum-pixel based correction
     max_val = zeros(n_permutes,2); % "2" for min/max
-
-    % compute mean and standard deviation maps under the null hypothesis
-    mean_h0 = squeeze(mean(permmaps(areaN,:,:,:)));
-    std_h0  = squeeze(std(permmaps(areaN,:,:,:)));
-
-    % now change data to zmap
-    zmap = (diffmap-mean_h0) ./ std_h0;
-
-    % threshold image at p-value, by setting subthreshold values to 0
-    zmap(abs(zmap)<zval) = 0;
     zmap_cluster = zmap; % initialize for cluster-correction
 
     % loop through permutations
@@ -571,7 +616,7 @@ for areaN = 1:numel(m1chans)
     thresh_lo = prctile(max_val(:,1),100*(pval/2)); % pval/2 percentile of smallest values
     thresh_hi = prctile(max_val(:,2),100-100*(pval/2)); % pval/2 percentile of largest values
     % threshold real data
-    pixel_threshmap = diffmap;
+    pixel_threshmap = diffmap; % initialize for pixel correction
     pixel_threshmap(pixel_threshmap>thresh_lo & pixel_threshmap<thresh_hi) = 0;
     if find(pixel_threshmap~=0) % significance left after pixel correction
         signif.(areas{areaN}).zmap_pixel = pixel_threshmap; 
@@ -585,10 +630,16 @@ end
 
 %% show histograph of maximum cluster sizes
 
-figure(9), clf
+figure(1), clf
 hist(max_cluster_sizes,20);
+hold on % vert line
+yL = get(gca,'YLim'); line([cluster_thresh cluster_thresh],yL,'Color','k','LineStyle',':','LineWidth',2); 
+axis off
 xlabel('Maximum cluster sizes'), ylabel('Number of observations')
 title('Expected cluster sizes under the null hypothesis')
+histogram(max_val,500,'FaceColor','b'); % bimodal
+hold on % vertical lines
+yL = get(gca,'YLim'); line([thresh_lo thresh_hi;thresh_lo thresh_hi],yL,'Color','k','LineStyle',':','LineWidth',2); 
 
 %% plots with multiple comparisons corrections
 
@@ -655,7 +706,73 @@ cbar.Label.String = 'Power (\muV^2)'; cbar.Label.Position=[pos(1)+1 pos(2)];
 cbar.TickLabels = ({'Incorrect','Correct'});
 title(sprintf('Pixel-corrected Significant Regions Outlined Monkey %d, Area %s, p=%f',monkeyN,areas{areaN}(2:end),pval));
 
+%% Poster Images
+% plot correct and incorrect then diffmap with sig regions outlined after mcc
 
+% load relevant workspace var's
+load('m2_pow_significant_areas.mat')
+
+figure(9), clf
+% subplot(221)
+contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_pixel),1,'linecolor','w','linewidth',3);
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[0 25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.5 pos(2)];
+% title('Correct, Significant Regions Outlined','FontSize',32);
+export_fig test2.png -transparent % no background
+
+% zoom in on clustered area (delay only, 2.5-8.6Hz) area 8B, [-250 130,
+% 3.5-11Hz area dPFC), pixel dfpc: [1150 1200ms], [3.5 4Hz] too small
+clustert = [1150 1200]; % in ms
+clusteridx = dsearchn(times2save',clustert');
+freqz = [3.5 4]; % in Hz
+freqzidx = dsearchn(frex',freqz');
+
+figure(10), clf
+% subplot(221)
+contourf(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),diffmap(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2)),100,'linecolor','none')
+hold on
+contour(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),logical(zmap_pixel(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2))),1,'linecolor','k','linewidth',3);
+% yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[0 2],'ytick',round(logspace(log10(frex(freqzidx(1))),log10(frex(freqzidx(2))),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (ms)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Power Difference (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+export_fig test2.png -transparent % no background
+
+figure(9), clf
+% subplot(222)
+contourf(signalt(times2saveidx),frex,inc,100,'linecolor','none');
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_pixel),1,'linecolor','w','linewidth',3);
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[0 25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.5 pos(2)];
+% title('Incorrect, Significant Regions Outlined','FontSize',32);
+export_fig test2.png -transparent % no background
+
+figure(9), clf
+% subplot(223)
+contourf(signalt(times2saveidx),frex,diffmap,100,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_pixel),1,'linecolor','k','linewidth',3);
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[-2 2],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Power Difference (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.3 pos(2)];
+% title(sprintf('M%d Avg FP Coh Pixel-corrected Sig Regions Outlined Cor > Inc p<%1.2f',monkeyN,pval));
+export_fig test2.png -transparent % no background
 
 %% now with max-pixel-based thresholding
 
@@ -690,85 +807,4 @@ set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','norm')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)')
 title(sprintf('Max-pixel-corrected & thresholded TF z-map Monkey %d, Area %s',monkeyN,m2areas{areaN+3}(2:end)));
-
-%% end.
-
-%% Visualizations
-
-figure(8), clf
-
-subplot(211)
-plot(signalt,mean(signal,2))
-% set(gca,'ylim',[-.05 1.05])
-ylabel('Amplitude'), title('ERP')
-
-subplot(212)
-contourf(sigtime,frex,tf,40,'linecolor','none')
-set(gca,'clim',[0 .1])
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), 
-% ylabel('Raw power (\muV^2)') colorbar label
-
-
-% plot for comparison
-figure
-subplot(311)
-plot(EEG.times,real(convolution_result_fft))
-xlabel('Time (ms)'), ylabel('Voltage (\muV)')
-title([ 'Projection onto real axis is filtered signal at ' num2str(frequency) ' Hz.' ])
-
-subplot(312)
-plot(EEG.times,abs(convolution_result_fft).^2)
-xlabel('Time (ms)'), ylabel('Power (\muV^2)')
-title([ 'Magnitude of projection vector squared is power at ' num2str(frequency) ' Hz.' ])
-
-subplot(313)
-plot(EEG.times,angle(convolution_result_fft))
-xlabel('Time (ms)'), ylabel('Phase angle (rad.)')
-title([ 'Angle of vector is phase angle time series at ' num2str(frequency) ' Hz.' ])
-
-
-%compute coherence (S1 & S2 only hold the power, not analytic signal)
-[C,phi,S12,S1,S2,t,f] = cohgramc(data1',data2',movingwin,params);
-
-% dB-baseline corrected
-baseline_power = mean(S1(baselineidx(1):baselineidx(2),:,:),1);
-dbconverted = 10*log10( bsxfun(@rdivide,S1,baseline_power));
-
-zmin = mean(dbconverted(:)) - 2*std(dbconverted(:));
-zmax = mean(dbconverted(:)) + 2*std(dbconverted(:));
-zrange = round((zmax - zmin)/2);
-
-%now plot, need baseline corrected dB code
-% x = 1 x samples
-% y = 1 x frequencies
-% z = frequencies x samples
-% contourf(x,y,z,...)
-W_ = params.tapers(1)/movingwin(1);
-figure
-contourf(t,f,dbconverted','linecolor','none')
-set(gca,'ytick',round(logspace(log10(f(1)),log10(f(end)),10)*100)/100,'yscale','log','clim',[-zrange zrange])
-% set(gca,'xlim',[monkeyTime(1) monkeyTime(end)])
-xlabel('Time (ms)'), ylabel('Frequency (Hz)')
-title(sprintf('Power via multitaper from Monkey %d, Day %d, Resp %s, Channel %s\n W = %dHz, moving window = %dms, step = %dms',i,day(i),resp{j},chan_combo{k,1},W_,movingwin(1)*1000,movingwin(2)*1000));
-cbar = colorbar; set(get(cbar,'label'),'string','dB change from baseline');   
-%title(sprintf('%s\n', labels{:}))
-
-[P,T,F]=mtspecgramc(Correct.area8B,movingwin,params);
-subplot(2,6,2)
-imagesc(T,F,10*log10(P)) %Plot power in dB
-axis xy; title('Frontal 8B'); xlabel('Time(s)'); ylabel('Freq (Hz)'); colormap jet; colorbar;
-
-%other plot
-plot_matrix(P,T,F); xlabel([]); % plot spectrogram
-%caxis([8 28]); 
-colorbar;
-set(gca,'FontName','Times New Roman','Fontsize', 14);
-title({['LFP 1,  W=' num2str(params.tapers(1)/movingwin(1)) 'Hz']; ['moving window = ' num2str(movingwin(1)) 's, step = ' num2str(movingwin(2)) 's']});
-ylabel('frequency Hz');
-
-%contour plot
-contourf(times2save,frex,squeeze(mi(i,:,:))-repmat(mean(mi(i,:,baseidx(1):baseidx(2)),3)',1,length(times2save)),40,'linecolor','none')
-set(gca,'clim',[-.075 .075],'yscale','log','ytick',round(logspace(log10(frex(1)),log10(frex(end)),6)))
-xlabel('Time (ms)'), ylabel('Frequency (Hz)'), title('MI Based on Power')
-c = colorbar; set(get(c,'label'),'string','MI (baseline subtracted)');    
 

@@ -31,8 +31,10 @@ Monkey 2 (M2) = Betty
 
 WAVELETS
 2. Had to start at 3Hz wavelets since 2Hz wavelets didn't taper to 0 back to the [-500,0] baseline epoch.
+We implemented time-frequency analysis by convolving the signal with a set of complex Morlet wavelets, defined as complex sine waves tapered by a Gaussian. The frequencies of the wavelets ranged from 3.5 Hz to 200 Hz in 50 steps. The full-width at half-maximum (FWHM) ranged from 350 ms to 50 ms with increasing wavelet peak frequency. This resulted in a spectral FWHM range of 4 Hz to 18 Hz. 
 
-load parts from huge analytic signal file: https://www.mathworks.com/help/matlab/import_export/load-parts-of-variables-from-mat-files.html
+
+
 
 2. [legacy] for TF Power analysis, choose only from rule 1: pull out first 1,001 points for prestimulus and stimulus: [1,500] for prestimulus, [501,1001] for stimulus and CueOffset+1 through 810ms [1002,1811] for delay. Do this for areas 8B, 9L, dPFC, vPFC, LIP, MIP, PEC & PG for M1. Do this for areas 6DR, 8AD, 8B, dPFC, LIP, PE, PEC & PG for M2. Save BehResp x Area for each monkey in 32 separate variables, 16/monkey, 8/BehResp. 
 
@@ -67,30 +69,32 @@ RESULTS
 
 M1 Power
 
-No time-frequency conditon-differenced power elements from any recording areas were significant after correcting for multiple comparisons using the cluster and pixel methods for M1, p<0.05, Bonferonni-adjusted p<0.00625. 
+No time-frequency condition-differenced power elements from any recording areas were significant after correcting for multiple comparisons using the cluster and pixel methods for M1, p<0.05, Bonferroni-adjusted p<0.00625. 
 
 M2 Power
 
-High-delta to mid-alpha (3.5-10Hz) conditon-differenced power from baseline through stimulus onset was significant in recording area dPFC after correcting for multiple comparisons using the cluster method for M1, p<0.05, Bonferonni-adjusted p<0.00625. [raw_power_sig_areas_corrected.eps]
+High-delta to mid-alpha (3.5-10Hz) condition-differenced power from baseline through stimulus onset was significant in recording area dPFC after correcting for multiple comparisons using the cluster method for M2, p<0.05, Bonferroni-adjusted p<0.00625. [raw_power_sig_areas_corrected.eps]
 
-High-delta (3.5Hz) conditon-differenced power from the end of the delay period was significant in recording area dPFC after correcting for multiple comparisons using the pixel method for M1, p<0.05, Bonferonni-adjusted p<0.00625. [raw_power_sig_areas_corrected.eps]
+High-delta (3.5Hz) condition-differenced power from the end of the delay period was significant in recording area dPFC after correcting for multiple comparisons using the pixel method for M2, p<0.05, Bonferroni-adjusted p<0.00625. [raw_power_sig_areas_corrected.eps]
 
-High-delta to high-theta (3.5-8Hz) conditon-differenced power from the delay period was significant in recording area 8B after correcting for multiple comparisons using the cluster method for M1, p<0.05, Bonferonni-adjusted p<0.00625. 
+High-delta to high-theta (3.5-8Hz) condition-differenced power from the delay period was significant in recording area 8B after correcting for multiple comparisons using the cluster method for M2, p<0.05, Bonferroni-adjusted p<0.00625. 
 [raw_power_sig_areas_corrected.eps]
 
 M1 Coherence
-{choose p<0.01 or p<0.05}
+
+Nothing signficant after meta permutation test and correcting for multiple comparisons via pixel and cluster methods.
+
+
+M2 Coherence
 
 p<0.05
 
-High-beta/low-gamma during baseline and low-beta on stimulus onset from conditon-differenced coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the pixel method for M1, p<0.05. [coh_m1_fp_cor_inc_thresh_mcc.eps]
+*raw*
+High delta, theta and low alpha (3.5-9Hz) throughout baseline and into beginning of stimulus onset, high delta, theta, alpha and low beta (3.5-17Hz) during mid-late delay from condition-differenced coherence over all frontoparietal combinations was significant after correcting for multiple comparisons using the cluster method for M2, p<0.05. [coh_m2_fp_cor_inc_mcc_p_.05.eps]
 
-Gamma activity (30-170Hz) throughout the trial from conditon-differenced coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the cluster method for M1, p<0.05. [coh_m1_fp_cor_inc_thresh_mcc.eps]
+High delta (3.5-4Hz) at the end of the delay period from condition-differenced coherence over all frontoparietal combinations was significant after correcting for multiple comparisons using the pixel method for M2, p<0.05. [coh_m2_fp_cor_inc_mcc_p_.05.eps]
 
-p<0.01
+*baseline-subtracted*
+High delta through high alpha (3.5-11Hz) shortly after onset, then throughout stimulus window, high delta through mid theta (3.5-6Hz) during early-mid delay period, and theta through low alpha (4.5-9Hz) during late delay period from condition-differenced, baseline-subtracted coherence over all FP combinations was significant after correcting for multiple comparisons using the cluster method for M2, p<0.05. [coh_base_sub_m2_fp_cor_inc_mcc_p_.05]
 
-Low-beta on stimulus onset from conditon-differenced coherence over all frontoparietal combinations was significant after correcting for multiple comparisons using the pixel method for M1, p<0.01. [coh_m1_fp_cor_inc_thresh_mcc_p=.01.eps]
-
-Gamma activity (70-170Hz) throughout the trial from conditon-differenced coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the cluster method for M1, p<0.01. [coh_m1_fp_cor_inc_thresh_mcc_p=.01.eps]
-
-No time-frequency elements from baseline-subtracted coherence over all frontoparietal combinations were significant after correcting for multiple comparisons using the cluster or pixel methods for M1, p<0.05. 
+High delta through low theta (3.5-4.5Hz) during early to mid delay and high delta (3.5Hz) at end of delay period from condition-differenced baseline-subtracted coherence over all frontoparietal combinations was significant after correcting for multiple comparisons using the cluster method for M2, p<0.05. [coh_base_sub_m2_fp_cor_inc_mcc_p_.05]

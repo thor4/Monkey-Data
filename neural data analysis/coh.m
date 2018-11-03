@@ -55,7 +55,7 @@ end
 load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
 
 % choose which monkey and response you want to pull out
-monkeyN = 1; % which monkey (1 or 2)
+monkeyN = 2; % which monkey (1 or 2)
 % resp = 2; % 1 = correct, 0 = incorrect
 
 % begin definining convolution parameters
@@ -229,9 +229,10 @@ toc
 %% setting up for plots & permutation testing
 
 % load coherence data for both monkeys
-load('mGoodStableRule1PingRejCoh-AllDays_Cor_Inc_Allchans.mat')
+% load('mGoodStableRule1PingRejCoh-AllDays_Cor_Inc_Allchans.mat') % legacy
+load('mcohfp_corinc.mat') %has only FP combinations saved
 
-monkeyN = 1; %which monkey? 1 or 2
+monkeyN = 2; %which monkey? 1 or 2
 responses = [{'correct'},{'incorrect'}]; 
 responseN = 1; %which response? 1 or 2
 
@@ -249,28 +250,29 @@ else
     areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'}; %monkey2
     combos = fieldnames(monkey(monkeyN).(responses{responseN}));
 end
-fpidx = []; %initialize fp_pairs matrix for each monkey
-% pull out only frontal-parietal or parietal-frontal pairs for testing
-for comboN=1:numel(combos) %parse all combinations
-    for areaN=1:numel(areas) %which area pair
-        if startsWith(combos{comboN},areas{areaN})
-            area1=areaN;
-        elseif endsWith(combos{comboN},areas{areaN})
-            area2=areaN;
-        end
-    end
-    if area1<=4 && area2>=5 %frontal-parietal
-        fpidx = [fpidx comboN]; %save idx
-    elseif area1>=5 && area2<=4 %parietal-frontal
-        fpidx = [fpidx comboN];
-    end
-end
+% legacy for when all combos are saved, not sure FP
+% fpidx = []; %initialize fp_pairs matrix for each monkey
+% % pull out only frontal-parietal or parietal-frontal pairs for testing
+% for comboN=1:numel(combos) %parse all combinations
+%     for areaN=1:numel(areas) %which area pair
+%         if startsWith(combos{comboN},areas{areaN})
+%             area1=areaN;
+%         elseif endsWith(combos{comboN},areas{areaN})
+%             area2=areaN;
+%         end
+%     end
+%     if area1<=4 && area2>=5 %frontal-parietal
+%         fpidx = [fpidx comboN]; %save idx
+%     elseif area1>=5 && area2<=4 %parietal-frontal
+%         fpidx = [fpidx comboN];
+%     end
+% end
 
 %% plotting the raw difference data from one FP combo
 
 %pull out correct & incorrect coherence avg over trials
-cor = mean( monkey(monkeyN).(responses{1}).(combos{fpidx(1)}),3 ); 
-inc = mean( monkey(monkeyN).(responses{2}).(combos{fpidx(1)}),3 );
+cor = mean( monkey(monkeyN).(responses{1}).(combos{1}),3 ); 
+inc = mean( monkey(monkeyN).(responses{2}).(combos{1}),3 );
 % compute the difference in power between the two conditions
 % diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
 diffmap = cor - inc;
@@ -283,14 +285,14 @@ imagesc(times2save,[],cor)
 set(gca,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Coherence from Monkey %d, Area %s, Resp Correct',monkeyN,combos{fpidx(1)}(2:end)));
+title(sprintf('Coherence from Monkey %d, Area %s, Resp Correct',monkeyN,combos{1}(2:end)));
 
 subplot(222)
 imagesc(times2save,[],inc)
 set(gca,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Coherence from Monkey %d, Area %s, Resp Incorrect',monkeyN,combos{fpidx(1)}(2:end)));
+title(sprintf('Coherence from Monkey %d, Area %s, Resp Incorrect',monkeyN,combos{1}(2:end)));
 
 subplot(223)
 imagesc(times2save,[],diffmap)
@@ -300,7 +302,7 @@ xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar;
 pos = get(cbar,'Position'); lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; cbar.Label.Position=[pos(1)+1 pos(3)-.02];
 cbar.TickLabels = ({'-0.04','0.04'});
-title(sprintf('Coherence Difference Monkey %d, Area %s, Correct > Incorrect',monkeyN,combos{fpidx(1)}(2:end)));
+title(sprintf('Coherence Difference Monkey %d, Area %s, Correct > Incorrect',monkeyN,combos{1}(2:end)));
 
 % plot examples showing correct, incorrect and their difference for
 % baseline-corrected
@@ -316,20 +318,20 @@ inc_base = repmat(inc_base,1,size(inc,2));
 diffmap_base = (cor-cor_base) - (inc-inc_base);
 clim = [-.1 .1]; %set color limits
 
-figure(25), clf
+figure(1), clf
 subplot(221)
 imagesc(times2save,[],cor-cor_base)
 set(gca,'clim',clim,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Baseline-subtracted Coherence from Monkey %d, Area %s, Resp Correct',monkeyN,combos{subplotN}(2:end)));
+title(sprintf('Baseline-subtracted Coherence from Monkey %d, Area %s, Resp Correct',monkeyN,combos{1}(2:end)));
 
 subplot(222)
 imagesc(times2save,[],inc-inc_base)
 set(gca,'clim',clim,'ydir','n')
 set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
 xlabel('Time (ms)'), ylabel('Frequency (Hz)'), colorbar
-title(sprintf('Baseline-subtracted Coherence from Monkey %d, Area %s, Resp Incorrect',monkeyN,combos{subplotN}(2:end)));
+title(sprintf('Baseline-subtracted Coherence from Monkey %d, Area %s, Resp Incorrect',monkeyN,combos{1}(2:end)));
 
 subplot(223)
 imagesc(times2save,[],diffmap_base)
@@ -339,83 +341,84 @@ xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar;
 pos = get(cbar,'Position'); lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Coherence vs baseline'; cbar.Label.Position=[pos(1)+1 pos(3)-.02];
 % cbar.TickLabels = ({'-0.04','0.04'});
-title(sprintf('Baseline-subtracted Coherence Difference Monkey %d, Area %s, Correct > Incorrect',monkeyN,combos{subplotN}(2:end)));
+title(sprintf('Baseline-subtracted Coherence Difference Monkey %d, Area %s, Correct > Incorrect',monkeyN,combos{1}(2:end)));
 
 %% pull out avg coherence for all frontoparietal pairs under correct, 
 % incorrect & difference conditions + baseline-corrected of same
 
 % number of frontoparietal (FP) pairs 
-n_fppairs = length(fpidx);
+% n_fppairs = length(fpidx); %legacy
+n_fppairs = length(combos);
 
 % initialize FP pair matrix for monkey 1, [frontal parietal]
-m1fppairs = zeros(n_fppairs,2);
+m2fppairs = zeros(n_fppairs,2);
 
 % initialize FP pair for correct, incorrect & differences for monkey
-m1fpcor = zeros(num_frex,length(times2save),n_fppairs);
-m1fpinc = zeros(num_frex,length(times2save),n_fppairs);
-m1fpdiffmap = zeros(num_frex,length(times2save),n_fppairs);
+m2fpcor = zeros(num_frex,length(times2save),n_fppairs);
+m2fpinc = zeros(num_frex,length(times2save),n_fppairs);
+m2fpdiffmap = zeros(num_frex,length(times2save),n_fppairs);
 
 % initialize baseline-corrected FP pair for correct, incorrect & 
 % differences for monkey
-m1fpcor_base = zeros(num_frex,length(times2save),n_fppairs);
-m1fpinc_base = zeros(num_frex,length(times2save),n_fppairs);
-m1fpdiffmap_base = zeros(num_frex,length(times2save),n_fppairs);
+m2fpcor_base = zeros(num_frex,length(times2save),n_fppairs);
+m2fpinc_base = zeros(num_frex,length(times2save),n_fppairs);
+m2fpdiffmap_base = zeros(num_frex,length(times2save),n_fppairs);
 
 for fpN=1:n_fppairs
     %pull out correct & incorrect coherence avg over sessions & channels,
     %previously avg'd over trials, leaves freq x time
-    m1fpcor(:,:,fpN) = mean( monkey(monkeyN).(responses{1}).(combos{fpidx(fpN)}),3 ); 
-    m1fpinc(:,:,fpN) = mean( monkey(monkeyN).(responses{2}).(combos{fpidx(fpN)}),3 );
+    m2fpcor(:,:,fpN) = mean( monkey(monkeyN).(responses{1}).(combos{fpN}),3 ); 
+    m2fpinc(:,:,fpN) = mean( monkey(monkeyN).(responses{2}).(combos{fpN}),3 );
     % compute the difference in power between the two conditions
     % diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
-    m1fpdiffmap(:,:,fpN) = m1fpcor(:,:,fpN) - m1fpinc(:,:,fpN);
+    m2fpdiffmap(:,:,fpN) = m2fpcor(:,:,fpN) - m2fpinc(:,:,fpN);
     % compute baseline for correct & incorrect responses averaged over trials 
     % then timepoints, leaving freq x 1 matrices of baseline
-    cor_base = mean(m1fpcor(:,baseidx(1):baseidx(2),fpN),2);
-    inc_base = mean(m1fpinc(:,baseidx(1):baseidx(2),fpN),2);
+    cor_base = mean(m2fpcor(:,baseidx(1):baseidx(2),fpN),2);
+    inc_base = mean(m2fpinc(:,baseidx(1):baseidx(2),fpN),2);
     % create appropriately-sized matrices to subtract from avg coherence, 
     % where cor is freq x time matrix
-    cor_base = repmat(cor_base,1,size(m1fpcor,2));
-    inc_base = repmat(inc_base,1,size(m1fpinc,2));
+    cor_base = repmat(cor_base,1,size(m2fpcor,2));
+    inc_base = repmat(inc_base,1,size(m2fpinc,2));
     % save baseline-corrected avg coh for all fp pairs across all frex for
     % both conditions: correct & incorrect
-    m1fpcor_base(:,:,fpN) = m1fpcor(:,:,fpN)-cor_base;
-    m1fpinc_base(:,:,fpN) = m1fpinc(:,:,fpN)-inc_base;
+    m2fpcor_base(:,:,fpN) = m2fpcor(:,:,fpN)-cor_base;
+    m2fpinc_base(:,:,fpN) = m2fpinc(:,:,fpN)-inc_base;
     % calculate diffmap of baseline-subtracted conditions
-    m1fpdiffmap_base(:,:,fpN) = m1fpcor_base(:,:,fpN) - m1fpinc_base(:,:,fpN);
+    m2fpdiffmap_base(:,:,fpN) = m2fpcor_base(:,:,fpN) - m2fpinc_base(:,:,fpN);
     % pull out FP pair
     for areaN=1:numel(areas) %which area pair
-        if startsWith(combos{fpidx(fpN)},areas{areaN}) %1st area
+        if startsWith(combos{fpN},areas{areaN}) %1st area
             if areaN<=4
                 areaF=areaN;
             else, areaP=areaN;
             end
-        elseif endsWith(combos{fpidx(fpN)},areas{areaN}) %2nd area
+        elseif endsWith(combos{fpN},areas{areaN}) %2nd area
             if areaN<=4
                 areaF=areaN;
             else, areaP=areaN;
             end
         end
     end
-    m1fppairs(fpN,:) = [areaF areaP]; % save FP pair    
+    m2fppairs(fpN,:) = [areaF areaP]; % save FP pair    
 end
 
 %% plot raw correct, incorrect & difference coherence spectrograms
 
-clim = [0 0.3];
+clim = [0 0.2];
 
-figure(26), clf
+figure(5), clf
 subplot(221)
-contourf(signalt(times2saveidx),frex,mean(m1fpcor,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpcor,3),15,'linecolor','none')
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-1 pos(2)];
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
 title(sprintf('Monkey %d TF Map, Avg Frontoparietal Coherence, Correct',monkeyN));
 
 subplot(222)
-contourf(signalt(times2saveidx),frex,mean(m1fpinc,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpinc,3),15,'linecolor','none')
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
@@ -424,31 +427,31 @@ cbar.Label.Position=[pos(1)-1 pos(2)];
 title(sprintf('Monkey %d TF Map, Avg Frontoparietal Coherence, Incorrect',monkeyN));
 
 subplot(223)
-contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap,3),15,'linecolor','none')
 set(gca,'clim',[-0.04 0.04],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
-title(sprintf('Monkey %d TF Map, Avg Frontoparietal Coherence, Correct > Incorrect',monkeyN));
+title(sprintf('Monkey %d TF Map, Avg Frontoparietal Coherence, Correct - Incorrect',monkeyN));
 
 % plot examples showing correct, incorrect and their difference for
 % baseline-corrected
 
 clim = [-0.1 0.1];
 
-figure(27), clf
+figure(6), clf
 subplot(221)
-contourf(signalt(times2saveidx),frex,mean(m1fpcor_base,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpcor_base,3),15,'linecolor','none')
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Baseline-subtracted Coherence'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-1 pos(2)];
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
 title(sprintf('Monkey %d TF Map, Avg Frontoparietal Baseline-subtracted Coherence, Correct',monkeyN));
 
 subplot(222)
-contourf(signalt(times2saveidx),frex,mean(m1fpinc_base,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpinc_base,3),15,'linecolor','none')
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
@@ -457,7 +460,9 @@ cbar.Label.Position=[pos(1)-1 pos(2)];
 title(sprintf('Monkey %d TF Map, Avg Frontoparietal Baseline-subtracted Coherence, Incorrect',monkeyN));
 
 subplot(223)
-contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap_base,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap_base,3),15,'linecolor','none')
+hold on %vertical line
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',[-0.04 0.04],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
@@ -473,28 +478,70 @@ pval = 0.05;
 % convert p-value to Z value
 zval = abs(norminv(pval));
 
+% meta-permutation test 
+nmeta = 20; % 20 permutation tests
 % number of permutations
 n_permutes = 1000;
 
-% initialize permutation matrix for monkey 1
-m1permN = zeros(num_frex,length(times2save),n_permutes);
+% initialize meta-permutation matrix
+zmap_groupmeta = zeros(nmeta,num_frex,length(times2save));
+% initialize matrices for cluster-based correction
+max_cluster_sizes = zeros(1,n_permutes);
+% initialize cluster meta permutation matrix to store all vals 
+max_cluster_meta = [];
+% initialize max val meta permutation matrix
+max_val_meta = [];
 
-% now permutation test, on each permutation, create group-avg coherence
-% across all FP pairs. this results in maps under the null hypothesis
-for permN=1:n_permutes
-    % create random vector of 1's and -1's to apply to each FP pair map
-    shuffinv = sign(randn(n_fppairs,1));
-    shuffinv = reshape(shuffinv,[1 1 n_fppairs]);
-    % apply shuffling through multiplication because multiplying by -1 is 
-    % algebraically the same as changing from cor - inc to inc - cor, then 
-    % calculate mean across all FP pairs
-    m1permN(:,:,permN) = mean( m1fpdiffmap.*shuffinv,3 );
-    % this represents freq x time points under the null hypothesis
+
+for metaN=1:nmeta
+    % initialize permutation matrix for monkey 1
+    m2permN = zeros(num_frex,length(times2save),n_permutes);
+    % initialize max val permutation matrix
+    max_val_perm = zeros(n_permutes,2);
+    % now permutation test, on each permutation, create group-avg coherence
+    % across all FP pairs. this results in maps under the null hypothesis
+    for permN=1:n_permutes
+        % create random vector of 1's and -1's to apply to each FP pair map
+        shuffinv = sign(randn(n_fppairs,1));
+        shuffinv = reshape(shuffinv,[1 1 n_fppairs]);
+        % apply shuffling through multiplication because multiplying by -1 is 
+        % algebraically the same as changing from cor - inc to inc - cor, then 
+        % calculate mean across all FP pairs
+        m2permN(:,:,permN) = mean( m2fpdiffmap.*shuffinv,3 );
+        % this represents freq x time points under the null hypothesis
+        % get extreme values (smallest and largest) (not z score)
+        temp = sort( reshape(m2permN(:,:,permN),1,[] ));
+        max_val_perm(permN,:) = [ min(temp) max(temp) ];
+    end
+    % compute mean and standard deviation maps under the null hypothesis
+    mean_h0 = mean(m2permN,3);
+    std_h0  = std(m2permN,0,3);
+    % calculate my z-score based on the null hypothesis distribution created
+    % through group-level permutations
+    zmap_groupmeta(metaN,:,:) = ( mean(m2fpdiffmap,3) - mean_h0 ) ./ std_h0;
+    % take each permutation map, and transform to Z
+    threshimg = (m2permN-mean_h0)./std_h0;
+    % threshold image at p-value
+    threshimg(abs(threshimg)<zval) = 0;
+    for threshN=1:n_permutes
+        threshimgperm = threshimg(:,:,threshN);
+        % find clusters (need image processing toolbox for this!)
+        islands = bwconncomp(threshimgperm);
+        if numel(islands.PixelIdxList)>0
+            % count sizes of clusters
+            tempclustsizes = cellfun(@length,islands.PixelIdxList);
+            % store size of biggest cluster
+            max_cluster_sizes(threshN) = max(tempclustsizes);
+        end
+    end
+    % save max values from each permutation test for pixel & cluster corr
+    max_val_meta = [max_val_meta; max_val_perm]; % pixel correction
+    max_cluster_meta = [max_cluster_meta max_cluster_sizes]; % cluster corr
 end
 
-% calculate my z-score based on the null hypothesis distribution created
-% through group-level permutations
-zmap_group = ( mean(m1fpdiffmap,3) - mean(m1permN,3) ) ./ std(m1permN,0,3);
+% complete meta permutation test by avg over all permutation tests, leaves 
+% frex x time of my observed z-scores
+zmap_group = squeeze(mean(zmap_groupmeta,1));
 
 % threshold image at p-value, by setting subthreshold values to 0
 zmap_group(abs(zmap_group)<zval) = 0;
@@ -508,85 +555,48 @@ zmap_group(abs(zmap_group)<zval) = 0;
 % contourf(x,y,z,...)
 clim=[-.04,.04];
 
-figure(39), clf
+figure(3), clf
 subplot(221)
-contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap,3),15,'linecolor','none')
+hold on %vertical line
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
-title(sprintf('M%d TF Map, Avg Frontoparietal Coherence, Correct > Incorrect',monkeyN));
+title(sprintf('M%d TF Map, Avg Frontoparietal Coherence, Correct - Incorrect',monkeyN));
 
 subplot(222)
-contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap,3),15,'linecolor','none')
 hold on
 contour(signalt(times2saveidx),frex,logical(zmap_group),1,'linecolor','k');
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
-title(sprintf('M%d Sig Regions Outlined, Avg FP Coherence, Cor > Inc p<%1.2f',monkeyN,pval));
+title(sprintf('M%d Sig Regions Outlined, Avg FP Coherence, Cor-Inc p<%1.2f',monkeyN,pval));
 
 subplot(223)
 contourf(signalt(times2saveidx),frex,zmap_group,15,'linecolor','none')
+hold on % vertical line
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim.*100,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Z-score'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-.8 pos(2)];
-title(sprintf('M%d Thresholded Uncorrected Z-values Avg FP Coh, Cor > Inc p<%1.2f',monkeyN,pval));
+title(sprintf('M%d Thresholded Uncorrected Z-values Avg FP Coh, Cor-Inc p<%1.2f',monkeyN,pval));
 
 %% corrections for multiple comparisons
 
-if monkeyN==1, permmaps = m1permN;
-else, permmaps = m2permN;
-end
-
-% initialize matrices for cluster-based correction
-max_cluster_sizes = zeros(1,n_permutes);
-% ... and for maximum-pixel based correction
-max_val = zeros(n_permutes,2); % "2" for min/max
-
-% compute mean and standard deviation maps under the null hypothesis
-mean_h0 = mean(permmaps,3);
-std_h0  = std(permmaps,0,3);
-
-% initialize cluster-correction threshold map
-zmap_cluster = zmap_group; 
-
-% loop through permutations
-for permi = 1:n_permutes
-
-    % take each permutation map, and transform to Z
-    threshimg = squeeze(permmaps(:,:,permi));
-    threshimg = (threshimg-mean_h0)./std_h0;
-
-    % threshold image at p-value
-    threshimg(abs(threshimg)<zval) = 0;
-
-
-    % find clusters (need image processing toolbox for this!)
-    islands = bwconncomp(threshimg);
-    if numel(islands.PixelIdxList)>0
-
-        % count sizes of clusters
-        tempclustsizes = cellfun(@length,islands.PixelIdxList);
-
-        % store size of biggest cluster
-        max_cluster_sizes(permi) = max(tempclustsizes);
-    end
-
-
-    % get extreme values (smallest and largest) (not z score)
-    temp = sort( reshape(permmaps(:,:,permi),1,[] ));
-    max_val(permi,:) = [ min(temp) max(temp) ];
-
-end
 % find cluster threshold (need image processing toolbox for this!)
 % based on p-value and null hypothesis distribution
-cluster_thresh = prctile(max_cluster_sizes,100-(100*pval));
+cluster_thresh = prctile(max_cluster_meta,100-(100*pval));
+% initialize cluster zmap to real thresholded map
+zmap_cluster = zmap_group;
 % now find clusters in the real thresholded zmap
 % if they are "too small" set them to zero
 islands = bwconncomp(zmap_cluster);
@@ -598,91 +608,134 @@ for i=1:islands.NumObjects
     end
 end
 % find the pixel threshold for lower and upper values, two-tailed
-thresh_lo = prctile(max_val(:,1),100*(pval/2)); % pval/2 percentile of smallest values
-thresh_hi = prctile(max_val(:,2),100-100*(pval/2)); % pval/2 percentile of largest values
+thresh_lo = prctile(max_val_meta(:,1),100*(pval/2)); % pval/2 percentile of smallest values
+thresh_hi = prctile(max_val_meta(:,2),100-100*(pval/2)); % pval/2 percentile of largest values
 % threshold real data
-pixel_threshmap = mean(m1fpdiffmap_base,3);
+pixel_threshmap = mean(m2fpdiffmap,3);
 % pixel-corrected threshold
 pixel_threshmap(pixel_threshmap>thresh_lo & pixel_threshmap<thresh_hi) = 0;
 
 %% show histograph of maximum cluster sizes
 
-figure(39), clf
-hist(max_cluster_sizes,20);
+figure(1), clf
+histogram(max_cluster_meta,200,'FaceColor','b');
+hold on % vert line
+yL = get(gca,'YLim'); line([cluster_thresh cluster_thresh],[yL(1) yL(2)/4],'Color','k','LineStyle',':','LineWidth',2); 
 xlabel('Maximum cluster sizes'), ylabel('Number of observations')
 title('Expected cluster sizes under the null hypothesis')
-hist(max_val,50); %bimodal
+hist(max_val_meta,'FaceColor','b',1000); %bimodal
+histogram(max_val_meta,500,'FaceColor','b');
+hold on % vertical lines
+yL = get(gca,'YLim'); line([thresh_lo thresh_hi;thresh_lo thresh_hi],yL,'Color','k','LineStyle',':','LineWidth',2); 
+axis off
+export_fig test2.png -transparent % no background
 
 %% plots with multiple comparisons corrections
 
-figure(39), clf
+
+figure(8), clf
 subplot(221)
-contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap_base,3),15,'linecolor','none')
 hold on
 contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','k');
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
-title(sprintf('M%d Avg FP Coh Cluster-corrected Sig Regions Outlined Cor > Inc p<%1.2f',monkeyN,pval));
+title(sprintf('M%d Avg Base-sub FP Coh Cluster-corrected Sig Regions Outlined Cor-Inc p<%1.2f',monkeyN,pval));
 
 subplot(222)
 contourf(signalt(times2saveidx),frex,zmap_cluster,15,'linecolor','none');
+hold on %vertical line
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim.*100,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Z-Score'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-.7 pos(2)];
-title(sprintf('M%d Cluster-corrected & thresholded FP Coherence z-map, Cor > Inc p<%1.2f',monkeyN,pval));
+title(sprintf('M%d Cluster-corrected & thresholded Base-sub FP Coherence z-map, Cor-Inc p<%1.2f',monkeyN,pval));
 
 subplot(223)
-contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),15,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap_base,3),15,'linecolor','none')
 hold on
 contour(signalt(times2saveidx),frex,logical(pixel_threshmap),1,'linecolor','k');
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineStyle',':'); 
 set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
-title(sprintf('M%d Avg FP Coh Pixel-corrected Sig Regions Outlined Cor > Inc p<%1.2f',monkeyN,pval));
+title(sprintf('M%d Avg Base-sub FP Coh Pixel-corrected Sig Regions Outlined Cor-Inc p<%1.2f',monkeyN,pval));
 
-%% plot correct and incorrect then diffmap with sig regions outlined after mcc
+%% Poster Images
+% plot correct and incorrect then diffmap with sig regions outlined after mcc
 
-% title on poster: M%d Avg Frontoparietal Coherence
+% zmap_cluster for cluster correction var
+% pixel_threshmap for pixel correction var
 
-figure(39), clf
+load('sig_coherence.mat') % contains all coherence var's from analysis, correction var's are for baseline-sub
+% to go back, be sure to remove the _base from Lines 510, 521 & 614
+
+figure(11), clf
 % subplot(221)
-contourf(signalt(times2saveidx),frex,mean(m1fpcor,3),100,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpcor,3),100,'linecolor','none')
 hold on
-contour(signalt(times2saveidx),frex,logical(pixel_threshmap),1,'linecolor','w','linewidth',3);
-set(gca,'clim',[0 0.3],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',24)
-xlabel('Time (s)','FontSize',28), ylabel('Frequency (Hz)','FontSize',28), cbar = colorbar; 
+contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','w','linewidth',3);
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[0 .13],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-1.7 pos(2)];
-title('Correct, Significant Regions Outlined','FontSize',32);
+cbar.Label.Position=[pos(1)-3.5 pos(2)];
+% title('Correct, Significant Regions Outlined','FontSize',32);
+export_fig test2.png -transparent % no background
 
-figure(40), clf
-% subplot(222)
-contourf(signalt(times2saveidx),frex,mean(m1fpinc,3),100,'linecolor','none');
-hold on
-contour(signalt(times2saveidx),frex,logical(pixel_threshmap),1,'linecolor','w','linewidth',3);
-set(gca,'clim',[0 0.3],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',24)
-xlabel('Time (s)','FontSize',28), ylabel('Frequency (Hz)','FontSize',28), cbar = colorbar; 
-lim = get(cbar,'Limits'); cbar.Ticks=lim;
-cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-1.7 pos(2)];
-title('Incorrect, Significant Regions Outlined','FontSize',32);
+% zoom in on clustered area ([50 1200], 3.5-11Hz baseline-subtracted coh), 
+% ([-400 1200], 3.5-18Hz raw coh)
+clustert = [-400 1200]; % in ms
+clusteridx = dsearchn(times2save',clustert');
+freqz = [3.5 18]; % in Hz
+freqzidx = dsearchn(frex',freqz');
 
-figure(41), clf
-% subplot(223)
-contourf(signalt(times2saveidx),frex,mean(m1fpdiffmap,3),100,'linecolor','none')
+figure(12), clf
+% subplot(221)
+contourf(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),mean(m2fpinc(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2),:),3),100,'linecolor','none')
 hold on
-contour(signalt(times2saveidx),frex,logical(pixel_threshmap),1,'linecolor','k','linewidth');
-set(gca,'clim',clim,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+contour(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),logical(zmap_cluster(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2))),1,'linecolor','w','linewidth',3);
+yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[0 0.13],'ytick',round(logspace(log10(frex(freqzidx(1))),log10(frex(freqzidx(2))),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (ms)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-1.5 pos(2)];
-title(sprintf('M%d Avg FP Coh Pixel-corrected Sig Regions Outlined Cor > Inc p<%1.2f',monkeyN,pval));
+cbar.Label.Position=[pos(1)-3.5 pos(2)];
+export_fig test2.png -transparent % no background
+
+figure(11), clf
+% subplot(221)
+contourf(signalt(times2saveidx),frex,mean(m2fpinc,3),100,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','w','linewidth',3);
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[0 0.13],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-3.5 pos(2)];
+% title('Correct, Significant Regions Outlined','FontSize',32);
+export_fig test2.png -transparent % no background
+
+figure(11), clf
+% subplot(221)
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap_base,3),100,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','k','linewidth',3);
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[-0.02 0.02],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Coherence Difference'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-4 pos(2)];
+% title('Correct, Significant Regions Outlined','FontSize',32);
+export_fig test2.png -transparent % no background
