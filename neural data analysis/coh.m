@@ -620,15 +620,17 @@ pixel_threshmap(pixel_threshmap>thresh_lo & pixel_threshmap<thresh_hi) = 0;
 figure(1), clf
 histogram(max_cluster_meta,200,'FaceColor','b');
 hold on % vert line
-yL = get(gca,'YLim'); line([cluster_thresh cluster_thresh],[yL(1) yL(2)/4],'Color','k','LineStyle',':','LineWidth',2); 
-xlabel('Maximum cluster sizes'), ylabel('Number of observations')
-title('Expected cluster sizes under the null hypothesis')
-hist(max_val_meta,'FaceColor','b',1000); %bimodal
+yL = get(gca,'YLim'); line([cluster_thresh cluster_thresh],[yL(1) yL(2)],'Color','k','LineStyle',':','LineWidth',2); 
+xlabel('Max cluster sizes','FontSize',34), ylabel('# of observations','FontSize',34)
+title('Expected cluster sizes under the H_0','FontSize',40)
+export_fig cluster_corr_coh_h0.png -transparent % no background
 histogram(max_val_meta,500,'FaceColor','b');
+xlabel('Min/max coherence-differenced pixel value','FontSize',34), ylabel('# of observations','FontSize',34)
+title('Expected extreme pixel values under the H_0','FontSize',40)
 hold on % vertical lines
 yL = get(gca,'YLim'); line([thresh_lo thresh_hi;thresh_lo thresh_hi],yL,'Color','k','LineStyle',':','LineWidth',2); 
 axis off
-export_fig test2.png -transparent % no background
+export_fig pixel_corr_coh_h0.png -transparent % no background
 
 %% plots with multiple comparisons corrections
 
@@ -675,14 +677,14 @@ title(sprintf('M%d Avg Base-sub FP Coh Pixel-corrected Sig Regions Outlined Cor-
 % zmap_cluster for cluster correction var
 % pixel_threshmap for pixel correction var
 
-load('sig_coherence.mat') % contains all coherence var's from analysis, correction var's are for baseline-sub
+load('sig_coherence_min.mat') % contains all coherence var's from analysis, correction var's are for baseline-sub
 % to go back, be sure to remove the _base from Lines 510, 521 & 614
 
 figure(11), clf
 % subplot(221)
 contourf(signalt(times2saveidx),frex,mean(m2fpcor,3),100,'linecolor','none')
 hold on
-contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','w','linewidth',3);
+contour(signalt(times2saveidx),frex,logical(pixel_threshmap),1,'linecolor','w','linewidth',3);
 yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
 set(gca,'clim',[0 .13],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
 xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
@@ -690,47 +692,48 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-3.5 pos(2)];
 % title('Correct, Significant Regions Outlined','FontSize',32);
-export_fig test2.png -transparent % no background
+export_fig m2_cor_coh_fp_pixel_corr_outline.png -transparent % no background
 
 % zoom in on clustered area ([50 1200], 3.5-11Hz baseline-subtracted coh), 
-% ([-400 1200], 3.5-18Hz raw coh)
-clustert = [-400 1200]; % in ms
+% ([-400 1200], 3.5-18Hz raw coh), pixel area: [600 1200], 3.5-4.8Hz
+% (baseline-sub); [1100 1200] 3.5-4.2Hz (raw)
+clustert = [1100 1200]; % in ms
 clusteridx = dsearchn(times2save',clustert');
-freqz = [3.5 18]; % in Hz
+freqz = [3.5 4.2]; % in Hz
 freqzidx = dsearchn(frex',freqz');
 
 figure(12), clf
 % subplot(221)
-contourf(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),mean(m2fpinc(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2),:),3),100,'linecolor','none')
+contourf(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),mean(m2fpdiffmap_base(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2),:),3),100,'linecolor','none')
 hold on
-contour(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),logical(zmap_cluster(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2))),1,'linecolor','w','linewidth',3);
-yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
-set(gca,'clim',[0 0.13],'ytick',round(logspace(log10(frex(freqzidx(1))),log10(frex(freqzidx(2))),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+contour(times2save(clusteridx(1):clusteridx(2)),frex(freqzidx(1):freqzidx(2)),logical(pixel_threshmap(freqzidx(1):freqzidx(2),clusteridx(1):clusteridx(2))),1,'linecolor','w','linewidth',3);
+% yL = get(gca,'YLim'); line([500;500],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[-.02 .02],'ytick',round(logspace(log10(frex(freqzidx(1))),log10(frex(freqzidx(2))),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
 xlabel('Time (ms)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
-cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
+cbar.Label.String = 'Coherence Difference'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-3.5 pos(2)];
-export_fig test2.png -transparent % no background
+export_fig m2_cor-inc_coh_fp_pixel_corr_outline_zoom.png -transparent % no background
 
 figure(11), clf
 % subplot(221)
 contourf(signalt(times2saveidx),frex,mean(m2fpinc,3),100,'linecolor','none')
 hold on
-contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','w','linewidth',3);
+contour(signalt(times2saveidx),frex,logical(pixel_threshmap),1,'linecolor','w','linewidth',3);
 yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
-set(gca,'clim',[0 0.13],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+set(gca,'clim',[0 .13],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
 xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Spectral Coherence'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-3.5 pos(2)];
 % title('Correct, Significant Regions Outlined','FontSize',32);
-export_fig test2.png -transparent % no background
+export_fig m2_inc_coh_fp_pixel_corr_outline.png -transparent % no background
 
 figure(11), clf
 % subplot(221)
-contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap_base,3),100,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mean(m2fpdiffmap,3),100,'linecolor','none')
 hold on
-contour(signalt(times2saveidx),frex,logical(zmap_cluster),1,'linecolor','k','linewidth',3);
+contour(signalt(times2saveidx),frex,logical(pixel_threshmap),1,'linecolor','k','linewidth',3);
 yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
 set(gca,'clim',[-0.02 0.02],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
 xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
@@ -738,4 +741,4 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Coherence Difference'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-4 pos(2)];
 % title('Correct, Significant Regions Outlined','FontSize',32);
-export_fig test2.png -transparent % no background
+export_fig m2_cor-inc_coh_fp_pixel_corr_outline.png -transparent % no background

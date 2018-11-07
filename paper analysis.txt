@@ -97,4 +97,7 @@ High delta (3.5-4Hz) at the end of the delay period from condition-differenced c
 *baseline-subtracted*
 High delta through high alpha (3.5-11Hz) shortly after onset, then throughout stimulus window, high delta through mid theta (3.5-6Hz) during early-mid delay period, and theta through low alpha (4.5-9Hz) during late delay period from condition-differenced, baseline-subtracted coherence over all FP combinations was significant after correcting for multiple comparisons using the cluster method for M2, p<0.05. [coh_base_sub_m2_fp_cor_inc_mcc_p_.05]
 
-High delta through low theta (3.5-4.5Hz) during early to mid delay and high delta (3.5Hz) at end of delay period from condition-differenced baseline-subtracted coherence over all frontoparietal combinations was significant after correcting for multiple comparisons using the cluster method for M2, p<0.05. [coh_base_sub_m2_fp_cor_inc_mcc_p_.05]
+High delta through low theta (3.5-4.5Hz) during early to mid delay and high delta (3.5Hz) at end of delay period from condition-differenced baseline-subtracted coherence over all frontoparietal combinations was significant after correcting for multiple comparisons using the pixel method for M2, p<0.05. [coh_base_sub_m2_fp_cor_inc_mcc_p_.05]
+
+DISCUSSION
+It appears that coherence during baseline (maybe attention) is differentially modulating coherence during sample and delay periods in the lower frequencies, allowing for proper performance of the working memory task.
