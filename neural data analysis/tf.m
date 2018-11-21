@@ -471,7 +471,7 @@ title(sprintf('Monkey %d, Area %s, Correct - Incorrect',monkeyN,areas{areaN}(2:e
 n_tests = 8;
 
 % p-value
-pval = 0.05/n_tests;
+pval = 0.025/n_tests;
 
 % convert p-value to Z value
 zval = abs(norminv(pval));
@@ -479,14 +479,18 @@ zval = abs(norminv(pval));
 % number of permutations
 n_permutes = 1000;
 
-% generate maps under the null hypothesis
-[m1_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
-string(m1areas) == string(areas) % true
-
-monkeyN = 2; % now monkey 2
-% generate maps under the null hypothesis
-[m2_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
-string(m2areas) == string(areas) % true
+% meta-permutation test
+for permN = 1:20
+	monkeyN = 1; % first monkey 1
+    % generate maps under the null hypothesis
+    [m1_permmaps, ~] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
+    % append permutations for monkey in chan x permutation x freq x time diffmap
+    m1_meta_permmaps(:,(permN-1)*n_permutes+1:permN*n_permutes,:,:) = m1_permmaps;
+    monkeyN = 2; % now monkey 2
+    % generate maps under the null hypothesis
+    [m2_permmaps, ~] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
+    m2_meta_permmaps(:,(permN-1)*n_permutes+1:permN*n_permutes,:,:) = m2_permmaps;
+end
 
 
 %% show non-corrected thresholded maps
