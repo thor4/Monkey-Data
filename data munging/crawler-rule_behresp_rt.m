@@ -29,6 +29,9 @@ for i=1:length(betty{1})
         end
     end
 end
+
+%save behavior var to m2-rule_resp_rt.mat
+
 % 
 % % clark loop
 % for i=1:length(clark{1})
