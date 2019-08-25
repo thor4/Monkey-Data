@@ -470,7 +470,7 @@ title(sprintf('Monkey %d, Area %s, Correct - Incorrect',monkeyN,areas{areaN}(2:e
 % number of tests
 n_tests = 8;
 
-% p-value
+% p-value, p<0.05 two-tailed is 0.025
 pval = 0.025/n_tests;
 
 % convert p-value to Z value
@@ -479,6 +479,7 @@ zval = abs(norminv(pval));
 % number of permutations
 n_permutes = 1000;
 
+tic
 % meta-permutation test
 for permN = 1:20
 	monkeyN = 1; % first monkey 1
@@ -491,7 +492,7 @@ for permN = 1:20
     [m2_permmaps, ~] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
     m2_meta_permmaps(:,(permN-1)*n_permutes+1:permN*n_permutes,:,:) = m2_permmaps;
 end
-
+toc
 
 %% show non-corrected thresholded maps
 
@@ -546,10 +547,10 @@ monkeyN = 2; % which monkey: 1 or 2
 
 if monkeyN==1
     areas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'}; %monkey1
-    permmaps = m1_permmaps;
+    permmaps = m1_meta_permmaps;
 else
     areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'}; %monkey2
-    permmaps = m2_permmaps;
+    permmaps = m2_meta_permmaps;
 end
 
 for areaN = 1:numel(areas)
@@ -566,18 +567,18 @@ for areaN = 1:numel(areas)
     % now change data to zmap
     zmap = (diffmap-mean_h0) ./ std_h0;
     % threshold image at p-value, by setting subthreshold values to 0, this
-    % is uncorrected zmap
+    % is uncorrected zmap, abs() for two-tailed
     zmap(abs(zmap)<zval) = 0;
     
     % now for cluster and pixel correction
     % initialize matrices for cluster-based correction
-    max_cluster_sizes = zeros(1,n_permutes);
+    max_cluster_sizes = zeros(1,n_permutes*20);
     % ... and for maximum-pixel based correction
-    max_val = zeros(n_permutes,2); % "2" for min/max
+    max_val = zeros(n_permutes*20,2); % "2" for min/max
     zmap_cluster = zmap; % initialize for cluster-correction
 
     % loop through permutations
-    for permi = 1:n_permutes
+    for permi = 1:n_permutes*20
 
         % take each permutation map, and transform to Z
         threshimg = squeeze(permmaps(areaN,permi,:,:));
