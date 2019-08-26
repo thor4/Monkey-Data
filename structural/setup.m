@@ -79,3 +79,18 @@ axes(a)
 % link axes in case of zooming
 linkaxes([a b])
 yticks('auto')
+
+%% visualize in & out degree distributions
+[id_sort,id_idx] = sort(id); %sort elements of id in ascending order and save indices in idx
+deg=horzcat(id',od'); %concatenate id + od to have single deg mat
+[deg_sort,deg_idx]=sort(deg,1); %sort each column in acscending order
+
+figure(2), clf
+barh(id_sort); % in-degree OR
+% stem(1:30,id_sort)
+% yticklabels({'-3\pi','-2\pi','-\pi','0','\pi','2\pi','3\pi'})
+yticks(1:30); yticklabels(nodes(id_idx));
+view(90,90)
+
+% get handle to current axes
+a = gca;
