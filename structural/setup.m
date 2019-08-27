@@ -82,19 +82,39 @@ yticks('auto')
 
 %% visualize in & out degree distributions
 [id_sort,id_idx] = sort(id); %sort elements of id in ascending order and save indices in idx
-deg=horzcat(id_sort',od_id_sort'); %concatenate id + od to have single deg mat
 od_id_sort = od(id_idx); %od sorted by the sorted id vector
+deg=horzcat(id_sort',od_id_sort'); %concatenate id + od to have single deg mat
 figure(2), clf
-barh(1:30,deg,'grouped'); % in-degree OR
+bh = barh(1:30,deg,'grouped','FaceColor','flat'); 
+% bh(1).FaceColor = '#C9778F'; %in-deg
+% bh(2).FaceColor = '#7EBACC'; %out-deg
+% bh(1).CData(1,:) = '#C9778F';
 % stem(1:30,id_sort)
-% yticklabels({'-3\pi','-2\pi','-\pi','0','\pi','2\pi','3\pi'})
 yticks(1:30); yticklabels(nodes(id_idx));
-xticks([10 20]); set(gca,'TickLength',[0 0])
-xline(mean(id),'--','Mean In-Degree','LabelVerticalAlignment','bottom',...
-    'Color','b');
-xline(mean(od),'--','Mean Out-Degree','LabelVerticalAlignment','bottom',...
-    'LabelHorizontalAlignment','left','Color','r');
-% view(90,90)
+xticks([10 mean(id) 20]); 
+h=gca; h.XAxis.TickLength = [0.005 0]; % shorten tick marks on only x-axis
+h.YAxis.TickLength = [0 0]; % del tick marks on only y-axis
+for i=1:length(id_idx) %color each tick label & bar's area acc to region
+    if (id_idx(i) < 18) %frontal area #7EBACC
+        h.YTickLabel{i} = ['\color[rgb]{0.4941 0.7294 0.8000}' h.YTickLabel{i}];
+        bh(1).CData(i,:) = [0.4941 0.7294 0.8000]; %color both bars
+        bh(2).CData(i,:) = [0.4941 0.7294 0.8000]; %color both bars
+    else %parietal area #C9778F
+        h.YTickLabel{i} = ['\color[rgb]{0.7882 0.4667 0.5608}' h.YTickLabel{i}];
+        bh(1).CData(i,:) = [0.7882 0.4667 0.5608]; %color both bars
+        bh(2).CData(i,:) = [0.7882 0.4667 0.5608]; %color both bars
+    end
+end
+bh(1).LineStyle = '-'; %set in-degree line style to solid
+bh(2).LineStyle = ':'; %set out-degree line style to dotted
+bh(1).LineWidth = 0.25; bh(2).LineWidth = 0.25; %set line size
 
-% get handle to current axes
-a = gca;
+xline(mean(id),'--','Mean In-Degree','LabelVerticalAlignment','bottom',...
+    'Color','#C9778F');
+xline(mean(od),'--','Mean Out-Degree','LabelVerticalAlignment','bottom',...
+    'LabelHorizontalAlignment','left','Color','#7EBACC');
+hold on %add phantom plots to get legend to present correctly
+sol=plot(21,2,'k-'); dot=plot(21,3,'k:'); hold off
+legend([sol dot],'In-degree','Out-degree'); title('In & Out-Degree Distributions')
+legend('boxoff')
+export_fig deg_dist.png -transparent % no background
