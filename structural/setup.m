@@ -4,10 +4,6 @@
 %step 2: setup the nodes to be in exact order as in 
 %prefrontal_parietal_areas spreadsheet, format: source x target
 
-nodes = {'10','9','32','14','25','8B','8Ad','9/46d','46d','46v','9/46v',...
-    '8Av','45','47/12','13','11','6DR','PE','PEci','PEc','PEa','PF',...
-    'PFop','PFG','IPd','POa','PG','PGm','PGop','Opt'}; %cell variable
-
 nodes = ["10","9","32","14","25","8B","8Ad","9/46d","46d","46v","9/46v",...
     "8Av","45","47/12","13","11","6DR","PE","PEci","PEc","PEa","PF",...
     "PFop","PFG","IPd","POa","PG","PGm","PGop","Opt"]; %string variable
@@ -117,4 +113,53 @@ hold on %add phantom plots to get legend to present correctly
 sol=plot(21,2,'k-'); dot=plot(21,3,'k:'); hold off
 legend([sol dot],'In-degree','Out-degree'); title('In & Out-Degree Distributions')
 legend('boxoff')
+export_fig deg_dist.pdf -transparent % no background
 export_fig deg_dist.png -transparent % no background
+
+%% in degree distribution visualization v2
+[id_sort,id_idx] = sort(id); %sort elements of id in ascending order and save indices in idx
+figure(3), clf
+bh = barh(1:30,id_sort,'FaceColor','flat'); 
+yticks(1:30); yticklabels(nodes(id_idx));
+xticks([10 mean(id) 20]); 
+h=gca; h.XAxis.TickLength = [0.005 0]; % shorten tick marks on only x-axis
+h.YAxis.TickLength = [0 0]; % del tick marks on only y-axis
+h.YAxisLocation = 'Right'; h.XDir = 'reverse'; %reflect about y-axis
+for i=1:length(id_idx) %color each tick label & bar's area acc to region
+    if (id_idx(i) < 18) %frontal area #6DB3A5
+        h.YTickLabel{i} = ['\color[rgb]{0.4941 0.7294 0.8000}' h.YTickLabel{i}];
+        bh.CData(i,:) = [0.4941 0.7294 0.8000]; %color bars
+    else %parietal area #C9778F
+        h.YTickLabel{i} = ['\color[rgb]{0.7882 0.4667 0.5608}' h.YTickLabel{i}];
+        bh.CData(i,:) = [0.7882 0.4667 0.5608]; %color both bars
+    end
+end
+xline(mean(id),'--','Mean','LabelVerticalAlignment','bottom',...
+    'Color',[0.5 0.5 0.5]);
+
+figure(4), clf
+histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5])
+
+figure(6), clf
+histogram(od_sort,6)
+
+
+%% out degree distribution visualization v2
+[od_sort,od_idx] = sort(od); %sort elements of id in ascending order and save indices in idx
+figure(4), clf
+bh = barh(1:30,od_sort,'FaceColor','flat'); 
+yticks(1:30); yticklabels(nodes(od_idx));
+xticks([10 mean(od) 20]); 
+h=gca; h.XAxis.TickLength = [0.005 0]; % shorten tick marks on only x-axis
+h.YAxis.TickLength = [0 0]; % del tick marks on only y-axis
+for i=1:length(od_idx) %color each tick label & bar's area acc to region
+    if (od_idx(i) < 18) %frontal area #6DB3A5
+        h.YTickLabel{i} = ['\color[rgb]{0.4941 0.7294 0.8000}' h.YTickLabel{i}];
+        bh.CData(i,:) = [0.4941 0.7294 0.8000]; %color bars
+    else %parietal area #C9778F
+        h.YTickLabel{i} = ['\color[rgb]{0.7882 0.4667 0.5608}' h.YTickLabel{i}];
+        bh.CData(i,:) = [0.7882 0.4667 0.5608]; %color both bars
+    end
+end
+xline(mean(od),'--','Mean','LabelVerticalAlignment','bottom',...
+    'Color',[0.5 0.5 0.5]);
