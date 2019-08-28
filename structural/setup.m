@@ -136,17 +136,20 @@ for i=1:length(id_idx) %color each tick label & bar's area acc to region
 end
 xline(mean(id),'--','Mean','LabelVerticalAlignment','bottom',...
     'Color',[0.5 0.5 0.5]);
+h.Color = 'none'; % turn off background color
+box off
+export_fig in_deg_rt.eps -transparent % no background
 
-figure(4), clf
-histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5])
-
-figure(6), clf
-histogram(od_sort,6)
+figure(4), clf %histogram
+id_hist = histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5]);
+xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
+axis off
+h.Color = 'none'; % turn off background color
 
 
 %% out degree distribution visualization v2
 [od_sort,od_idx] = sort(od); %sort elements of id in ascending order and save indices in idx
-figure(4), clf
+figure(5), clf
 bh = barh(1:30,od_sort,'FaceColor','flat'); 
 yticks(1:30); yticklabels(nodes(od_idx));
 xticks([10 mean(od) 20]); 
@@ -163,3 +166,12 @@ for i=1:length(od_idx) %color each tick label & bar's area acc to region
 end
 xline(mean(od),'--','Mean','LabelVerticalAlignment','bottom',...
     'Color',[0.5 0.5 0.5]);
+h.Color = 'none'; % turn off background color
+box off
+
+figure(6), clf %histogram
+id_hist = histogram(od_sort,6,'FaceColor',[0.5 0.5 0.5]);
+xline(mean(od),'--','Color',[0.5 0.5 0.5]); 
+h.Color = 'none'; % turn off background color
+axis off
+
