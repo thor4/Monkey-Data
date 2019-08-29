@@ -144,7 +144,7 @@ figure(4), clf %histogram
 id_hist = histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5]);
 xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
 axis off
-h.Color = 'none'; % turn off background color
+h=gca; h.Color = 'none'; % turn off background color
 export_fig in_deg_hist.eps -transparent % no background
 
 
@@ -172,8 +172,8 @@ box off
 export_fig out_deg_lt.eps -transparent % no background
 
 figure(6), clf %histogram
-id_hist = histogram(od_sort,6,'FaceColor',[0.5 0.5 0.5]);
+od_hist = histogram(od_sort,6,'FaceColor',[0.5 0.5 0.5]);
 xline(mean(od),'--','Color',[0.5 0.5 0.5]); 
-h.Color = 'none'; % turn off background color
+h=gca; h.Color = 'none'; % turn off background color
 axis off
 export_fig out_deg_hist.eps -transparent % no background
