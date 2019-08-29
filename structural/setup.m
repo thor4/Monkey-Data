@@ -143,8 +143,10 @@ export_fig in_deg_rt.eps -transparent % no background
 figure(4), clf %histogram
 id_hist = histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5]);
 xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
-axis off
-h=gca; h.Color = 'none'; % turn off background color
+xticks([]); yticks([]); box off %rem misc elements
+h=gca;
+h.YAxis.Visible='off'; h.XAxis.Visible='off'; %get rid of axes
+h.Color = 'none'; % turn off background color
 export_fig in_deg_hist.eps -transparent % no background
 
 
