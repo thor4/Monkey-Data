@@ -145,7 +145,7 @@ id_hist = histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5]);
 xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
 xticks([]); yticks([]); box off %rem misc elements
 h=gca;
-h.YAxis.Visible='off'; h.XAxis.Visible='off'; %get rid of axes
+% h.YAxis.Visible='off'; h.XAxis.Visible='off'; %get rid of axes
 h.Color = 'none'; % turn off background color
 export_fig in_deg_hist.eps -transparent % no background
 
