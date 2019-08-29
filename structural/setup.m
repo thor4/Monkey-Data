@@ -76,7 +76,7 @@ axes(a)
 linkaxes([a b])
 yticks('auto')
 
-%% visualize in & out degree distributions
+%% visualize in & out degree distributions - grouped v1
 [id_sort,id_idx] = sort(id); %sort elements of id in ascending order and save indices in idx
 od_id_sort = od(id_idx); %od sorted by the sorted id vector
 deg=horzcat(id_sort',od_id_sort'); %concatenate id + od to have single deg mat
@@ -145,6 +145,7 @@ id_hist = histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5]);
 xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
 axis off
 h.Color = 'none'; % turn off background color
+export_fig in_deg_hist.eps -transparent % no background
 
 
 %% out degree distribution visualization v2
@@ -168,10 +169,11 @@ xline(mean(od),'--','Mean','LabelVerticalAlignment','bottom',...
     'Color',[0.5 0.5 0.5]);
 h.Color = 'none'; % turn off background color
 box off
+export_fig out_deg_lt.eps -transparent % no background
 
 figure(6), clf %histogram
 id_hist = histogram(od_sort,6,'FaceColor',[0.5 0.5 0.5]);
 xline(mean(od),'--','Color',[0.5 0.5 0.5]); 
 h.Color = 'none'; % turn off background color
 axis off
-
+export_fig out_deg_hist.eps -transparent % no background
