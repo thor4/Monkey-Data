@@ -143,10 +143,15 @@ export_fig in_deg_rt.eps -transparent % no background
 figure(4), clf %histogram
 %need to turn FaceAlpha to 1 to turn transparency off to deal with
 %export_fig bug only for histograms
-id_hist = histogram(id_sort,6,'FaceColor',[0.5 0.5 0.5],'FaceAlpha',1);
-xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
+id_hist = histogram(id_sort,'BinEdges',(2:3:23),'FaceColor',[0.5 0.5 0.5],'FaceAlpha',1);
 h=gca; h.Color = 'none'; % turn off background color
-axis off
+ylim([0,10]); % same-scale y-axis as fig 6
+xticks([10 mean(od) 20]); % same tick marks
+xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
+h.XAxis.TickLength = [0.005 0]; 
+h.YAxisLocation = 'Right'; h.XDir = 'reverse'; %reflect about y-axis
+box off; h.YAxis.Visible = 'off'; % turn off y-axis
+% axis off
 export_fig in_deg_hist.eps -transparent % no background
 
 
@@ -175,8 +180,12 @@ box off
 export_fig out_deg_lt.eps -transparent % no background
 
 figure(6), clf %histogram
-od_hist = histogram(od_sort,6,'FaceColor',[0.5 0.5 0.5],'FaceAlpha',1);
-xline(mean(od),'--','Color',[0.5 0.5 0.5]); 
+od_hist = histogram(od_sort,'BinEdges',(2:3:23),'FaceColor',[0.5 0.5 0.5],'FaceAlpha',1);
 h=gca; h.Color = 'none'; % turn off background color
-axis off
+ylim([0,10]); % same-scale y-axis as fig 6
+xticks([10 mean(od) 20]); % same tick marks
+xline(mean(id),'--','Color',[0.5 0.5 0.5]); 
+h.XAxis.TickLength = [0.005 0]; 
+box off; h.YAxis.Visible = 'off'; % turn off y-axis
+% axis off
 export_fig out_deg_hist.eps -transparent % no background
