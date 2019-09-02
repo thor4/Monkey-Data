@@ -154,7 +154,8 @@ box off; h.YAxis.Visible = 'off'; % turn off y-axis
 % axis off
 export_fig in_deg_hist.eps -transparent % no background
 
-
+figure(5), clf %cCDF
+plot(id_sort,
 
 %% out degree distribution visualization v2
 [od_sort,od_idx] = sort(od); %sort elements of id in ascending order and save indices in idx
