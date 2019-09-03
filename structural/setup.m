@@ -155,7 +155,10 @@ box off; h.YAxis.Visible = 'off'; % turn off y-axis
 export_fig in_deg_hist.eps -transparent % no background
 
 figure(5), clf %cCDF
-plot(id_sort,
+[x_deg,y_pdk,idx] = cCDF(id);
+plot(x_deg,y_pdk,'ro');
+xticks([10^0 10^1]); yticks([0 10^-1 10^-2 10^-3 10^-4]); 
+ylim([0 10^-4]) 
 
 %% out degree distribution visualization v2
 [od_sort,od_idx] = sort(od); %sort elements of id in ascending order and save indices in idx
