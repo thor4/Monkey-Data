@@ -154,10 +154,38 @@ box off; h.YAxis.Visible = 'off'; % turn off y-axis
 % axis off
 export_fig in_deg_hist.eps -transparent % no background
 
-figure(5), clf %cCDF
-[x_deg,y_pdk,idx] = cCDF(id);
+%% testing best cCDF plot
+[x_deg,y_pdk,idx] = cCDF(id); %first try with in-degree
+
+% figure(5), clf %cCDF
+% semilogy(x_deg,y_pdk,'ro');
+
+figure(6), clf %loglog plot of cCDF
+loglog(x_deg,y_pdk,'rs')
+grid on
+
+fit_xdeg = x_deg(1:28)'; %remove outliers with 0% probability
+fit_ypdk = y_pdk(1:28)';
+% f_exp = fit(fit_xdeg,fit_ypdk,'exp1'); % y = a*exp(b*x)
+% a_exp = f_exp.a; b_exp = f_exp.b; y_exp = a_exp*exp(b_exp*fit_xdeg); %exp line of best fit
+% f_pow = fit(fit_xdeg,fit_ypdk,'power1'); % y = a*x^b
+% a_pow = f_pow.a; b_pow = f_pow.b; y_pow = a_pow*fit_xdeg.^b_pow; %exp line of best fit
+% hold on
+% loglog(fit_xdeg,y_exp,'b-')
+% loglog(fit_xdeg,y_pow,'g-')
+
+figure(3),clf %linear plot of cCDF
 plot(x_deg,y_pdk,'ro');
-xticks([10^0 10^1]); yticks([0 10^-1 10^-2 10^-3 10^-4]); 
+f = fit(x_deg',y_pdk','poly1'); % linear regression fit: y = p1*x + p2
+a_poly = f.p1; b_poly = f.p2; y_poly = a_poly*fit_xdeg+b_poly; %line of best fit
+hold on
+plot(fit_xdeg,y_poly,'b-')
+
+% quantify goodness of fit, r^2, etc.. 
+% compare this with the fit from degree=6 to 21
+
+
+xticks([10^0 10^1]);  
 ylim([0 10^-4]) 
 
 %% out degree distribution visualization v2
