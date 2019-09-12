@@ -158,32 +158,39 @@ export_fig in_deg_hist.eps -transparent % no background
 [xi_deg,yi_pdk,idxi] = cCDF(id); %in-degree
 [xo_deg,yo_pdk,idxo] = cCDF(od); %out-degree
 
-figure(5), clf %cCDF
-semilogy(xi_deg,yi_pdk,'ro');
-hold on
-semilogy(xo_deg,yo_pdk,'bs');
+[fi,gofi,outputi] = fit(xi_deg',yi_pdk','gauss1'); %Y = a1*exp(-((x-b1)/c1)^2) Gaussian fit
+[fo,gofo,outputo] = fit(xo_deg',yo_pdk','gauss1'); %Y = a1*exp(-((x-b1)/c1)^2) Gaussian fit
+%in sse: 0.0745 r^2: 0.9717 adjr^2: 0.9696 rmse: 0.0525 [gaussian]
+%out sse: 0.0222 r^2: 0.9909 adjr^2: 0.9902 rmse: 0.0287 [gaussian]
+%in sse: 1.1184 r^2: 0.5758 adjr^2: 0.5606 rmse: 0.1999 [power]
+%out sse: 0.7279 r^2: 0.7015 adjr^2: 0.6909 rmse: 0.1612 [power]
+%in sse: 0.4644 r^2: 0.8238 adjr^2: 0.8176 rmse: 0.1288 [exp]
+%out sse: 0.2287 r^2: 0.9062 adjr^2: 0.9029 rmse: 0.0904 [exp]
+%in sse: 0.0965 r^2: 0.9634 adjr^2: 0.9621 rmse: 0.0587 [linear regression]
+%out sse: 0.0248 r^2: 0.9898 adjr^2: 0.9895 rmse: 0.0298[linear regression]
+yi = fi(xi_deg); %Gaussian best fit of cCDF in-deg dist data
+yo = fo(xo_deg); %Gaussian best fit of cCDF out-deg dist data
 
-figure(6), clf %loglog plot of cCDF
-loglog(x_deg,y_pdk,'rs')
+figure(5), clf %cCDF
+loglog(xi_deg,yi_pdk,'ro'); %in
+hold on
+loglog(xi_deg,yi,'k-'); %in-deg best-fit
+loglog(xo_deg,yo_pdk,'bs'); %out
+loglog(xo_deg,yo,'k--'); %out-deg best-fit
 grid on
 
-fit_xdeg = x_deg(6:14)'; %remove outliers with 0% probability
-fit_ypdk = y_pdk(6:14)';
-% f_exp = fit(fit_xdeg,fit_ypdk,'exp1'); % y = a*exp(b*x)
-% a_exp = f_exp.a; b_exp = f_exp.b; y_exp = a_exp*exp(b_exp*fit_xdeg); %exp line of best fit
-f_pow = fit(fit_xdeg,fit_ypdk,'power1'); % y = a*x^b
-b_pow = f_pow.b; y_pow = f_pow(fit_xdeg); %power law best fit
+%use this if you want to find degrees where it like a power law dist,
+%between degrees [6,14]
+fit_xdeg = xi_deg(3:15)'; %remove outliers for in-deg with no power dist
+fit_ypdk = yi_pdk(3:15)';
+[fp,gofp,outputp] = fit(fit_xdeg,fit_ypdk,'power1'); % y = a*x^b
+%in sse: 0.0143 r^2: 0.9149 adjr^2: 0.9063 rmse: 0.0379 [lin reg]
+%fp.b = -0.5433 (not in barabasi's range)
+yp = fp(fit_xdeg); %power law best fit
 hold on
-% loglog(fit_xdeg,y_exp,'b-')
-loglog(fit_xdeg,y_pow,'g-')
+loglog(fit_xdeg,yp,'g-')
 % plot(f_pow,'predobs')
 
-figure(3),clf %linear plot of cCDF
-plot(x_deg,y_pdk,'ro');
-% f = fit(x_deg',y_pdk','poly1'); % linear regression fit: y = p1*x + p2
-% a_poly = f.p1; b_poly = f.p2; y_poly = a_poly*fit_xdeg+b_poly; %line of best fit
-hold on
-plot(fit_xdeg,y_poly,'b-')
 
 % quantify goodness of fit, r^2, etc.. 
 % compare this with the fit from degree=6 to 21
