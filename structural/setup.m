@@ -155,10 +155,13 @@ box off; h.YAxis.Visible = 'off'; % turn off y-axis
 export_fig in_deg_hist.eps -transparent % no background
 
 %% testing best cCDF plot
-[x_deg,y_pdk,idx] = cCDF(id); %first try with in-degree
+[xi_deg,yi_pdk,idxi] = cCDF(id); %in-degree
+[xo_deg,yo_pdk,idxo] = cCDF(od); %out-degree
 
-% figure(5), clf %cCDF
-% semilogy(x_deg,y_pdk,'ro');
+figure(5), clf %cCDF
+semilogy(xi_deg,yi_pdk,'ro');
+hold on
+semilogy(xo_deg,yo_pdk,'bs');
 
 figure(6), clf %loglog plot of cCDF
 loglog(x_deg,y_pdk,'rs')
