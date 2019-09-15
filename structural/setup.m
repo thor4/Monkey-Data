@@ -179,7 +179,7 @@ loglog(xo_deg,yo_pdk,'bs'); %out
 loglog(xo_deg,yo,'k--'); %out-deg best-fit
 grid on
 
-%use this if you want to find degrees where it like a power law dist,
+%use this if you want to find degrees where its like a power law dist,
 %between degrees [6,14]
 fit_xdeg = xi_deg(3:15)'; %remove outliers for in-deg with no power dist
 fit_ypdk = yi_pdk(3:15)';
@@ -191,13 +191,27 @@ hold on
 loglog(fit_xdeg,yp,'g-')
 % plot(f_pow,'predobs')
 
+% %frontal & parietal in+out degree analyses (worry about this for SI)
+% frontal = AM(1:17,1:17); %pull out all frontal areas
+% parietal = AM(18:30,18:30); %pull out all parietal areas
+% %identify in-degree, out-degree and in+out=total degree per node
+% [fid,fod,fdeg] = degrees_dir(frontal); %frontal in+out degrees
+% [pid,pod,pdeg] = degrees_dir(parietal); %parietal in+out degrees
+% [fxi_deg,fyi_pdk,~] = cCDF(fid); [fxo_deg,fyo_pdk,~] = cCDF(fod); %cCDFs frontal
+% [pxi_deg,pyi_pdk,~] = cCDF(pid); [pxo_deg,pyo_pdk,~] = cCDF(pod); %cCDFs frontal
+% %use curve fitting app to explore cCDFs and find best fit
+% [fpresult,fpgof] = fitFrontalParietal(fxi_deg, fyi_pdk, fxo_deg, fyo_pdk,...
+%     pxi_deg, pyi_pdk, pxo_deg, pyo_pdk); %idx 2, 3, 5 & 7 are best
+% yif = fpresult{2}(fxi_deg); %Gaussian best fit of cCDF in-deg frontal
+% 
+% figure(9), clf %cCDF of in-deg frontal
+% loglog(fxi_deg,fyi_pdk,'ro'); %in
+% hold on
+% loglog(fxi_deg,yif,'k-'); %in-deg frontal Gaussian best-fit
 
-% quantify goodness of fit, r^2, etc.. 
-% compare this with the fit from degree=6 to 21
+%get goodness of fit data for fpn as a function using tool
 
 
-xticks([10^0 10^1]);  
-ylim([0 10^-4]) 
 
 %% out degree distribution visualization v2
 [od_sort,od_idx] = sort(od); %sort elements of id in ascending order and save indices in idx
