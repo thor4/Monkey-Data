@@ -157,21 +157,13 @@ export_fig in_deg_hist.eps -transparent % no background
 %% testing best cCDF plot
 [xi_deg,yi_pdk,idxi] = cCDF(id); %in-degree
 [xo_deg,yo_pdk,idxo] = cCDF(od); %out-degree
+%use curve fitting app to find best fit for cCDFs and make fitFPN function
+[fpnresult,fpngof] = fitFPN(xi_deg, yi_pdk, xo_deg, yo_pdk); %idx 4 & 8 are best
 
-[fi,gofi,outputi] = fit(xi_deg',yi_pdk','gauss1'); %Y = a1*exp(-((x-b1)/c1)^2) Gaussian fit
-[fo,gofo,outputo] = fit(xo_deg',yo_pdk','gauss1'); %Y = a1*exp(-((x-b1)/c1)^2) Gaussian fit
-%in sse: 0.0745 r^2: 0.9717 adjr^2: 0.9696 rmse: 0.0525 [gaussian]
-%out sse: 0.0222 r^2: 0.9909 adjr^2: 0.9902 rmse: 0.0287 [gaussian]
-%in sse: 1.1184 r^2: 0.5758 adjr^2: 0.5606 rmse: 0.1999 [power]
-%out sse: 0.7279 r^2: 0.7015 adjr^2: 0.6909 rmse: 0.1612 [power]
-%in sse: 0.4644 r^2: 0.8238 adjr^2: 0.8176 rmse: 0.1288 [exp]
-%out sse: 0.2287 r^2: 0.9062 adjr^2: 0.9029 rmse: 0.0904 [exp]
-%in sse: 0.0965 r^2: 0.9634 adjr^2: 0.9621 rmse: 0.0587 [linear regression]
-%out sse: 0.0248 r^2: 0.9898 adjr^2: 0.9895 rmse: 0.0298[linear regression]
-yi = fi(xi_deg); %Gaussian best fit of cCDF in-deg dist data
-yo = fo(xo_deg); %Gaussian best fit of cCDF out-deg dist data
+yi = fpnresult{4}(xi_deg); %Gaussian best fit of cCDF in-deg fpn
+yo = fpnresult{8}(xo_deg); %Gaussian best fit of cCDF out-deg fpn
 
-figure(5), clf %cCDF
+figure(9), clf %cCDF
 loglog(xi_deg,yi_pdk,'ro'); %in
 hold on
 loglog(xi_deg,yi,'k-'); %in-deg best-fit
@@ -209,7 +201,8 @@ loglog(fit_xdeg,yp,'g-')
 % hold on
 % loglog(fxi_deg,yif,'k-'); %in-deg frontal Gaussian best-fit
 
-%get goodness of fit data for fpn as a function using tool
+%see about other metrics to explore
+%make structural figures and write up methods + discussion surrounding it
 
 
 
