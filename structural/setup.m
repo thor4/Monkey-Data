@@ -204,7 +204,20 @@ loglog(fit_xdeg,yp,'g-')
 %see about other metrics to explore
 %make structural figures and write up methods + discussion surrounding it
 
+%% test for power law distribution
+[alpha, xmin, L] = plfit(id','finite');
+% The output 'alpha' is the maximum likelihood estimate of the scaling
+% exponent, 'xmin' is the estimate of the lower bound of the power-law
+% behavior, and L is the log-likelihood of the data x>=xmin under the
+% fitted power law.
+%visualize id dist along with fitted power-law dist on log-log axes
+h = plplot(id,xmin,alpha); 
+[p, gof] = plpva(id',xmin,'reps',5000); %p=0.0192, reject power law hypo for id deg, not drawn from a power-law dist
 
+[alpha, xmin, L] = plfit(od','finite');
+[p, gof] = plpva(od',xmin,'reps',5000); %p=0.1716, >0.1 so power law is plausible hypo for data
+%visualize od dist along with fitted power-law dist on log-log axes
+h = plplot(od,xmin,alpha); 
 
 %% out degree distribution visualization v2
 [od_sort,od_idx] = sort(od); %sort elements of id in ascending order and save indices in idx
