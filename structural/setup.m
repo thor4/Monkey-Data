@@ -50,31 +50,37 @@ D = distance_bin(AM);
 BC = betweenness_bin(AM);
 
 %% visualize association matrix
-imagesc(AM)
+figure(1), clf
+% AMv = imagesc(AM);
+AMv = imagesc((1:size(AM,2))-0.5, (1:size(AM,1))-0.5, AM);
+% G = digraph(AM)
+% plot(G)
+colormap([1 1 1; 0.75 0.75 0.75; 0.25 0.25 0.25;]) % black 1, white 0
+grid on
+ax = gca; ax.GridColor = [0 0 0]; ax.LineWidth = 2; % make grid show up
+ax.XAxis.Visible = 'off'; ax.YAxis.Visible = 'off';
+% white [1 1 1] , black [0 0 0], grey [0.5 0.5 0.5]
 % colormap(cool)
-colormap(summer)
-yticks(1:30); xticks(1:30); yticklabels(nodes(:)); xticklabels(nodes(:));
+% colormap(summer)
+yticks(1:30); xticks(1:30); yticklabels([]); xticklabels([]);
 set(gca,'XAxisLocation','top') %move x-axis to top
-xtickangle(90); set(gca,'TickLength',[0 0],'FontSize',24) %remove ticks
+ytk=get(gca,'ytick').'; xtik=get(gca,'xtick'); ypos=-0.1; xpos=-.2;
+% place y-labels
+text(repmat(ypos,size(ytk)),ytk,nodes(:),'FontSize',16,'vertical','bottom','HorizontalAlignment','right')
+% place x-labels
+text(ytk-0.85,repmat(xpos,size(ytk)),nodes(:),'FontSize',16,'vertical','top','HorizontalAlignment','left','Rotation',90)
+% xtickangle(90); 
+% set(gca,'TickLength',[0 0],'FontSize',24) %remove ticks
 cbar = colorbar; lim = get(cbar,'Limits'); cbar.TickLabels=(["No","Yes"]); % top/bottom
-set(get(cbar,'label'),'string','Raw power (\muV^2)');
 cbar.Label.String = 'Connection?'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-2.5 pos(2)];
 export_fig AM.png -transparent % no background
-%%make font size bigger then export, in powerpoint make axis labels "from"
-%%and "to"
+%%in powerpoint make axis labels "from" and "to"
 
-% get handle to current axes
-a = gca;
-% set box property to off and remove background color
-set(a,'box','off','color','none')
-% create new, empty axes with box but without ticks
-b = axes('Position',get(a,'Position'),'box','on','xtick',(1:30),'ytick',(1:30),'TickDir','out');
-% set original axes as active
-axes(a)
-% link axes in case of zooming
-linkaxes([a b])
-yticks('auto')
+%%change colors of different regional areas to match frontal and parietal
+%%color scheme
+
+
 
 %% visualize in & out degree distributions - grouped v1
 [id_sort,id_idx] = sort(id); %sort elements of id in ascending order and save indices in idx
