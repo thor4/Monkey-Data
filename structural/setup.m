@@ -8,8 +8,15 @@ nodes = ["10","9","32","14","25","8B","8Ad","9/46d","46d","46v","9/46v",...
     "8Av","45","47/12","13","11","6DR","PE","PEci","PEc","PEa","PF",...
     "PFop","PFG","IPd","POa","PG","PGm","PGop","Opt"]; %string variable
 
+nodes = ["10" "9" "32" "14" "25" "8B" "8Ad" "9/46d" "46d" "46v" "9/46v",...
+    "8Av" "45" "47/12" "13" "11" "6DR" "PE" "PEci" "PEc" "PEa" "PF",...
+    "PFop" "PFG" "IPd" "POa" "PG" "PGm" "PGop" "Opt"]
+
 %step 3: save AM and nodes as AM.mat data file
 load('AM.mat')
+% load('AMv.mat') %has 0.5 along diagonal for AM visualization
+EdgeL = adj2gephilab(filename,AM);
+[result] = Matrix2GraphML(AM,'C:\Users\bryan\Documents\GitHub\Monkey-Data\structural\fpn.graphml',nodes);
 
 %identify in-degree, out-degree and in+out=total degree per node
 [id,od,deg] = degrees_dir(AM);
@@ -66,15 +73,18 @@ yticks(1:30); xticks(1:30); yticklabels([]); xticklabels([]);
 set(gca,'XAxisLocation','top') %move x-axis to top
 ytk=get(gca,'ytick').'; xtik=get(gca,'xtick'); ypos=-0.1; xpos=-.2;
 % place y-labels
-text(repmat(ypos,size(ytk)),ytk,nodes(:),'FontSize',16,'vertical','bottom','HorizontalAlignment','right')
+text(repmat(ypos,size(ytk(1:17))),ytk(1:17),nodes(1:17),'FontSize',16,'Color',[0.4941 0.7294 0.8000],'vertical','bottom','HorizontalAlignment','right') %frontal
+text(repmat(ypos,size(ytk(18:30))),ytk(18:30),nodes(18:30),'FontSize',16,'Color',[0.7882 0.4667 0.5608],'vertical','bottom','HorizontalAlignment','right') %parietal
 % place x-labels
-text(ytk-0.85,repmat(xpos,size(ytk)),nodes(:),'FontSize',16,'vertical','top','HorizontalAlignment','left','Rotation',90)
+text(ytk(1:17)-0.85,repmat(xpos,size(ytk(1:17))),nodes(1:17),'FontSize',16,'Color',[0.4941 0.7294 0.8000],'vertical','top','HorizontalAlignment','left','Rotation',90) %frontal
+text(ytk(18:30)-0.85,repmat(xpos,size(ytk(18:30))),nodes(18:30),'FontSize',16,'Color',[0.7882 0.4667 0.5608],'vertical','top','HorizontalAlignment','left','Rotation',90) %parietal
 % xtickangle(90); 
 % set(gca,'TickLength',[0 0],'FontSize',24) %remove ticks
-cbar = colorbar; lim = get(cbar,'Limits'); cbar.TickLabels=(["No","Yes"]); % top/bottom
-cbar.Label.String = 'Connection?'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-2.5 pos(2)];
+% cbar = colorbar; lim = get(cbar,'Limits'); cbar.TickLabels=(["No","Yes"]); % top/bottom
+% cbar.Label.String = 'Connection?'; pos = cbar.Label.Position; 
+% cbar.Label.Position=[pos(1)-2.5 pos(2)];
 export_fig AM.png -transparent % no background
+export_fig AM.eps -transparent % no background
 %%in powerpoint make axis labels "from" and "to"
 
 %%change colors of different regional areas to match frontal and parietal
