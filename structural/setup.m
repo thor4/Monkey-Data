@@ -11,29 +11,30 @@ nodes = ["10","9","32","14","25","8B","8Ad","9/46d","46d","46v","9/46v",...
 %step 3: save AM and nodes as AM.mat data file
 load('AM.mat')
 % load('AMv.mat') %has 0.5 along diagonal for AM visualization
-EdgeL = adj2gephilab(filename,AM);
-[result] = Matrix2GraphML(AM,'C:\Users\bryan\Documents\GitHub\Monkey-Data\structural\fpn.graphml',nodes);
+% following lines are attempts to get AM into format for import into gephi
+% EdgeL = adj2gephilab(filename,AM);
+% [result] = Matrix2GraphML(AM,'C:\Users\bryan\Documents\GitHub\Monkey-Data\structural\fpn.graphml',nodes);
 
 %identify in-degree, out-degree and in+out=total degree per node
 [id,od,deg] = degrees_dir(AM);
 
-%identify joint degree distribution, J: joint degree distribution matrix 
-%(shifted by one) J_od: number of vertices with od>id. J_id: number of 
-%vertices with id>od. J_bl: number of vertices with id=od.
-[J,J_od,J_id,J_bl] = jdegree(AM);
-
-%identify density (fraction of present connections to possible connections)
-kden = density_dir(AM);
-
+% %identify joint degree distribution, J: joint degree distribution matrix 
+% %(shifted by one) J_od: number of vertices with od>id. J_id: number of 
+% %vertices with id>od. J_bl: number of vertices with id=od.
+% [J,J_od,J_id,J_bl] = jdegree(AM);
+% 
+% %identify density (fraction of present connections to possible connections)
+% kden = density_dir(AM);
+% 
 %identify clutering coeff (the fraction of triangles around a node (equiv. 
 %the fraction of node's neighbors that are neighbors of each other)
 C = clustering_coef_bd(AM);
-
-%identify optimal community structure (a subdivision of the network into
-%nonoverlapping groups of nodes which maximizes the number of within-
-%group edges, and minimizes the number of between-group edges. q is 
-%optimized community-structure statistic
-[M,Q] = community_louvain(AM);
+% 
+% %identify optimal community structure (a subdivision of the network into
+% %nonoverlapping groups of nodes which maximizes the number of within-
+% %group edges, and minimizes the number of between-group edges. q is 
+% %optimized community-structure statistic
+% [M,Q] = community_louvain(AM);
 
 %calculate distance matrix (contains lengths of shortest paths between all
 %pairs of nodes. An entry (u,v) represents the length of shortest path 
@@ -45,12 +46,12 @@ D = distance_bin(AM);
 %calculate characteristic path length (average shortest path length between
 %all pairs of nodes in the network) & global efficiency (average inverse 
 %shortest path length in the network. lambda=inf, efficiency=0.5686
-[lambda,efficiency] = charpath(D); %lambda=char path length
-
-%calculate betweenness centrality (the fraction of all shortest paths in 
-%the network that contain a given node. Nodes with high values of 
-%betweenness centrality participate in a large number of shortest paths.
-BC = betweenness_bin(AM);
+[char_path_length,efficiency] = charpath(D); 
+% 
+% %calculate betweenness centrality (the fraction of all shortest paths in 
+% %the network that contain a given node. Nodes with high values of 
+% %betweenness centrality participate in a large number of shortest paths.
+% BC = betweenness_bin(AM);
 
 %% visualize association matrix
 figure(1), clf
@@ -264,3 +265,14 @@ h.XAxis.TickLength = [0.005 0];
 box off; h.YAxis.Visible = 'off'; % turn off y-axis
 % axis off
 export_fig out_deg_hist.eps -transparent % no background
+
+
+%% surrogate networks
+
+% %be sure not to include the diagonal in the mean distance calculation
+% rowMean = sum(D,2) ./ sum(D~=0,2); %avg shortest path length
+% char_path_length = mean(rowMean); %characteristic path length
+
+%random erdos renyi Maslov-Sneppen
+
+%lattice
