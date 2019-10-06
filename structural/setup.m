@@ -26,9 +26,9 @@ load('AM.mat')
 % %identify density (fraction of present connections to possible connections)
 % kden = density_dir(AM);
 % 
-%identify clutering coeff (the fraction of triangles around a node (equiv. 
-%the fraction of node's neighbors that are neighbors of each other)
-C = clustering_coef_bd(AM);
+% %identify clutering coeff (the fraction of triangles around a node (equiv. 
+% %the fraction of node's neighbors that are neighbors of each other)
+% C = clustering_coef_bd(AM);
 % 
 % %identify optimal community structure (a subdivision of the network into
 % %nonoverlapping groups of nodes which maximizes the number of within-
@@ -273,6 +273,36 @@ export_fig out_deg_hist.eps -transparent % no background
 % rowMean = sum(D,2) ./ sum(D~=0,2); %avg shortest path length
 % char_path_length = mean(rowMean); %characteristic path length
 
-%random erdos renyi Maslov-Sneppen
+%random Maslov-Sneppen re-wiring
+% ..the number of iterations should exceed at least 100 times the number of 
+% connections in the network (Milo et al., 2004). 100*30 = 3000
+iter = 100; % # of iterations
+networks = 100; % # of surrogate networks
+ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
+C_ensemble = zeros(networks,1); %init clust coef ensemble
+L_ensemble = zeros(networks,1); %init char path length ensemble
+% doc randmio_dir
+tic
+for i=1:networks
+    % R: randomized network, eff: number of actual rewirings carried out
+    [R eff] = randmio_dir(AM, iter); 
+    ensemble(:,:,i) = R; %build ensemble of surrogate networks
+    C_ensemble(i) = mean(clustering_coef_bd(R)); 
+    D_rand = distance_bin(R); %shortest path length for each node
+    [L_ensemble(i),~] = charpath(D_rand); 
+    clear R
+end
+toc
+% 8 seconds = 100 surrogate networks
+% [id_test,od_test,deg_test] = degrees_dir(ensemble(:,:,57)); %test deg dist
+% id==id_test
+% od==od_test
+% all deg dist are maintained
+C = mean(clustering_coef_bd(AM)); % avg clustering coef for empirical network
+D = distance_bin(AM); [L,efficiency] = charpath(D); %L = char path length
+
+gamma = C / mean(C_ensemble); %Gamma > 1 suggests greater clustering than random
+lambda = L / mean(L_ensemble); %Lambda ~ 1 suggests a comparable avg path length to randomized network
+sigma = gamma / lambda; %sigma > 1 indicates small-worldness
 
 %lattice
