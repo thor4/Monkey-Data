@@ -306,3 +306,29 @@ lambda = L / mean(L_ensemble); %Lambda ~ 1 suggests a comparable avg path length
 sigma = gamma / lambda; %sigma > 1 indicates small-worldness
 
 %lattice
+
+%Rlatt,  latticized network in original node ordering
+%Rrp, latticized network in node ordering used for latticization
+%ind_rp, node ordering used for latticization
+%eff, number of actual rewirings carried out
+latt_ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
+C_latt_ensemble = zeros(networks,1); %init clust coef ensemble
+
+tic
+for i=1:networks
+    % R: randomized network, eff: number of actual rewirings carried out
+    [Rlatt,Rrp,ind_rp,eff] = latmio_dir_connected(AM, iter); 
+    latt_ensemble(:,:,i) = Rrp; %build ensemble of surrogate networks
+    C_latt_ensemble(i) = mean(clustering_coef_bd(Rrp)); 
+    D_latt = distance_bin(Rrp); %shortest path length for each node
+    clear Rrp
+end
+toc
+%25 seconds = 100 surrogate networks
+
+%Telesford et al., 2011 technique:
+omega = (mean(L_ensemble) / L) - (C / mean(C_latt_ensemble));
+%omega = 0.0275, 
+%omega index ranges between -1 and 1. Values close to 0 are indicative of 
+%small-worldness. Positive values suggest more random characteristics and 
+%negative values indicate a lattice-like structure
