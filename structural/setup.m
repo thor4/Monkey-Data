@@ -224,7 +224,8 @@ loglog(fit_xdeg,yp,'g-')
 % behavior, and L is the log-likelihood of the data x>=xmin under the
 % fitted power law.
 %visualize id dist along with fitted power-law dist on log-log axes
-h = plplot(id,xmin,alpha); 
+h = plplot(id,xmin,alpha); ylabel('P(degree ? x)')
+% Alt 242
 [p, gof] = plpva(id',xmin,'reps',5000); %p=0.0192, reject power law hypo for id deg, not drawn from a power-law dist
 
 [alpha, xmin, L] = plfit(od','finite');
