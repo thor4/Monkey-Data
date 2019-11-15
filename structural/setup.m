@@ -218,14 +218,88 @@ loglog(fit_xdeg,yp,'g-')
 %make structural figures and write up methods + discussion surrounding it
 
 %% test for power law distribution
+% files located here: http://tuvalu.santafe.edu/~aaronc/powerlaws/
 [alpha, xmin, L] = plfit(id','finite');
 % The output 'alpha' is the maximum likelihood estimate of the scaling
 % exponent, 'xmin' is the estimate of the lower bound of the power-law
 % behavior, and L is the log-likelihood of the data x>=xmin under the
 % fitted power law.
-%visualize id dist along with fitted power-law dist on log-log axes
-h = plplot(id,xmin,alpha); ylabel('P(degree ? x)')
-% Alt 242
+%% visualize id dist along with fitted power-law dist on log-log axes
+% 99% of this taken directly from plplot
+% reshape input vector
+x = reshape(id,numel(id),1); %state whether looking at in/out/total deg
+% initialize storage for output handles
+h = zeros(2,1);
+
+% select method (discrete or continuous) for plotting
+if     isempty(setdiff(x,floor(x))), f_dattype = 'INTS';
+elseif isreal(x),    f_dattype = 'REAL';
+else                 f_dattype = 'UNKN';
+end;
+if strcmp(f_dattype,'INTS') && min(x) > 50,
+    f_dattype = 'REAL';
+end;
+
+% calc cCDF (c) and best-fit line (cf)
+switch f_dattype,
+    
+    case 'REAL',
+        n = length(x);
+        c = [sort(x) (n:-1:1)'./n];
+        q = sort(x(x>=xmin));
+        cf = [q (q./xmin).^(1-alpha)];
+        cf(:,2) = cf(:,2) .* c(find(c(:,1)>=xmin,1,'first'),2);
+
+        figure;
+        h(1) = loglog(c(:,1),c(:,2),'ro','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
+        h(2) = loglog(cf(:,1),cf(:,2),'k--','LineWidth',2); hold off;
+        xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
+        xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
+        if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
+        yr  = [10.^floor(log10(1/n)) 1];
+        yrt = (round(log10(yr(1))):2:round(log10(yr(2))));
+        if length(yrt)<4, yrt = (round(log10(yr(1))):1:round(log10(yr(2)))); end;
+        set(gca,'XLim',xr,'XTick',10.^xrt);
+        set(gca,'YLim',yr,'YTick',10.^yrt,'FontSize',16);
+        ylabel('P(degree \geq x)','FontSize',18);
+        xlabel('x','FontSize',18)
+
+    case 'INTS',
+        n = length(x);        
+        q = unique(x);
+        c = hist(x,q)'./n;
+        c = [[q; q(end)+1] 1-[0; cumsum(c)]]; c(c(:,2)<10^-10,:) = [];
+        cf = ((xmin:q(end))'.^-alpha)./(zeta(alpha) - sum((1:xmin-1).^-alpha));
+        cf = [(xmin:q(end)+1)' 1-[0; cumsum(cf)]];
+        cf(:,2) = cf(:,2) .* c(c(:,1)==xmin,2);
+
+        figure;
+        h(1) = loglog(c(:,1),c(:,2),'ro','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
+        h(2) = loglog(cf(:,1),cf(:,2),'k--','LineWidth',2); hold off;
+        xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
+        xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
+        if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
+        yr  = [10.^floor(log10(1/n)) 1];
+        yrt = (round(log10(yr(1))):2:round(log10(yr(2))));
+        if length(yrt)<4, yrt = (round(log10(yr(1))):1:round(log10(yr(2)))); end;
+        set(gca,'XLim',xr,'XTick',10.^xrt);
+        set(gca,'YLim',yr,'YTick',10.^yrt,'FontSize',16);
+        ylabel('P(degree \geq x)','FontSize',18);
+        xlabel('x','FontSize',18)
+
+    otherwise,
+        fprintf('(PLPLOT) Error: x must contain only reals or only integers.\n');
+        h = [];
+        return;
+end;
+
+set(gca,'XLim',[1,50],'XTick',10.^xrt);
+set(gca,'YLim',[0.05,1],'YTick',10.^yrt,'FontSize',16);
+ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
+title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
+export_fig id_ccdf.eps -transparent % no background
+export_fig id_ccdf.png -transparent % no background
+
 [p, gof] = plpva(id',xmin,'reps',5000); %p=0.0192, reject power law hypo for id deg, not drawn from a power-law dist
 
 [alpha, xmin, L] = plfit(od','finite');
