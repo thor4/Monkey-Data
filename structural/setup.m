@@ -170,6 +170,7 @@ export_fig in_deg_hist.eps -transparent % no background
 %% testing best cCDF plot
 [xi_deg,yi_pdk,idxi] = cCDF(id); %in-degree
 [xo_deg,yo_pdk,idxo] = cCDF(od); %out-degree
+% xi=c(:,1); yi=c(:,2); %pull out deg & prob from cCDF for curve fitting
 %use curve fitting app to find best fit for cCDFs and make fitFPN function
 [fpnresult,fpngof] = fitFPN(xi_deg, yi_pdk, xo_deg, yo_pdk); %idx 4 & 8 are best
 
@@ -224,7 +225,22 @@ loglog(fit_xdeg,yp,'g-')
 % exponent, 'xmin' is the estimate of the lower bound of the power-law
 % behavior, and L is the log-likelihood of the data x>=xmin under the
 % fitted power law.
-%% visualize id dist along with fitted power-law dist on log-log axes
+[p, gof] = plpva(id',xmin,'reps',5000); %p=0.0158, reject power law hypo for id deg, not drawn from a power-law dist
+
+[alpha, xmin, L] = plfit(od','finite');
+[p, gof] = plpva(od',xmin,'reps',5000); %p=0.1716, >0.1 so power law is plausible hypo for data
+
+% now go to python for curve fitting comparisons
+% find in-degree is better approximated by an exponential than a power law
+xi= c(9:end,1);
+yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 0.192623 ...
+    0.120321]; %exp fit from python from xmin (12) to 21
+% find out-degree
+
+%visualize od dist along with fitted power-law dist on log-log axes
+% h = plplot(od,xmin,alpha); 
+
+%% visualize id+od dist along with fitted power-law dist on log-log axes
 % 99% of this taken directly from plplot
 % reshape input vector
 x = reshape(id,numel(id),1); %state whether looking at in/out/total deg
@@ -251,8 +267,9 @@ switch f_dattype,
         cf(:,2) = cf(:,2) .* c(find(c(:,1)>=xmin,1,'first'),2);
 
         figure;
-        h(1) = loglog(c(:,1),c(:,2),'ro','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
-        h(2) = loglog(cf(:,1),cf(:,2),'k--','LineWidth',2); hold off;
+        h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
+        h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
+        h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -274,8 +291,9 @@ switch f_dattype,
         cf(:,2) = cf(:,2) .* c(c(:,1)==xmin,2);
 
         figure;
-        h(1) = loglog(c(:,1),c(:,2),'ro','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
-        h(2) = loglog(cf(:,1),cf(:,2),'k--','LineWidth',2); hold off;
+        h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
+        h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
+        h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -293,19 +311,18 @@ switch f_dattype,
         return;
 end;
 
+
+
 set(gca,'XLim',[1,50],'XTick',10.^xrt);
-set(gca,'YLim',[0.05,1],'YTick',10.^yrt,'FontSize',16);
+set(gca,'YLim',[0.03,1],'YTick',10.^yrt,'FontSize',16);
 ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
 title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
+legend('empirical data','power-law fit','exponential fit')
 export_fig id_ccdf.eps -transparent % no background
 export_fig id_ccdf.png -transparent % no background
 
-[p, gof] = plpva(id',xmin,'reps',5000); %p=0.0192, reject power law hypo for id deg, not drawn from a power-law dist
 
-[alpha, xmin, L] = plfit(od','finite');
-[p, gof] = plpva(od',xmin,'reps',5000); %p=0.1716, >0.1 so power law is plausible hypo for data
-%visualize od dist along with fitted power-law dist on log-log axes
-h = plplot(od,xmin,alpha); 
+
 
 %% out degree distribution visualization v2
 [od_sort,od_idx] = sort(od); %sort elements of id in ascending order and save indices in idx
