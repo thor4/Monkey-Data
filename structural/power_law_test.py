@@ -131,22 +131,32 @@ R, p = results.distribution_compare('power_law','exponential', normalized_ratio=
 # test next.
 R,p #(R=-3.3855629932457019, p=0.00071032404153694329)
 # exp is better fit than power-law for tail of in-degree distribution
+results.distribution_compare('exponential', 'stretched_exponential')
+# stretched exp is better than exp: (-3.3081976438013103, 0.010104414280270313)
+#neither distribution is a significantly stronger fit (p>.05) for the following:
 results.distribution_compare('exponential','lognormal', normalized_ratio=True)
 #(R=-1.179336415953951, p=0.23826424303514571)
-#neither distribution is a significantly stronger fit (p>.05)
-# negative for in-deg & out-deg, stop here
-results.distribution_compare('power_law','truncated_power_law', normalized_ratio=True)
-#(R=-3.6929254209270748, p=0.082409492672877893) 
-#neither distribution is a significantly stronger fit (p>.05)
-results.distribution_compare('power_law','lognormal', normalized_ratio=True)
-#(R=-1.6299391402494143, p=0.10311436030588744)
-#neither distribution is a significantly stronger fit (p>.05)
-results.distribution_compare('power_law', 'lognormal_positive')
-#(R=-4.4001933185677364, p=0.10311436030588744)
-#neither distribution is a significantly stronger fit (p>.05)
 results.distribution_compare('exponential', 'lognormal_positive')
 #(R=-2.5779328984331871, p=0.23826424303514571)
-#neither distribution is a significantly stronger fit (p>.05)
+results.distribution_compare('exponential','truncated_power_law', normalized_ratio=True)
+# exp is better than trunc power law(2.4156311709062623, 0.01570796358053525)
+results.distribution_compare('stretched_exponential','truncated_power_law')
+#(R=3.62209319585141, p=0.11960686333194259)
+results.distribution_compare('stretched_exponential','lognormal')
+#(R=0.7302647453681228, p=0.14569078178385125)
+results.distribution_compare('stretched_exponential','lognormal_positive')
+#(R=0.7302647453681228, p=0.14569078178385125)
+results.distribution_compare('power_law', 'stretched_exponential')
+#(R=-5.13045806393586, p=0.05997056435316063)
+results.distribution_compare('power_law','truncated_power_law', normalized_ratio=True)
+#(R=-3.6929254209270748, p=0.082409492672877893) 
+results.distribution_compare('power_law','lognormal', normalized_ratio=True)
+#(R=-1.6299391402494143, p=0.10311436030588744)
+results.distribution_compare('power_law', 'lognormal_positive')
+#(R=-4.4001933185677364, p=0.10311436030588744)
+# negative for in-deg & out-deg, stop here
+
+
 
 # likely that neither heavy-tailed dist is a sig stronger fit (p>0.05). can 
 # only conclude moderate support for power law, without ruling out possibility

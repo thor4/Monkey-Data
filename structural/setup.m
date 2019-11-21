@@ -232,9 +232,7 @@ loglog(fit_xdeg,yp,'g-')
 
 % now go to python for curve fitting comparisons
 % find in-degree is better approximated by an exponential than a power law
-xi= c(9:end,1);
-yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 0.192623 ...
-    0.120321]; %exp fit from python from xmin (12) to 21
+
 % find out-degree
 
 %visualize od dist along with fitted power-law dist on log-log axes
@@ -265,6 +263,9 @@ switch f_dattype,
         q = sort(x(x>=xmin));
         cf = [q (q./xmin).^(1-alpha)];
         cf(:,2) = cf(:,2) .* c(find(c(:,1)>=xmin,1,'first'),2);
+        xi= c(9:end,1);
+        yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
+            0.192623 0.120321]; %exp fit from python from xmin (12) to 21
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
@@ -284,11 +285,14 @@ switch f_dattype,
     case 'INTS',
         n = length(x);        
         q = unique(x);
-        c = hist(x,q)'./n;
-        c = [[q; q(end)+1] 1-[0; cumsum(c)]]; c(c(:,2)<10^-10,:) = [];
+        c = hist(x,q)'./n; %c is p(degree=x)
+        c = [[q; q(end)+1] 1-[0; cumsum(c)]]; c(c(:,2)<10^-10,:) = []; %now c is p(degree>=x)
         cf = ((xmin:q(end))'.^-alpha)./(zeta(alpha) - sum((1:xmin-1).^-alpha));
         cf = [(xmin:q(end)+1)' 1-[0; cumsum(cf)]];
         cf(:,2) = cf(:,2) .* c(c(:,1)==xmin,2);
+        xi= c(9:end,1);
+        yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
+            0.192623 0.120321]; %exp fit from python from xmin (12) to 21
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
