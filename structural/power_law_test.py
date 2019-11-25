@@ -113,13 +113,14 @@ results.truncated_power_law.plot_ccdf(ax=fig3, color='y', linestyle='--')
 
 ## Exploring accessible probabilities ##
 x,y = results.cdf() # sorted data only from x_min up (x) with assoc probabilities ( y, p(x<k) )
-bin_edges, probability = results.pdf() # left & right edges (bin_edges) of pdf
-# small spacing to large (log-scale), with assoc prob (probability, p(x=k) )
-y = results.lognormal.cdf(data=[2,3,4]) # gives assoc prob p(x<k) for each datum
-y = results.lognormal.pdf() # gives assoc prob p(x=k) for all data
+#bin_edges, probability = results.pdf() # left & right edges (bin_edges) of pdf
+## small spacing to large (log-scale), with assoc prob (probability, p(x=k) )
+#y = results.lognormal.cdf(data=[2,3,4]) # gives assoc prob p(x<k) for each datum
+#y = results.lognormal.pdf() # gives assoc prob p(x=k) for all data
 
-y = results.exponential.ccdf() # sorted data only from x_min up (x) with assoc probabilities ( y, p(x>=k) )
-y = results.exponential.ccdf(data=[12,13,14,15,16,17,18,19,21]) # gives assoc prob p(x<k) for each datum
+#y = results.exponential.ccdf() # sorted data only from x_min up (x) with assoc probabilities ( y, p(x>=k) )
+y = results.exponential.ccdf(data=[12,13,14,15,16,17,18,19,21]) # gives assoc prob p(x<k) for each datum in id
+y = results.exponential.ccdf(data=[10,11,12,13,14,15,16,17,18,19,20,21,23]) # gives assoc prob p(x<k) for each datum in od
 
 ## Comparing candidate distributions ##
 R, p = results.distribution_compare('power_law','exponential', normalized_ratio=True)
@@ -129,10 +130,12 @@ R, p = results.distribution_compare('power_law','exponential', normalized_ratio=
 # that it's not exp bounded (Asmussen Sr 2003). if sig diff, then proceed to 
 # motivated hypo concerning generative mechanisms to determine which dist to 
 # test next.
-R,p #(R=-3.3855629932457019, p=0.00071032404153694329)
-# exp is better fit than power-law for tail of in-degree distribution
+R,p #(R=-3.3855629932457019, p=0.00071032404153694329) id
+#(R=-1.6764042975802269, p=0.093659027710146808) od
+# exp is better fit than power-law for tail of in-degree distribution, but not od
 results.distribution_compare('exponential', 'stretched_exponential')
-# stretched exp is better than exp: (-3.3081976438013103, 0.010104414280270313)
+# stretched exp is better than exp: (-3.3081976438013103, 0.010104414280270313) for id
+#(R=-0.85293484402035791, p=0.19152213548654928) od
 #neither distribution is a significantly stronger fit (p>.05) for the following:
 results.distribution_compare('exponential','lognormal', normalized_ratio=True)
 #(R=-1.179336415953951, p=0.23826424303514571)
@@ -147,19 +150,23 @@ results.distribution_compare('stretched_exponential','lognormal')
 results.distribution_compare('stretched_exponential','lognormal_positive')
 #(R=0.7302647453681228, p=0.14569078178385125)
 results.distribution_compare('power_law', 'stretched_exponential')
-#(R=-5.13045806393586, p=0.05997056435316063)
+#(R=-5.13045806393586, p=0.05997056435316063) id
+#(R=-2.6363814472541445, p=0.28622857062203577) od
 results.distribution_compare('power_law','truncated_power_law', normalized_ratio=True)
-#(R=-3.6929254209270748, p=0.082409492672877893) 
+#(R=-3.6929254209270748, p=0.082409492672877893) id
+#(R=-1.9179450095500206, p=0.083440273525472786) od
 results.distribution_compare('power_law','lognormal', normalized_ratio=True)
-#(R=-1.6299391402494143, p=0.10311436030588744)
+#(R=-1.6299391402494143, p=0.10311436030588744) id
+#(R=-0.97789584568915033, p=0.32812584001695999) od
 results.distribution_compare('power_law', 'lognormal_positive')
-#(R=-4.4001933185677364, p=0.10311436030588744)
-# negative for in-deg & out-deg, stop here
+#(R=-4.4001933185677364, p=0.10311436030588744) id
+#(R=-1.7979149474119933, p=0.32812584001695999) od
+# negative for out-deg, stop here
 
 
 
 # likely that neither heavy-tailed dist is a sig stronger fit (p>0.05). can 
-# only conclude moderate support for power law, without ruling out possibility
+# only conclude moderate support for power law for od, without ruling out possibility
 # of other dist
 
 

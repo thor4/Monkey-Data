@@ -263,14 +263,18 @@ switch f_dattype,
         q = sort(x(x>=xmin));
         cf = [q (q./xmin).^(1-alpha)];
         cf(:,2) = cf(:,2) .* c(find(c(:,1)>=xmin,1,'first'),2);
-        xi= c(9:end,1);
+        xi= c(9:end,1); %start from xmin (12)
         yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
             0.192623 0.120321]; %exp fit from python from xmin (12) to 21
+%         xo= c(9:end,1); %start from xmin (10)
+%         yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
+%             0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
         h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
+%         h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -290,14 +294,20 @@ switch f_dattype,
         cf = ((xmin:q(end))'.^-alpha)./(zeta(alpha) - sum((1:xmin-1).^-alpha));
         cf = [(xmin:q(end)+1)' 1-[0; cumsum(cf)]];
         cf(:,2) = cf(:,2) .* c(c(:,1)==xmin,2);
-        xi= c(9:end,1);
+        xi= c(9:end,1); %start from xmin (12)
         yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
             0.192623 0.120321]; %exp fit from python from xmin (12) to 21
+        %exp fit from python from xmin (10) to 23
+%         xo= c(6:end,1); %start from xmin (10) 
+%         yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
+%             0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
+
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
         h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
+%         h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -317,11 +327,11 @@ end;
 
 
 
-set(gca,'XLim',[1,50],'XTick',10.^xrt);
-set(gca,'YLim',[0.03,1],'YTick',10.^yrt,'FontSize',16);
+set(gca,'XLim',[1,30],'XTick',10.^xrt);
+set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',16);
 ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
 title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
-legend('empirical data','power-law fit','exponential fit')
+% legend('empirical data','power-law fit','exponential fit')
 export_fig id_ccdf.eps -transparent % no background
 export_fig id_ccdf.png -transparent % no background
 
