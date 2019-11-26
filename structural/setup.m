@@ -168,33 +168,67 @@ box off; h.YAxis.Visible = 'off'; % turn off y-axis
 export_fig in_deg_hist.eps -transparent % no background
 
 %% testing best cCDF plot
-[xi_deg,yi_pdk,idxi] = cCDF(id); %in-degree
-[xo_deg,yo_pdk,idxo] = cCDF(od); %out-degree
+% [xi_deg,yi_pdk,idxi] = cCDF(id); %in-degree *legacy*
+% [xo_deg,yo_pdk,idxo] = cCDF(od); %out-degree *legacy*
+% get xi/o's and yi/o's from next section's c values, first in-deg
+xi_deg = c(:,1); yi_pdk = c(:,2); %in-deg cCDF
+% now re-run to get new c for out-degree
+xo_deg = c(:,1); yo_pdk = c(:,2); %out-deg cCDF
 % xi=c(:,1); yi=c(:,2); %pull out deg & prob from cCDF for curve fitting
 %use curve fitting app to find best fit for cCDFs and make fitFPN function
 [fpnresult,fpngof] = fitFPN(xi_deg, yi_pdk, xo_deg, yo_pdk); %idx 4 & 8 are best
+save('fitted_models','fpnresult'); save('gof_models','fpngof') %save models and their gof
 
-yi = fpnresult{4}(xi_deg); %Gaussian best fit of cCDF in-deg fpn
-yo = fpnresult{8}(xo_deg); %Gaussian best fit of cCDF out-deg fpn
+% now pass the xi/o_deg into each model to get its prediction
+% yi_poly = fpnresult{1}(xi_deg); %Polynomial best fit of cCDF in-deg fpn
+yi_pow = fpnresult{2}(xi_deg); %Power best fit of cCDF in-deg fpn
+yi_exp = fpnresult{3}(xi_deg); %Exponential best fit of cCDF in-deg fpn
+yi_gauss = fpnresult{4}(xi_deg); %Gaussian best fit of cCDF in-deg fpn
+% yo_poly = fpnresult{1}(xo_deg); %Polynomial best fit of cCDF out-deg fpn
+yo_pow = fpnresult{2}(xo_deg); %Power best fit of cCDF out-deg fpn
+yo_exp = fpnresult{3}(xo_deg); %Exponential best fit of cCDF out-deg fpn
+yo_gauss = fpnresult{4}(xo_deg); %Gaussian best fit of cCDF out-deg fpn
 
-figure(9), clf %cCDF
-loglog(xi_deg,yi_pdk,'ro'); %in
+
+figure(9), clf %cCDF in-deg fits
+loglog(xi_deg,yi_pdk,'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); %in
 hold on
-loglog(xi_deg,yi,'k-'); %in-deg best-fit
-loglog(xo_deg,yo_pdk,'bs'); %out
-loglog(xo_deg,yo,'k--'); %out-deg best-fit
-grid on
+loglog(xi_deg,yi_exp,'b:','LineWidth',2); %exp fit
+loglog(xi_deg,yi_pow,'r--','LineWidth',2); %power law fit
+loglog(xi_deg,yi_gauss,'m-.','LineWidth',2); %gaussian fit
+hold off; 
+set(gca,'XLim',[1,30],'XTick',10.^xrt);
+set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',16);
+ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
+title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
+export_fig id_ccdf_matlab.eps -transparent % no background
+export_fig id_ccdf_matlab.png -transparent % no background
 
-%use this if you want to find degrees where its like a power law dist,
-%between degrees [6,14]
-fit_xdeg = xi_deg(3:15)'; %remove outliers for in-deg with no power dist
-fit_ypdk = yi_pdk(3:15)';
-[fp,gofp,outputp] = fit(fit_xdeg,fit_ypdk,'power1'); % y = a*x^b
-%in sse: 0.0143 r^2: 0.9149 adjr^2: 0.9063 rmse: 0.0379 [lin reg]
-%fp.b = -0.5433 (not in barabasi's range)
-yp = fp(fit_xdeg); %power law best fit
+figure(10), clf %cCDF out-deg fits
+loglog(xo_deg,yo_pdk,'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); %out
 hold on
-loglog(fit_xdeg,yp,'g-')
+loglog(xo_deg,yo_exp,'b:','LineWidth',2); %exp fit
+loglog(xo_deg,yo_pow,'r--','LineWidth',2); %power law fit
+loglog(xo_deg,yo_gauss,'m-.','LineWidth',2); %gaussian fit
+hold off; 
+set(gca,'XLim',[2,30],'XTick',10.^xrt);
+set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',16);
+ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
+title('Out-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
+export_fig od_ccdf_matlab.eps -transparent % no background
+export_fig od_ccdf_matlab.png -transparent % no background
+
+
+% %use this if you want to find degrees where its like a power law dist,
+% %between degrees [6,14]
+% fit_xdeg = xi_deg(3:15)'; %remove outliers for in-deg with no power dist
+% fit_ypdk = yi_pdk(3:15)';
+% [fp,gofp,outputp] = fit(fit_xdeg,fit_ypdk,'power1'); % y = a*x^b
+% %in sse: 0.0143 r^2: 0.9149 adjr^2: 0.9063 rmse: 0.0379 [lin reg]
+% %fp.b = -0.5433 (not in barabasi's range)
+% yp = fp(fit_xdeg); %power law best fit
+% hold on
+% loglog(fit_xdeg,yp,'g-')
 % plot(f_pow,'predobs')
 
 % %frontal & parietal in+out degree analyses (worry about this for SI)
