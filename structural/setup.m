@@ -421,6 +421,7 @@ networks = 100; % # of surrogate networks
 ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
 C_ensemble = zeros(networks,1); %init clust coef ensemble
 L_ensemble = zeros(networks,1); %init char path length ensemble
+f_ensemble = zeros(13,networks); %init network motif freq fingerprint ensemble
 % doc randmio_dir
 tic
 for i=1:networks
@@ -430,20 +431,15 @@ for i=1:networks
     C_ensemble(i) = mean(clustering_coef_bd(R)); 
     D_rand = distance_bin(R); %shortest path length for each node
     [L_ensemble(i),~] = charpath(D_rand); 
+    [f_ensemble(:,i),~]=motif3struct_bin(R); %network motif freq fingerprint
     clear R
 end
 toc
-% 8 seconds = 100 surrogate networks
+% 19.14 seconds = 100 surrogate networks
 % [id_test,od_test,deg_test] = degrees_dir(ensemble(:,:,57)); %test deg dist
 % id==id_test
 % od==od_test
 % all deg dist are maintained
-C = mean(clustering_coef_bd(AM)); % avg clustering coef for empirical network
-D = distance_bin(AM); [L,efficiency] = charpath(D); %L = char path length
-
-gamma = C / mean(C_ensemble); %Gamma > 1 suggests greater clustering than random
-lambda = L / mean(L_ensemble); %Lambda ~ 1 suggests a comparable avg path length to randomized network
-sigma = gamma / lambda; %sigma > 1 indicates small-worldness
 
 %lattice
 
@@ -466,7 +462,38 @@ end
 toc
 %25 seconds = 100 surrogate networks
 
+%% Motif analysis
+%first must make_motif34lib.m which generates the required motif34lib.mat
+%which all motif releated functions require
+make_motif34lib
+
+%next be sure to generate null hypothesis distributions through random and
+%lattice-based network ensemble generation
+
+[f,F]=motif3struct_bin(AM); % real data
+% The motif frequency of occurrence around an individual node is known as
+% the motif fingerprint of that node. The total motif frequency of
+% occurrence in the entire network is known as the motif fingerprint of the network. 
+%F is node motif frequency fingerprint
+%f is network motif frequency fingerprint
+f_rand = mean(f_ensemble,2); %compute the mean motif fingerprint over all randomly generated networks
+f_std = std(f_ensemble,0,2); %compute the std dev over all rand gen networks
+f_zscores = (f - f_rand) > (0.1 * f_rand); % Milo, 2002 method, only 9 & 13 sig
+
+%% Small-world analysis
+%run surrogate networks first to generate ensembles
+
+%Humphries et al. (2006& 2008) method of calculating sigma:
+%only uses random networks
+C = mean(clustering_coef_bd(AM)); % avg clustering coef for empirical network
+D = distance_bin(AM); [L,efficiency] = charpath(D); %L = char path length
+gamma = C / mean(C_ensemble); %Gamma > 1 suggests greater clustering than random
+lambda = L / mean(L_ensemble); %Lambda ~ 1 suggests a comparable avg path length to randomized network
+sigma = gamma / lambda; %sigma > 1 indicates small-worldness
+
 %Telesford et al., 2011 technique:
+%uses both random and latticized networks to capture both sides of the
+%spectrum
 omega = (mean(L_ensemble) / L) - (C / mean(C_latt_ensemble));
 %omega = 0.0275, 
 %omega index ranges between -1 and 1. Values close to 0 are indicative of 
