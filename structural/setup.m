@@ -18,6 +18,9 @@ load('AM.mat')
 %identify in-degree, out-degree and in+out=total degree per node
 [id,od,deg] = degrees_dir(AM);
 
+%total number of edges (connections) in network
+edges = sum(sum(AM)); sum(deg)/2, sum(id), sum(od) %all yield 399
+
 % %identify joint degree distribution, J: joint degree distribution matrix 
 % %(shifted by one) J_od: number of vertices with od>id. J_id: number of 
 % %vertices with id>od. J_bl: number of vertices with id=od.
@@ -415,13 +418,14 @@ export_fig out_deg_hist.eps -transparent % no background
 
 %random Maslov-Sneppen re-wiring
 % ..the number of iterations should exceed at least 100 times the number of 
-% connections in the network (Milo et al., 2004). 100*30 = 3000
-iter = 100; % # of iterations
+% connections in the network (Milo et al., 2004). 100*399 = 39,900
+iter = 100*sum(id); % # of iterations
 networks = 100; % # of surrogate networks
 ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
 C_ensemble = zeros(networks,1); %init clust coef ensemble
 L_ensemble = zeros(networks,1); %init char path length ensemble
 f_ensemble = zeros(13,networks); %init network motif freq fingerprint ensemble
+p_vals_rand = zeros(13,1); %init p-value 
 % doc randmio_dir
 tic
 for i=1:networks
@@ -432,9 +436,17 @@ for i=1:networks
     D_rand = distance_bin(R); %shortest path length for each node
     [L_ensemble(i),~] = charpath(D_rand); 
     [f_ensemble(:,i),~]=motif3struct_bin(R); %network motif freq fingerprint
+    p_vals_rand = p_vals_rand + (f_ensemble(:,i) > f);
+    %     For each motif class, compute a p-value as the fraction of times the
+% frequency count estimated in the benchmark data is higher than the
+% count obtained in the empirical data.
     clear R
 end
 toc
+% change from total times freq count in null networks > empirical to 
+% fraction, making it a p-val
+p_vals_rand = p_vals_rand ./ networks; 
+
 % 19.14 seconds = 100 surrogate networks
 % [id_test,od_test,deg_test] = degrees_dir(ensemble(:,:,57)); %test deg dist
 % id==id_test
