@@ -437,9 +437,6 @@ for i=1:networks
     [L_ensemble(i),~] = charpath(D_rand); 
     [f_ensemble(:,i),~]=motif3struct_bin(R); %network motif freq fingerprint
     p_vals_rand = p_vals_rand + (f_ensemble(:,i) > f);
-    %     For each motif class, compute a p-value as the fraction of times the
-% frequency count estimated in the benchmark data is higher than the
-% count obtained in the empirical data.
     clear R
 end
 toc
@@ -447,7 +444,7 @@ toc
 % fraction, making it a p-val
 p_vals_rand = p_vals_rand ./ networks; 
 
-% 19.14 seconds = 100 surrogate networks
+% 5991.728168 seconds = 100 surrogate networks (office pc)
 % [id_test,od_test,deg_test] = degrees_dir(ensemble(:,:,57)); %test deg dist
 % id==id_test
 % od==od_test
