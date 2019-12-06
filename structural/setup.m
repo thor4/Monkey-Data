@@ -448,7 +448,9 @@ toc
 p_vals_rand = p_vals_rand ./ networks; 
 
 % 5991.728168 seconds = 100 surrogate networks (office pc) 39,990 iter
+% 600.054129 seconds = 100 surrogate networks (office pc) 3,9990 iter
 % 4081.617863 seconds = 100 surr networks (koko-CogNeuroLab) 39,990 iter
+% 409.284658 seconds = 100 surr networks (koko-CogNeuroLab) 3,9990 iter
 % [id_test,od_test,deg_test] = degrees_dir(ensemble(:,:,57)); %test deg dist
 % id==id_test
 % od==od_test
@@ -462,6 +464,8 @@ p_vals_rand = p_vals_rand ./ networks;
 %eff, number of actual rewirings carried out
 latt_ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
 C_latt_ensemble = zeros(networks,1); %init clust coef ensemble
+f_latt_ensemble = zeros(13,networks); %init network motif freq fingerprint ensemble
+p_vals_latt = zeros(13,1); %init p-value 
 
 tic
 for i=1:networks
@@ -470,10 +474,16 @@ for i=1:networks
     latt_ensemble(:,:,i) = Rrp; %build ensemble of surrogate networks
     C_latt_ensemble(i) = mean(clustering_coef_bd(Rrp)); 
     D_latt = distance_bin(Rrp); %shortest path length for each node
+    [f_latt_ensemble(:,i),~]=motif3struct_bin(Rrp); %network motif freq fingerprint
+    p_vals_latt = p_vals_latt + (f_latt_ensemble(:,i) > f);
     clear Rrp
 end
 toc
 %25 seconds = 100 surrogate networks
+
+% change from total times freq count in null networks > empirical to 
+% fraction, making it a p-val
+p_vals_latt = p_vals_latt ./ networks; 
 
 %% Motif analysis
 %first must make_motif34lib.m which generates the required motif34lib.mat
