@@ -418,8 +418,11 @@ export_fig out_deg_hist.eps -transparent % no background
 
 %random Maslov-Sneppen re-wiring
 % ..the number of iterations should exceed at least 100 times the number of 
-% connections in the network (Milo et al., 2004). 100*399 = 39,900
-iter = 100*sum(id); % # of iterations
+% connections in the network (Milo et al., 2004). 100*399 = 39,900 (from
+% Bullmore book, but Milo et al, 2004 states 100 is more than adequate and
+% 10 appears "adequate" according to its fig 1)
+% iter = 100*sum(id); % # of iterations
+iter = 10*sum(id); % # of iterations
 networks = 100; % # of surrogate networks
 ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
 C_ensemble = zeros(networks,1); %init clust coef ensemble
@@ -444,7 +447,8 @@ toc
 % fraction, making it a p-val
 p_vals_rand = p_vals_rand ./ networks; 
 
-% 5991.728168 seconds = 100 surrogate networks (office pc)
+% 5991.728168 seconds = 100 surrogate networks (office pc) 39,990 iter
+% 4081.617863 seconds = 100 surr networks (koko-CogNeuroLab) 39,990 iter
 % [id_test,od_test,deg_test] = degrees_dir(ensemble(:,:,57)); %test deg dist
 % id==id_test
 % od==od_test
