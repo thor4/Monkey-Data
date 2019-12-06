@@ -423,7 +423,7 @@ export_fig out_deg_hist.eps -transparent % no background
 % 10 appears "adequate" according to its fig 1)
 % iter = 100*sum(id); % # of iterations
 iter = 10*sum(id); % # of iterations
-networks = 100; % # of surrogate networks
+networks = 1000; % # of surrogate networks 100 for small world, 1000 for p-val stats
 ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
 C_ensemble = zeros(networks,1); %init clust coef ensemble
 L_ensemble = zeros(networks,1); %init char path length ensemble
@@ -480,7 +480,8 @@ for i=1:networks
 end
 toc
 %25 seconds = 100 surrogate networks
-
+% 1834.272242 seconds = 100 surr networks, 3,990 iter (office pc)
+% 1193.954145 seconds = 100 surr networks, 3,990 iter (koko)
 % change from total times freq count in null networks > empirical to 
 % fraction, making it a p-val
 p_vals_latt = p_vals_latt ./ networks; 
