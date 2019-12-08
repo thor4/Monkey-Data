@@ -505,12 +505,12 @@ make_motif34lib
 f_rand_mean = mean(f_ensemble,2); %compute the mean motif fingerprint over all randomly generated networks
 f_rand_std = std(f_ensemble,0,2); %compute the std dev over all rand gen networks
 f_rand_z = (f - f_rand_mean) > (0.1 * f_rand_mean); % Milo, 2002 method, only 9 & 13 sig
-f_rand_z = (f - f_rand_mean) / f_rand_std; 
+f_rand_z = (f - f_rand_mean) ./ f_rand_std; 
 
-f_latt_mean = mean(f_ensemble,2); %compute the mean motif fingerprint over all lattice networks
-f_latt_std = std(f_ensemble,0,2); %compute the std dev over all lattice networks
+f_latt_mean = mean(f_latt_ensemble,2); %compute the mean motif fingerprint over all lattice networks
+f_latt_std = std(f_latt_ensemble,0,2); %compute the std dev over all lattice networks
 f_latt_z = (f - f_latt_mean) > (0.1 * f_latt_mean); % Milo, 2002 method,  sig
-f_latt_z = (f - f_latt_mean) / f_latt_std; % Milo, 2002 method,  sig
+f_latt_z = (f - f_latt_mean) ./ f_latt_std; % Milo, 2002 method,  sig
 
 %% Small-world analysis
 %run surrogate networks first to generate ensembles
