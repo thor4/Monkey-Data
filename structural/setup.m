@@ -451,6 +451,7 @@ p_vals_rand = p_vals_rand ./ networks;
 % 600.054129 seconds = 100 surrogate networks (office pc) 3,9990 iter
 % 4081.617863 seconds = 100 surr networks (koko-CogNeuroLab) 39,990 iter
 % 409.284658 seconds = 100 surr networks (koko-CogNeuroLab) 3,9990 iter
+% 4085.557941 seconds = 1000 surr networks (koko-CogNeuroLab) 3,9990 iter
 % [id_test,od_test,deg_test] = degrees_dir(ensemble(:,:,57)); %test deg dist
 % id==id_test
 % od==od_test
@@ -482,6 +483,7 @@ toc
 %25 seconds = 100 surrogate networks
 % 1834.272242 seconds = 100 surr networks, 3,990 iter (office pc)
 % 1193.954145 seconds = 100 surr networks, 3,990 iter (koko)
+% 12008.572344 seconds = 1000 surr networks, 3,990 iter (koko)
 % change from total times freq count in null networks > empirical to 
 % fraction, making it a p-val
 p_vals_latt = p_vals_latt ./ networks; 
@@ -500,9 +502,13 @@ make_motif34lib
 % occurrence in the entire network is known as the motif fingerprint of the network. 
 %F is node motif frequency fingerprint
 %f is network motif frequency fingerprint
-f_rand = mean(f_ensemble,2); %compute the mean motif fingerprint over all randomly generated networks
-f_std = std(f_ensemble,0,2); %compute the std dev over all rand gen networks
-f_zscores = (f - f_rand) > (0.1 * f_rand); % Milo, 2002 method, only 9 & 13 sig
+f_rand_mean = mean(f_ensemble,2); %compute the mean motif fingerprint over all randomly generated networks
+f_rand_std = std(f_ensemble,0,2); %compute the std dev over all rand gen networks
+f_rand_z = (f - f_rand) > (0.1 * f_rand); % Milo, 2002 method, only 9 & 13 sig
+
+f_latt_mean = mean(f_ensemble,2); %compute the mean motif fingerprint over all lattice networks
+f_latt_std = std(f_ensemble,0,2); %compute the std dev over all lattice networks
+f_latt_z = (f - f_rand) > (0.1 * f_rand); % Milo, 2002 method, only 9 & 13 sig
 
 %% Small-world analysis
 %run surrogate networks first to generate ensembles
