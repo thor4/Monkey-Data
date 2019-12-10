@@ -512,6 +512,18 @@ f_latt_std = std(f_latt_ensemble,0,2); %compute the std dev over all lattice net
 f_latt_z = (f - f_latt_mean) > (0.1 * f_latt_mean); % Milo, 2002 method,  sig
 f_latt_z = (f - f_latt_mean) ./ f_latt_std; % Milo, 2002 method,  sig
 
+%visualize motif frequency spectra
+load('null_networks-motif_and_small_world.mat')
+
+figure(1), clf
+x = (1:13);
+vals = [f'; mean(f_ensemble,2)'; mean(f_latt_ensemble,2)'];
+b = bar(x,vals);
+ylabel('structural motif count','FontSize',18); xlabel('motif ID (M=3)','FontSize',18)
+legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
+% export_fig id_ccdf.eps -transparent % no background
+% export_fig id_ccdf.png -transparent % no background
+
 %% Small-world analysis
 %run surrogate networks first to generate ensembles
 
