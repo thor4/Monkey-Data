@@ -33,11 +33,6 @@ edges = sum(sum(AM)); sum(deg)/2, sum(id), sum(od) %all yield 399
 % %the fraction of node's neighbors that are neighbors of each other)
 % C = clustering_coef_bd(AM);
 % 
-% %identify optimal community structure (a subdivision of the network into
-% %nonoverlapping groups of nodes which maximizes the number of within-
-% %group edges, and minimizes the number of between-group edges. q is 
-% %optimized community-structure statistic
-% [M,Q] = community_louvain(AM);
 
 %calculate distance matrix (contains lengths of shortest paths between all
 %pairs of nodes. An entry (u,v) represents the length of shortest path 
@@ -50,11 +45,6 @@ D = distance_bin(AM);
 %all pairs of nodes in the network) & global efficiency (average inverse 
 %shortest path length in the network. lambda=inf, efficiency=0.5686
 [char_path_length,efficiency] = charpath(D); 
-% 
-% %calculate betweenness centrality (the fraction of all shortest paths in 
-% %the network that contain a given node. Nodes with high values of 
-% %betweenness centrality participate in a large number of shortest paths.
-% BC = betweenness_bin(AM);
 
 %% visualize association matrix
 figure(1), clf
@@ -488,10 +478,13 @@ toc
 % fraction, making it a p-val
 p_vals_latt = p_vals_latt ./ networks; 
 
+
 %% Motif analysis
 %first must make_motif34lib.m which generates the required motif34lib.mat
 %which all motif releated functions require
 make_motif34lib
+
+load('null_networks-motif_and_small_world.mat')
 
 %next be sure to generate null hypothesis distributions through random and
 %lattice-based network ensemble generation
@@ -509,7 +502,7 @@ f_rand_z = (f - f_rand_mean) ./ f_rand_std;
 
 f_latt_mean = mean(f_latt_ensemble,2); %compute the mean motif fingerprint over all lattice networks
 f_latt_std = std(f_latt_ensemble,0,2); %compute the std dev over all lattice networks
-f_latt_z = (f - f_latt_mean) > (0.1 * f_latt_mean); % Milo, 2002 method,  sig
+f_latt_z = (f - f_latt_mean) > (0.1 * f_latt_mean); % Milo, 2002 method, 3, 5, & 9 sig
 f_latt_z = (f - f_latt_mean) ./ f_latt_std; % Milo, 2002 method,  sig
 
 %visualize motif frequency spectra
