@@ -461,7 +461,8 @@ p_vals_latt = zeros(13,1); %init p-value
 tic
 for i=1:networks
     % R: randomized network, eff: number of actual rewirings carried out
-    [Rlatt,Rrp,ind_rp,eff] = latmio_dir_connected(AM, iter); 
+%     [Rlatt,Rrp,ind_rp,eff] = latmio_dir_connected(AM, iter); 
+    [Rlatt,Rrp,ind_rp,eff] = latmio_dir(AM, iter); %not fully connected
     latt_ensemble(:,:,i) = Rrp; %build ensemble of surrogate networks
     C_latt_ensemble(i) = mean(clustering_coef_bd(Rrp)); 
     D_latt = distance_bin(Rrp); %shortest path length for each node
