@@ -476,7 +476,7 @@ toc
 % 1193.954145 seconds = 100 surr networks, 3,990 iter (koko)
 % 12008.572344 seconds = 1000 surr networks, 3,990 iter (koko)
 % change from total times freq count in null networks > empirical to 
-% fraction, making it a p-val
+% fraction, making it a p-val, 3, 5, 9 & 13 sig
 p_vals_latt = p_vals_latt ./ networks; 
 
 
