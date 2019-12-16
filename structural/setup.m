@@ -485,8 +485,6 @@ p_vals_latt = p_vals_latt ./ networks;
 %which all motif releated functions require
 make_motif34lib
 
-load('null_networks-motif_and_small_world.mat')
-
 %next be sure to generate null hypothesis distributions through random and
 %lattice-based network ensemble generation
 
@@ -507,14 +505,26 @@ f_latt_z = (f - f_latt_mean) > (0.1 * f_latt_mean); % Milo, 2002 method, 3, 5, &
 f_latt_z = (f - f_latt_mean) ./ f_latt_std; % Milo, 2002 method,  sig
 
 %visualize motif frequency spectra
-load('null_networks-motif_and_small_world.mat')
+load('null_networks-motif_and_small_world.mat') %fully connected lattice
+load('null_networks-motifs.mat') %not fully connected lattice
+
+err  = [f'; std(f_ensemble,0,2)'; std(f_latt_ensemble,0,2)'];
+%replace this std with 95% confidence interval
+%look up how to remove ticks from error bars and how to do significance
+%lines on plot
 
 figure(1), clf
 x = (1:13);
 vals = [f'; mean(f_ensemble,2)'; mean(f_latt_ensemble,2)'];
-b = bar(x,vals);
+b = bar(x,vals); hold on
+xBar=cell2mat(get(b,'XData')).' + [b.XOffset];  % compute bar centers
+% apply error bars to only random and lattice plots
+hEB=errorbar(xBar(:,2:3),vals(2:3,:)',err(2:3,:)','k','LineStyle','none'); 
+yl=ylim; ylim([0,yl(2)]); % bring back to 0
 ylabel('structural motif count','FontSize',18); xlabel('motif ID (M=3)','FontSize',18)
 legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
+hold off
+
 % export_fig id_ccdf.eps -transparent % no background
 % export_fig id_ccdf.png -transparent % no background
 
