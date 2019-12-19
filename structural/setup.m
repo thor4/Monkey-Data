@@ -511,7 +511,7 @@ load('null_networks-motifs.mat') %not fully connected lattice
 err  = [f'; std(f_ensemble,0,2)'; std(f_latt_ensemble,0,2)'];
 %replace this std with 95% confidence interval
 %look up how to remove ticks from error bars and how to do significance
-%lines on plot
+%lines on plot with only a single asterisk for 0.05 I *think*, confirm
 
 figure(1), clf
 x = (1:13);
@@ -521,6 +521,17 @@ xBar=cell2mat(get(b,'XData')).' + [b.XOffset];  % compute bar centers
 % apply error bars to only random and lattice plots
 hEB=errorbar(xBar(:,2:3),vals(2:3,:)',err(2:3,:)','k','LineStyle','none'); 
 yl=ylim; ylim([0,yl(2)]); % bring back to 0
+set(hEB,'LineStyle','none');
+%draw significance lines over class ID 9 & 13, first set x val's
+sigIDs_x = [b(1).XEndPoints(9) b(2).XEndPoints(9) b(1).XEndPoints(9) b(3).XEndPoints(9) ...
+    b(1).XEndPoints(13) b(2).XEndPoints(13) b(1).XEndPoints(13) b(3).XEndPoints(13)];
+sigIDs_y = [f(9)+20 f(9)+20 f(9)+30 f(9)+30 f(13)+20 f(13)+20 f(13)+30 f(13)+30];%now set corresponding y val's
+% line(sigIDs_x,sigIDs_y) %no good, lines connect the lines
+plot(sigIDs_x(1:2), sigIDs_y(1:2), '-k', 'LineWidth',2) %sig ID 9 emp/rand
+plot(sigIDs_x(3:4), sigIDs_y(3:4), '-k', 'LineWidth',2) %sig ID 9 emp/latt
+plot(sigIDs_x(5:6), sigIDs_y(5:6), '-k', 'LineWidth',2) %sig ID 13 emp/rand
+plot(sigIDs_x(7:8), sigIDs_y(7:8), '-k', 'LineWidth',2) %sig ID 13 emp/latt
+plot(mean(ctr2(1:2)), cDeltaRegionsR1mean(1,2)*1.15, '*k')
 ylabel('structural motif count','FontSize',18); xlabel('motif ID (M=3)','FontSize',18)
 legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
 hold off
