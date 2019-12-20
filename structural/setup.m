@@ -508,15 +508,24 @@ f_latt_z = (f - f_latt_mean) ./ f_latt_std; % Milo, 2002 method,  sig
 load('null_networks-motif_and_small_world.mat') %fully connected lattice
 load('null_networks-motifs.mat') %not fully connected lattice
 
+%each class ID's ensemble is normally distributed, so can fit this dist
+pd = fitdist(f_ensemble(1,:)','Normal') %fit normal dist to each class ID
+ci = paramci(pd); f_rand_ci(1,:) = ci(:,1); %compute & save 95% ci of mu statistic
+%%%%%%%iterate over all class IDs from both ensembles to get ci's%%%%%%%%
+
 err  = [f'; std(f_ensemble,0,2)'; std(f_latt_ensemble,0,2)'];
-%replace this std with 95% confidence interval
+%%%%****replace this std with 95% confidence interval*****%%%%%
 %look up how to remove ticks from error bars and how to do significance
 %lines on plot with only a single asterisk for 0.05 I *think*, confirm
-
 figure(1), clf
 x = (1:13);
 vals = [f'; mean(f_ensemble,2)'; mean(f_latt_ensemble,2)'];
-b = bar(x,vals); hold on
+b = bar(x,vals); b(1).FaceColor = 'flat'; b(2).FaceColor = 'flat'; 
+b(3).FaceColor = 'flat'; hold on
+b(1).CData = 1/255*[204 255 153]; %empirical motif fingerprint
+b(2).CData = 1/255*[128 128 128]; %random mean motif fingerprint
+b(3).CData = 1/255*[192 192 192]; %lattice mean motif fingerprint
+hold on
 xBar=cell2mat(get(b,'XData')).' + [b.XOffset];  % compute bar centers
 % apply error bars to only random and lattice plots
 hEB=errorbar(xBar(:,2:3),vals(2:3,:)',err(2:3,:)','k','LineStyle','none'); 
@@ -531,7 +540,7 @@ plot(sigIDs_x(1:2), sigIDs_y(1:2), '-k', 'LineWidth',2) %sig ID 9 emp/rand
 plot(sigIDs_x(3:4), sigIDs_y(3:4), '-k', 'LineWidth',2) %sig ID 9 emp/latt
 plot(sigIDs_x(5:6), sigIDs_y(5:6), '-k', 'LineWidth',2) %sig ID 13 emp/rand
 plot(sigIDs_x(7:8), sigIDs_y(7:8), '-k', 'LineWidth',2) %sig ID 13 emp/latt
-plot(mean(ctr2(1:2)), cDeltaRegionsR1mean(1,2)*1.15, '*k')
+% plot(mean(ctr2(1:2)), cDeltaRegionsR1mean(1,2)*1.15, '*k') DO THIS NEXT
 ylabel('structural motif count','FontSize',18); xlabel('motif ID (M=3)','FontSize',18)
 legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
 hold off
