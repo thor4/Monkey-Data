@@ -507,16 +507,25 @@ f_latt_z = (f - f_latt_mean) ./ f_latt_std; % Milo, 2002 method,  sig
 %visualize motif frequency spectra
 load('null_networks-motif_and_small_world.mat') %fully connected lattice
 load('null_networks-motifs.mat') %not fully connected lattice
+% 
+% f_rand_ci = zeros(size(f_ensemble,1),2); %init rand 95% ci of mu stat describing motif network fingerprints
+% f_latt_ci = zeros(size(f_ensemble,1),2); %init latt 95% ci of mu stat describing motif network fingerprints
+% 
+% for i=1:size(f_ensemble,1)
+%     %each class ID's ensemble is normally distributed, so can fit this dist
+%     pd = fitdist(f_ensemble(i,:)','Normal'); %fit normal dist to each class ID
+%     ci = paramci(pd); f_rand_ci(i,:) = ci(:,1); %compute & save 95% ci of mu statistic
+%     pd = fitdist(f_latt_ensemble(i,:)','Normal'); ci = paramci(pd,'Alpha',0.01); 
+%     f_latt_ci(i,:) = ci(:,1); %doing the same for latt as above for rand
+% end
+% 
+% err_low = [mean(f_ensemble,2)-f_rand_ci(:,1) ...
+%     mean(f_latt_ensemble,2)-f_latt_ci(:,1)]; %length below the mean null fingerprints
+% err_high = [f_rand_ci(:,2)-mean(f_ensemble,2) ...
+%     f_latt_ci(:,2)-mean(f_latt_ensemble,2)]; %length below the mean null fingerprints
 
-%each class ID's ensemble is normally distributed, so can fit this dist
-pd = fitdist(f_ensemble(1,:)','Normal') %fit normal dist to each class ID
-ci = paramci(pd); f_rand_ci(1,:) = ci(:,1); %compute & save 95% ci of mu statistic
-%%%%%%%iterate over all class IDs from both ensembles to get ci's%%%%%%%%
+%confidence intervals are so tight around mean it doesn't make sense to plot them
 
-err  = [f'; std(f_ensemble,0,2)'; std(f_latt_ensemble,0,2)'];
-%%%%****replace this std with 95% confidence interval*****%%%%%
-%look up how to remove ticks from error bars and how to do significance
-%lines on plot with only a single asterisk for 0.05 I *think*, confirm
 figure(1), clf
 x = (1:13);
 vals = [f'; mean(f_ensemble,2)'; mean(f_latt_ensemble,2)'];
@@ -528,25 +537,32 @@ b(3).CData = 1/255*[192 192 192]; %lattice mean motif fingerprint
 hold on
 xBar=cell2mat(get(b,'XData')).' + [b.XOffset];  % compute bar centers
 % apply error bars to only random and lattice plots
-hEB=errorbar(xBar(:,2:3),vals(2:3,:)',err(2:3,:)','k','LineStyle','none'); 
-yl=ylim; ylim([0,yl(2)]); % bring back to 0
-set(hEB,'LineStyle','none');
+% hEB=errorbar(xBar(:,2:3),vals(2:3,:)',err_low,err_high,'k','LineStyle','none'); 
+% yl=ylim; ylim([0,yl(2)]); % bring back to 0
+% set(hEB,'LineStyle','none');
 %draw significance lines over class ID 9 & 13, first set x val's
 sigIDs_x = [b(1).XEndPoints(9) b(2).XEndPoints(9) b(1).XEndPoints(9) b(3).XEndPoints(9) ...
     b(1).XEndPoints(13) b(2).XEndPoints(13) b(1).XEndPoints(13) b(3).XEndPoints(13)];
-sigIDs_y = [f(9)+20 f(9)+20 f(9)+30 f(9)+30 f(13)+20 f(13)+20 f(13)+30 f(13)+30];%now set corresponding y val's
+sigIDs_y = [f(9)+20 f(9)+20 f(9)+40 f(9)+40 f(13)+20 f(13)+20 f(13)+40 f(13)+40];%now set corresponding y val's
 % line(sigIDs_x,sigIDs_y) %no good, lines connect the lines
 plot(sigIDs_x(1:2), sigIDs_y(1:2), '-k', 'LineWidth',2) %sig ID 9 emp/rand
 plot(sigIDs_x(3:4), sigIDs_y(3:4), '-k', 'LineWidth',2) %sig ID 9 emp/latt
 plot(sigIDs_x(5:6), sigIDs_y(5:6), '-k', 'LineWidth',2) %sig ID 13 emp/rand
 plot(sigIDs_x(7:8), sigIDs_y(7:8), '-k', 'LineWidth',2) %sig ID 13 emp/latt
-% plot(mean(ctr2(1:2)), cDeltaRegionsR1mean(1,2)*1.15, '*k') DO THIS NEXT
-ylabel('structural motif count','FontSize',18); xlabel('motif ID (M=3)','FontSize',18)
-legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
-hold off
+set(gca,'TickLength',[0 0],'FontSize',18) %remove ticks
+sig_rand = [xBar(9,1)+0.03 sigIDs_y(1)+5; xBar(9,1)+0.10 sigIDs_y(1)+5; ...
+    xBar(9,1)+0.17 sigIDs_y(1)+5; xBar(13,1)+0.03 sigIDs_y(5)+5; ...
+    xBar(13,1)+0.10 sigIDs_y(5)+5; xBar(13,1)+0.17 sigIDs_y(5)+5;]; %*** p<.001
+sig_latt = [xBar(9,2) sigIDs_y(3)+5; xBar(13,2) sigIDs_y(7)+5]; %* p<=.05
+plot(sig_rand(:,1),sig_rand(:,2), '*k') %*** p<.001
+plot(sig_latt(:,1),sig_latt(:,2), '*k') %* p<=.05
+ylabel('structural motif count','FontSize',21); xlabel('motif ID (M=3)','FontSize',21)
+% legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
+h=gca; h.Color = 'none'; % turn off background color
+box off; %take out top and right lines
 
-% export_fig id_ccdf.eps -transparent % no background
-% export_fig id_ccdf.png -transparent % no background
+export_fig motif_spectra.eps -transparent % no background
+export_fig motif_spectra.png -transparent % no background
 
 %% Small-world analysis
 %run surrogate networks first to generate ensembles
