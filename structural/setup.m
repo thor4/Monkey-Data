@@ -485,6 +485,8 @@ p_vals_latt = p_vals_latt ./ networks;
 %which all motif releated functions require
 make_motif34lib
 
+M = 3; %motif size
+
 %next be sure to generate null hypothesis distributions through random and
 %lattice-based network ensemble generation
 
@@ -563,6 +565,19 @@ box off; %take out top and right lines
 
 export_fig motif_spectra.eps -transparent % no background
 export_fig motif_spectra.png -transparent % no background
+
+% combinatorics
+
+C = nchoosek(1:length(AM),M); 
+% yields 4060x3 matrix which provides all possible 3-node combinations in 
+% the network
+% 1. next figure out how to pull out the connectivity for each node
+% combo, yield a 3x3 matrix for each row in C, (save as 3x3x4060 matrix?)
+% 2. compare this 3x3 matrix with motif isomorphs from find_motif34 to see if
+% any qualify as ID 9, 
+% 3. if so, save the row from C in separate matrix: m39, otherwise skip to
+% next row
+% 4. proceed until all rows in C have been tested
 
 %% Small-world analysis
 %run surrogate networks first to generate ensembles
