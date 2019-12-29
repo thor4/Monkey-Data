@@ -572,7 +572,12 @@ C = nchoosek(1:length(AM),M);
 % yields 4060x3 matrix which provides all possible 3-node combinations in 
 % the network
 % 1. next figure out how to pull out the connectivity for each node
-% combo, yield a 3x3 matrix for each row in C, (save as 3x3x4060 matrix?)
+% combo, yields 3x3 matrix for each row in C, (save as 3x3x4060 matrix C_bd)
+C_bd = zeros(M,M,length(C)); %init mat for all possible 3-node bin+dir connectivity schemes in emp FPN
+for i=1:length(C)
+    C_bd(:,:,i) = [AM(C(i,:),C(i,:))]; %binary, directed 3x3 connectivity for i'th row of C
+end
+
 % 2. compare this 3x3 matrix with motif isomorphs from find_motif34 to see if
 % any qualify as ID 9, 
 % 3. if so, save the row from C in separate matrix: m39, otherwise skip to
