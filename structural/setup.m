@@ -451,7 +451,7 @@ p_vals_rand = p_vals_rand ./ networks;
 
 
 
-while (p_vals_latt_f(9) > 38 || p_vals_latt_f(9)==0 )
+while (p_vals_latt_f(9) > 38 || p_vals_latt_f(9)==0 || p_vals_latt_f(13) > 41)
     %lattice
     %Rlatt,  latticized network in original node ordering
     %Rrp, latticized network in node ordering used for latticization
