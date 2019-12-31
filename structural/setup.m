@@ -423,17 +423,16 @@ p_vals_rand_f = zeros(13,1); %init p-value
 p_vals_rand_F = zeros(13,30); %init p-value 
 % doc randmio_dir
 tic
-for i=1:networks
+parfor i=1:networks
     % R: randomized network, eff: number of actual rewirings carried out
-    [R eff] = randmio_dir(AM, iter); 
+    [R,eff] = randmio_dir(AM, iter); 
     ensemble(:,:,i) = R; %build ensemble of surrogate networks
     C_ensemble(i) = mean(clustering_coef_bd(R)); 
     D_rand = distance_bin(R); %shortest path length for each node
     [L_ensemble(i),~] = charpath(D_rand); 
     [f_ensemble(:,i),F_ensemble(:,:,i)]=motif3struct_bin(R); %network motif freq fingerprint
     p_vals_rand_f = p_vals_rand_f + (f_ensemble(:,i) > f);
-    p_vals_rand_F = p_vals_rand_F + (F_ensemble(:,i) > F);
-    clear R
+    p_vals_rand_F = p_vals_rand_F + (F_ensemble(:,:,i) > F);
 end
 toc
 % change from total times freq count in null networks > empirical to 
@@ -465,7 +464,7 @@ while (p_vals_latt_f(9) > 38 || p_vals_latt_f(9)==0 )
     p_vals_latt_f = zeros(13,1); %init p-value 
     p_vals_latt_F = zeros(13,30); %init p-value 
     tic
-    for i=1:networks
+    parfor i=1:networks
         % R: randomized network, eff: number of actual rewirings carried out
     %     [Rlatt,Rrp,ind_rp,eff] = latmio_dir_connected(AM, iter); 
         [Rlatt,Rrp,ind_rp,eff] = latmio_dir(AM, iter); %not fully connected
@@ -474,8 +473,7 @@ while (p_vals_latt_f(9) > 38 || p_vals_latt_f(9)==0 )
         D_latt = distance_bin(Rrp); %shortest path length for each node
         [f_latt_ensemble(:,i),F_latt_ensemble(:,:,i)]=motif3struct_bin(Rrp); %network motif freq fingerprint
         p_vals_latt_f = p_vals_latt_f + (f_latt_ensemble(:,i) > f);
-        p_vals_latt_F = p_vals_latt_F + (F_latt_ensemble(:,i) > F);
-        clear Rrp
+        p_vals_latt_F = p_vals_latt_F + (F_latt_ensemble(:,:,i) > F);
     end
     toc
 end
