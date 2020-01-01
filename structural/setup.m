@@ -413,7 +413,7 @@ export_fig out_deg_hist.eps -transparent % no background
 % 10 appears "adequate" according to its fig 1)
 % iter = 100*sum(id); % # of iterations
 iter = 10*sum(id); % # of iterations
-networks = 1000; % # of surrogate networks 100 for small world, 1000 for p-val stats
+networks = 100000; % # of surrogate networks 100 for small world, 1000 for p-val stats
 ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
 C_ensemble = zeros(networks,1); %init clust coef ensemble
 L_ensemble = zeros(networks,1); %init char path length ensemble
@@ -451,32 +451,32 @@ p_vals_rand = p_vals_rand ./ networks;
 
 
 
-while (p_vals_latt_f(9) > 38 || p_vals_latt_f(9)==0 || p_vals_latt_f(13) > 41 || p_vals_latt_F(9,13) > 50)
-    %lattice
-    %Rlatt,  latticized network in original node ordering
-    %Rrp, latticized network in node ordering used for latticization
-    %ind_rp, node ordering used for latticization
-    %eff, number of actual rewirings carried out
-    latt_ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
-    C_latt_ensemble = zeros(networks,1); %init clust coef ensemble
-    f_latt_ensemble = zeros(13,networks); %init network motif freq fingerprint ensemble
-    F_latt_ensemble = zeros(13,30,networks); %init node motif freq fingerprint ensemble
-    p_vals_latt_f = zeros(13,1); %init p-value 
-    p_vals_latt_F = zeros(13,30); %init p-value 
-    tic
-    parfor i=1:networks
-        % R: randomized network, eff: number of actual rewirings carried out
-    %     [Rlatt,Rrp,ind_rp,eff] = latmio_dir_connected(AM, iter); 
-        [Rlatt,Rrp,ind_rp,eff] = latmio_dir(AM, iter); %not fully connected
-        latt_ensemble(:,:,i) = Rrp; %build ensemble of surrogate networks
-        C_latt_ensemble(i) = mean(clustering_coef_bd(Rrp)); 
-        D_latt = distance_bin(Rrp); %shortest path length for each node
-        [f_latt_ensemble(:,i),F_latt_ensemble(:,:,i)]=motif3struct_bin(Rrp); %network motif freq fingerprint
-        p_vals_latt_f = p_vals_latt_f + (f_latt_ensemble(:,i) > f);
-        p_vals_latt_F = p_vals_latt_F + (F_latt_ensemble(:,:,i) > F);
-    end
-    toc
+% while (p_vals_latt_f(9) > 38 || p_vals_latt_f(9)==0 || p_vals_latt_f(13) > 41 || p_vals_latt_F(9,13) > 50)
+%lattice
+%Rlatt,  latticized network in original node ordering
+%Rrp, latticized network in node ordering used for latticization
+%ind_rp, node ordering used for latticization
+%eff, number of actual rewirings carried out
+latt_ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
+C_latt_ensemble = zeros(networks,1); %init clust coef ensemble
+f_latt_ensemble = zeros(13,networks); %init network motif freq fingerprint ensemble
+F_latt_ensemble = zeros(13,30,networks); %init node motif freq fingerprint ensemble
+p_vals_latt_f = zeros(13,1); %init p-value 
+p_vals_latt_F = zeros(13,30); %init p-value 
+tic
+parfor i=1:networks
+    % R: randomized network, eff: number of actual rewirings carried out
+%     [Rlatt,Rrp,ind_rp,eff] = latmio_dir_connected(AM, iter); 
+    [Rlatt,Rrp,ind_rp,eff] = latmio_dir(AM, iter); %not fully connected
+    latt_ensemble(:,:,i) = Rrp; %build ensemble of surrogate networks
+    C_latt_ensemble(i) = mean(clustering_coef_bd(Rrp)); 
+    D_latt = distance_bin(Rrp); %shortest path length for each node
+    [f_latt_ensemble(:,i),F_latt_ensemble(:,:,i)]=motif3struct_bin(Rrp); %network motif freq fingerprint
+    p_vals_latt_f = p_vals_latt_f + (f_latt_ensemble(:,i) > f);
+    p_vals_latt_F = p_vals_latt_F + (F_latt_ensemble(:,:,i) > F);
 end
+toc
+
 
 z=0;
 while z==0 || z<5
