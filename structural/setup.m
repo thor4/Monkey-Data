@@ -477,16 +477,6 @@ parfor i=1:networks
 end
 toc
 
-
-z=0;
-while z==0 || z<5
-    z=0;
-    for i=1:10
-        z = z+1;
-    end
-end
-
-
 %25 seconds = 100 surrogate networks
 % 1834.272242 seconds = 100 surr networks, 3,990 iter (office pc)
 % 1193.954145 seconds = 100 surr networks, 3,990 iter (koko)
@@ -495,36 +485,10 @@ end
 % fraction, making it a p-val, 3, 5, 9 & 13 sig
 p_vals_latt = p_vals_latt ./ networks; 
 
-
-%% Motif analysis
-%first must make_motif34lib.m which generates the required motif34lib.mat
-%which all motif releated functions require
-make_motif34lib
-
-M = 3; %motif size
-
-%next be sure to generate null hypothesis distributions through random and
-%lattice-based network ensemble generation
-
-[f,F]=motif3struct_bin(AM); % real data
-% The motif frequency of occurrence around an individual node is known as
-% the motif fingerprint of that node. The total motif frequency of
-% occurrence in the entire network is known as the motif fingerprint of the network. 
-%F is node motif frequency fingerprint
-%f is network motif frequency fingerprint
-f_rand_mean = mean(f_ensemble,2); %compute the mean motif fingerprint over all randomly generated networks
-f_rand_std = std(f_ensemble,0,2); %compute the std dev over all rand gen networks
-f_rand_z = (f - f_rand_mean) > (0.1 * f_rand_mean); % Milo, 2002 method, only 9 & 13 sig
-f_rand_z = (f - f_rand_mean) ./ f_rand_std; 
-
-f_latt_mean = mean(f_latt_ensemble,2); %compute the mean motif fingerprint over all lattice networks
-f_latt_std = std(f_latt_ensemble,0,2); %compute the std dev over all lattice networks
-f_latt_z = (f - f_latt_mean) > (0.1 * f_latt_mean); % Milo, 2002 method, 3, 5, & 9 sig
-f_latt_z = (f - f_latt_mean) ./ f_latt_std; % Milo, 2002 method,  sig
-
-%visualize motif frequency spectra
+%% visualize motif frequency spectra
 load('null_networks-motif_and_small_world.mat') %fully connected lattice
 load('null_networks-motifs.mat') %not fully connected lattice
+
 % 
 % f_rand_ci = zeros(size(f_ensemble,1),2); %init rand 95% ci of mu stat describing motif network fingerprints
 % f_latt_ci = zeros(size(f_ensemble,1),2); %init latt 95% ci of mu stat describing motif network fingerprints
@@ -565,15 +529,15 @@ sigIDs_y = [f(9)+20 f(9)+20 f(9)+40 f(9)+40 f(13)+20 f(13)+20 f(13)+40 f(13)+40]
 % line(sigIDs_x,sigIDs_y) %no good, lines connect the lines
 plot(sigIDs_x(1:2), sigIDs_y(1:2), '-k', 'LineWidth',2) %sig ID 9 emp/rand
 plot(sigIDs_x(3:4), sigIDs_y(3:4), '-k', 'LineWidth',2) %sig ID 9 emp/latt
-plot(sigIDs_x(5:6), sigIDs_y(5:6), '-k', 'LineWidth',2) %sig ID 13 emp/rand
-plot(sigIDs_x(7:8), sigIDs_y(7:8), '-k', 'LineWidth',2) %sig ID 13 emp/latt
+% plot(sigIDs_x(5:6), sigIDs_y(5:6), '-k', 'LineWidth',2) %sig ID 13 emp/rand
+% plot(sigIDs_x(7:8), sigIDs_y(7:8), '-k', 'LineWidth',2) %sig ID 13 emp/latt
 set(gca,'TickLength',[0 0],'FontSize',18) %remove ticks
 sig_rand = [xBar(9,1)+0.03 sigIDs_y(1)+5; xBar(9,1)+0.10 sigIDs_y(1)+5; ...
     xBar(9,1)+0.17 sigIDs_y(1)+5; xBar(13,1)+0.03 sigIDs_y(5)+5; ...
     xBar(13,1)+0.10 sigIDs_y(5)+5; xBar(13,1)+0.17 sigIDs_y(5)+5;]; %*** p<.001
 sig_latt = [xBar(9,2) sigIDs_y(3)+5; xBar(13,2) sigIDs_y(7)+5]; %* p<=.05
-plot(sig_rand(:,1),sig_rand(:,2), '*k') %*** p<.001
-plot(sig_latt(:,1),sig_latt(:,2), '*k') %* p<=.05
+plot(sig_rand(1:3,1),sig_rand(1:3,2), '*k') %*** p<.001
+plot(sig_latt(1,1),sig_latt(1,2), '*k') %* p<=.05
 ylabel('structural motif count','FontSize',21); xlabel('motif ID (M=3)','FontSize',21)
 % legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
 h=gca; h.Color = 'none'; % turn off background color
@@ -582,9 +546,45 @@ box off; %take out top and right lines
 export_fig motif_spectra.eps -transparent % no background
 export_fig motif_spectra.png -transparent % no background
 
-% combinatorics to find which nodes are a part of each class ID, not going
-% to 
+%% Motif analysis
+%first must make_motif34lib.m which generates the required motif34lib.mat
+%which all motif releated functions require
+make_motif34lib
 
+M = 3; %motif size
+
+%next be sure to generate null hypothesis distributions through random and
+%lattice-based network ensemble generation
+
+[f,F]=motif3struct_bin(AM); % real data
+% The motif frequency of occurrence around an individual node is known as
+% the motif fingerprint of that node. The total motif frequency of
+% occurrence in the entire network is known as the motif fingerprint of the network. 
+%F is node motif frequency fingerprint
+%f is network motif frequency fingerprint
+f_rand_mean = mean(f_ensemble,2); %compute the mean motif fingerprint over all randomly generated networks
+f_rand_std = std(f_ensemble,0,2); %compute the std dev over all rand gen networks
+f_rand_z = (f - f_rand_mean) > (0.1 * f_rand_mean); % Milo, 2002 method, only 9 & 13 sig
+f_rand_z = (f - f_rand_mean) ./ f_rand_std; 
+
+F_rand_z = (F - mean(F_ensemble,3)) ./ std(F_ensemble,0,3); %compute nodal z-score over all rand networks
+
+f_latt_mean = mean(f_latt_ensemble,2); %compute the mean motif fingerprint over all lattice networks
+f_latt_std = std(f_latt_ensemble,0,2); %compute the std dev over all lattice networks
+f_latt_z = (f - f_latt_mean) > (0.1 * f_latt_mean); % Milo, 2002 method, 3, 5, & 9 sig
+f_latt_z = (f - f_latt_mean) ./ f_latt_std; %   sig
+
+F_latt_z = (F - mean(F_latt_ensemble,3)) ./ std(F_latt_ensemble,0,3); %compute nodal z-score over all latt networks
+
+p_vals_latt_f = p_vals_latt_f ./ networks; p_vals_latt_F = p_vals_latt_F ./ networks; 
+p_vals_rand_f = p_vals_rand_f ./ networks; p_vals_rand_F = p_vals_rand_F ./ networks; 
+
+%interweave z-scores for easier copy-pasting to excel for table
+F_z = zeros(2*size(F_latt_z,1),size(F_latt_z,2)); %embedding matrix
+F_z(1:2:end) = F_rand_z; F_z(2:2:end) = F_latt_z;
+
+
+%% combinatorics to find which nodes are a part of each class ID
 C = nchoosek(1:length(AM),M); 
 % yields 4060x3 matrix which provides all possible 3-node combinations in 
 % the network
