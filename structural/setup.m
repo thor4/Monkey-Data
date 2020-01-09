@@ -27,7 +27,7 @@ edges = sum(sum(AM)); sum(deg)/2, sum(id), sum(od) %all yield 399
 % [J,J_od,J_id,J_bl] = jdegree(AM);
 % 
 % %identify density (fraction of present connections to possible connections)
-% kden = density_dir(AM);
+kden = density_dir(AM); % 45.86%
 % 
 % %identify clutering coeff (the fraction of triangles around a node (equiv. 
 % %the fraction of node's neighbors that are neighbors of each other)
@@ -582,7 +582,7 @@ p_vals_rand_f = p_vals_rand_f ./ networks; p_vals_rand_F = p_vals_rand_F ./ netw
 %interweave z-scores for easier copy-pasting to excel for table
 F_z = zeros(2*size(F_latt_z,1),size(F_latt_z,2)); %embedding matrix
 F_z(1:2:end) = F_rand_z; F_z(2:2:end) = F_latt_z;
-
+f_latt_z'
 
 %% combinatorics to find which nodes are a part of each class ID
 C = nchoosek(1:length(AM),M); 
@@ -620,13 +620,13 @@ C = mean(clustering_coef_bd(AM)); % avg clustering coef for empirical network
 D = distance_bin(AM); [L,efficiency] = charpath(D); %L = char path length
 gamma = C / mean(C_ensemble); %Gamma > 1 suggests greater clustering than random
 lambda = L / mean(L_ensemble); %Lambda ~ 1 suggests a comparable avg path length to randomized network
-sigma = gamma / lambda; %sigma > 1 indicates small-worldness
+sigma = gamma / lambda; %sigma > 1 indicates small-worldness (1.1429)
 
 %Telesford et al., 2011 technique:
 %uses both random and latticized networks to capture both sides of the
 %spectrum
 omega = (mean(L_ensemble) / L) - (C / mean(C_latt_ensemble));
-%omega = 0.0275, 
+%omega = 0.0275 (1,000 networks), 0.0297 (100,000 networks)
 %omega index ranges between -1 and 1. Values close to 0 are indicative of 
 %small-worldness. Positive values suggest more random characteristics and 
 %negative values indicate a lattice-like structure
