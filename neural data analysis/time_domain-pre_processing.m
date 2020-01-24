@@ -1,3 +1,8 @@
+%%%% Time-domain analysis %%%%
+%% Step 1a: Pre-process data using baseline normalization
+
+%% Step 1b: Pre-process data using a low-pass butterworth filter
+
 filtOrder = 3; % filter order, higher values = steeper roll off around the 
 %cutoff but too high and you're gonna get phase distortions
 x = 0;
