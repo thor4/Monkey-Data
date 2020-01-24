@@ -6,7 +6,8 @@
 function [M1,M2] = craw(path,varargin)
     p = inputParser; %create inputParser object to check inputs
     %define default optional parameter values
-%     path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
+%   homepc  path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
+%   labpc  path = 'C:\\Users\\bryan\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
     defaultMonkey = 'betty'; monkeys = [ "betty", "clark" ];
     %validate monkey exists and is accurate
     checkMonkey = @(x) any(validatestring(x,monkeys));
