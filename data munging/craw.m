@@ -3,13 +3,14 @@
 
 %doc: https://www.mathworks.com/help/matlab/matlab_prog/parse-function-inputs.html
 
-function [M1,M2] = craw(path,monkey,session,good,stable,behResp,rule,epoch)
+function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     p = inputParser; %create inputParser object to check inputs
     %define default optional parameter values
 %   homepc  path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
 %   labpc  path = 'C:\\Users\\bryan\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
+%   test  monkey = "betty" 
+%   test day = '090615'
     defaultMonkey = 'betty'; monkeys = [ "betty", "clark" ];
-%     path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
     monkeys = [ "betty", "clark" ];
     %validate monkey exists and is accurate
     checkMonkey = @(x) any(validatestring(x,monkeys));
@@ -36,7 +37,7 @@ function [M1,M2] = craw(path,monkey,session,good,stable,behResp,rule,epoch)
     addRequired(p,'behResp',checkBehResp)
     addRequired(p,'rule',checkRule)
     addRequired(p,'epoch',checkEpoch)
-    parse(p,path,monkey,session,good,stable,behResp,rule,epoch) %parse all the inputs
+    parse(p,path,monkey,day,good,stable,behResp,rule,epoch) %parse all the inputs
     %report parsed inputs back to user for confirmation
     disp(['Crawling: ',p.Results.data])
     if ~isempty(p.UsingDefaults) %check if using any default values
@@ -46,31 +47,54 @@ function [M1,M2] = craw(path,monkey,session,good,stable,behResp,rule,epoch)
     trial_info_path = strcat(path,'%s\\%s\\%s\\trial_info.mat'); %build trial_info path
     recording_info_path = strcat(path,'%s\\%s\\%s\\recording_info.mat'); %build recording_info path
     lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.%04d.mat'); %build lfp raw data path
+    function loadinfo(dayN,session)
+       trial_infoN = sprintf(trial_info_path, monkey, dayN, session); %create full path to trial_info.mat
+       load('trial_infoN'); %load trial_info for day's trials
+       recording_infoN = sprintf(recording_info_path, monkey, dayN, session); %create full path to recording_info.mat
+       load('recording_infoN'); %load recording_info for day's trials
+    end
     monkeys = [ "betty", "clark" ];
     if monkey=="betty"
         days = { days_betty, "session01" };
     else
         days = { days_clark, "session02", "session03" };
     end
-    z = 1;
-    M1=0;
-    %betty
+    % pseudocode for epoch
+    % if epoch = sample
+    % epoch = cueoffset - cueonset (or whatever calculation is correct)
+    % elseif etc... end
+    % then use epoch in day-loop
     
-    idx = 0; % counter
-
-    for i=1:length(days{1})
-        trial_infoN = sprintf(trial_info_path, monkeys(1), betty{1}{i}, betty{2}); %create full path to trial_info.mat
+    % pseudocode for good,stable,behResp,rule
+    % (trial_info.good_trials(j) == good) && ...%artifacts/none
+    % (trial_info.stable_trials(j) == stable) && ...%stabile/transition
+    % (trial_info.BehResp(j) == behResp) && ... %correct/incorrect
+    % (trial_info.rule(j) == rule) %identify/location
+    % extract whatever fulfills these req's
+    
+    
+    if ~(string(day) == "all") %single day
         for j=2:3
             if (j==3) && (monkey=="betty") %only one session for betty
-                continue
+                continue %skip rest of loop
             end
-            trial_infoN = sprintf(trial_info_path, monkey, days{1}{i}, days{j}); %create full path to trial_info.mat
-            load(trial_infoN); %load trial_info for day's trials
-            recording_infoN = sprintf(recording_info_path, monkey, days{1}{i}, days{j}); %create full path to recording_info.mat
-            load(recording_infoN); %load recording_info for day's trials
+            loadinfo(day,days{j}) %load trial & rec info for day
+            %%gather all trials according to good,stable,behResp,rule,epoch
+        end
+    else
+        for i=1:length(days{1}) %all days
+            for j=2:3
+                if (j==3) && (monkey=="betty") %only one session for betty
+                    continue
+                end
+                loadinfo(days{1}{i},days{j}); %load trial & rec info for day
+                %%gather all trials according to good,stable,behResp,rule,epoch
+            end
+        end
+    end
+    
+%------------------     
         
-        trial_myfilename = sprintf(trial_path, monkey, days{1}{i}, clark{j});
-        load(trial_myfilename);
         for j=1:trial_info.numTrials
             if (trial_info.good_trials(j) == 1) && ...%no artifacts
                     (trial_info.rule(j) == 1) && ... %only identity rule
