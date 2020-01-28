@@ -10,6 +10,11 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
 %   labpc  path = 'C:\\Users\\bryan\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
 %   test  monkey = "betty" 
 %   test day = '090615'
+%   test good = 1;
+%   test stable = 2;
+%   test behResp = 1;
+%   test rule = 1;
+%   test epoch = 'delay';
     defaultMonkey = 'betty'; monkeys = [ "betty", "clark" ];
     monkeys = [ "betty", "clark" ];
     %validate monkey exists and is accurate
@@ -19,14 +24,12 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     %validate session exists or if user wants all sessions
     validDay = [ days_betty days_clark 'all' ];
     checkDay = @(x) any(validatestring(x,validDay)); 
-    validGood = { 'yes','no' }; %yes has no artifacts
-    checkGood = @(x) any(validatestring(x,validGood));
-    validStable = { 'yes','no','transition' }; %yes stable perf or trial during transition bet rules
-    checkStable = @(x) any(validatestring(x,validStable));
+    checkGood = @(x) ismember(x,[0,1]); %0 bad trials, 1 good/no artifacts
     checkBehResp = @(x) ismember(x,[0,1]); %0 incorrect trials, 1 correct
     checkRule = @(x) ismember(x,[1,2]); %1 identity, 2 location
     validEpoch = { 'base','sample','delay','match','all' }; 
     checkEpoch = @(x) any(validatestring(x,validEpoch));
+    checkStable = @(x) ismember(x,[0,1,2]); %0 transition, 1 stable perf, 2 all
     %add required input + optional parameter values & verify datatype
 %     addRequired(p,'data',@isstruct);
     addRequired(p,'path',@ischar);
@@ -49,9 +52,9 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.%04d.mat'); %build lfp raw data path
     function loadinfo(dayN,session)
        trial_infoN = sprintf(trial_info_path, monkey, dayN, session); %create full path to trial_info.mat
-       load('trial_infoN'); %load trial_info for day's trials
+       load(trial_infoN,'trial_info'); %load trial_info for day's trials
        recording_infoN = sprintf(recording_info_path, monkey, dayN, session); %create full path to recording_info.mat
-       load('recording_infoN'); %load recording_info for day's trials
+       load(recording_infoN,'recording_info'); %load recording_info for day's trials
     end
     monkeys = [ "betty", "clark" ];
     if monkey=="betty"
@@ -59,18 +62,7 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     else
         days = { days_clark, "session02", "session03" };
     end
-    % pseudocode for epoch
-    % if epoch = sample
-    % epoch = cueoffset - cueonset (or whatever calculation is correct)
-    % elseif etc... end
-    % then use epoch in day-loop
-    
-    % pseudocode for good,stable,behResp,rule
-    % (trial_info.good_trials(j) == good) && ...%artifacts/none
-    % (trial_info.stable_trials(j) == stable) && ...%stabile/transition
-    % (trial_info.BehResp(j) == behResp) && ... %correct/incorrect
-    % (trial_info.rule(j) == rule) %identify/location
-    % extract whatever fulfills these req's
+    %% fill up trial info in day-loop   
     
     
     if ~(string(day) == "all") %single day
@@ -88,7 +80,62 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                     continue
                 end
                 loadinfo(days{1}{i},days{j}); %load trial & rec info for day
-                %%gather all trials according to good,stable,behResp,rule,epoch
+                idx = 0; %init counter
+                for k=1:trial_info.numTrials %parse all trials for day
+                    if ~(stable==2) %stable is specified
+                        if (trial_info.good_trials(k) == good) && ...%artifacts/none
+                                (trial_info.stable_trials(k) == stable) && ...%stabile/transition
+                                (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
+                                (trial_info.rule(k) == rule) %identify/location
+%                             idx = idx + length(recording_info.area); %inc by # of channels
+                            trial_lfp = sprintf(lfp_path,monkey,days{1}{i},days{j},monkey,days{1}{i},days{j}{1}(8:9),k);
+                            load(trial_lfp,'lfp_data');
+                            %%verify the timing below with the ERP analysis
+                            %done before. Ensure same time periods are
+                            %taken
+                            switch epoch
+                                case 'base'
+                                    %take 501ms before sample onset up
+                                    %until 1ms before sample onset =
+                                    %lfp(chan,500,trial)
+                                    lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
+                                case 'sample'
+                                    %take first ms sample is turned on up
+                                    %until 509ms of sample. turned off
+                                    %around 510 or so = lfp(chan,510,trial)
+                                    lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
+                                case 'delay'
+                                    %take one second after sample goes away
+                                    %up through 810ms afterwards. insert in 
+                                    %matrix with trial count as 3rd
+                                    %dimension = lfp(chan,810,trial)
+                                    lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
+                                case 'match'
+                                    %take first ms match is turned on up
+                                    %until 200ms of match. =
+                                    %lfp(chan,210,trial)
+                                    lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
+                                case 'all'
+                                    lfp(:,:,idx) = lfp_data;
+                                otherwise
+                                    warning('no such epoch exists')
+                            end
+                            idx = idx + 1;
+                            %%save entire trial_info and rec_info per day in struct
+                        end
+                    else %give stable perf and transition trials
+                        if (trial_info.good_trials(k) == good) && ...%artifacts/none
+                                (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
+                                (trial_info.rule(k) == rule) %identify/location
+                            idx = idx + 1;
+                            trial_lfp = sprintf(lfp_path,monkey,days{1}{i},days{j},monkey,days{1}{i},days{j}{1}(8:9),k);
+                            load(trial_lfp);
+                            %%load up trials accordingly
+                            lfp(
+                            
+                        end
+                    end
+                end
             end
         end
     end
