@@ -1,9 +1,29 @@
+function [idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
 %%%% Crawler for raw data %%%%
 %Will crawl specific file location based on PC used: koko, home or lab
 
 %doc: https://www.mathworks.com/help/matlab/matlab_prog/parse-function-inputs.html
 
-function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
+% monkey: [ "betty", "clark" ]
+% day:(betty) [   '090615', '090616', '090617', '090618', '090622', 
+%                 '090625', '090626', '090629', '090701', '090702', 
+%                 '090706', '090708', '090709', '090901', '090903', 
+%                 '090916', '090917', '090921', '090923', '090924', 
+%                 '090928', '090929', '090930', '091001']
+%     (clark) [   '060328', '060406', '060411', '060414', '060426', 
+%                 '060427', '060428', '060502', '060503', '060509', 
+%                 '060511', '060531', '060601', '060602', '060824', 
+%                 '060825', '060831', '060907', '061212', '061213', 
+%                 '061214', '061215', '061221']
+% good: [ 0(artifacts), 1(no artifacts) ]
+% stable: [ 0(transition), 1(stable performance), 2(both) ]
+% behResp: [0(incorrect), 1(correct) ]
+% rule: [ 1(identity), 2(location) ]
+% epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
+
+% Version 1.0   (2020 January)
+
+
     p = inputParser; %create inputParser object to check inputs
     %define default optional parameter values
 %   homepc  path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
@@ -15,7 +35,6 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
 %   test behResp = 1;
 %   test rule = 1;
 %   test epoch = 'delay';
-    defaultMonkey = 'betty'; monkeys = [ "betty", "clark" ];
     monkeys = [ "betty", "clark" ];
     %validate monkey exists and is accurate
     checkMonkey = @(x) any(validatestring(x,monkeys));
@@ -50,13 +69,12 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     trial_info_path = strcat(path,'%s\\%s\\%s\\trial_info.mat'); %build trial_info path
     recording_info_path = strcat(path,'%s\\%s\\%s\\recording_info.mat'); %build recording_info path
     lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.%04d.mat'); %build lfp raw data path
-    function loadinfo(dayN,session)
+    function [trial_info, recording_info] = loadinfo(dayN,session)
        trial_infoN = sprintf(trial_info_path, monkey, dayN, session); %create full path to trial_info.mat
-       load(trial_infoN,'trial_info'); %load trial_info for day's trials
+       trial_info = load(trial_infoN,'trial_info'); %load trial_info for day's trials
        recording_infoN = sprintf(recording_info_path, monkey, dayN, session); %create full path to recording_info.mat
-       load(recording_infoN,'recording_info'); %load recording_info for day's trials
+       recording_info = load(recording_infoN,'recording_info'); %load recording_info for day's trials
     end
-    monkeys = [ "betty", "clark" ];
     if monkey=="betty"
         days = { days_betty, "session01" };
     else
@@ -64,22 +82,109 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     end
     %% fill up trial info in day-loop   
     
-    
+    idx = 0; %init counter
     if ~(string(day) == "all") %single day
         for j=2:3
             if (j==3) && (monkey=="betty") %only one session for betty
                 continue %skip rest of loop
             end
-            loadinfo(day,days{j}) %load trial & rec info for day
-            %%gather all trials according to good,stable,behResp,rule,epoch
+            [trial_info, ~] = loadinfo(day,days{j}); %load trial & rec info for day
+            for k=1:trial_info.numTrials %parse all trials for day
+                if ~(stable==2) %stable is specified
+                    if (trial_info.good_trials(k) == good) && ...%artifacts/none
+                            (trial_info.stable_trials(k) == stable) && ...%stabile/transition
+                            (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
+                            (trial_info.rule(k) == rule) %identify/location
+%                             idx = idx + length(recording_info.area); %inc by # of channels
+                        idx = idx + 1;                        
+                        trial_lfp = sprintf(lfp_path,monkey,days{1}{i},days{j},monkey,days{1}{i},days{j}{1}(8:9),k);
+                        load(trial_lfp,'lfp_data');
+                        %%verify the timing below with the ERP analysis
+                        %done before. Ensure same time periods are
+                        %taken
+                        switch epoch
+                            case 'base'
+                                %take 501ms before sample onset up
+                                %until 1ms before sample onset =
+                                %lfp(chan,500,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
+                                lengths(idx) = length(lfp_data(:,1:trial_info.CueOnset(k)-1)) %len of baseline in ms
+                            case 'sample'
+                                %take first ms sample is turned on up
+                                %until 509ms of sample. turned off
+                                %around 510 or so = lfp(chan,510,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
+                                lengths(idx) = length(lfp_data(:,trial_info.CueOnset(k):trial_info.CueOffset(k)-1)) %len of sample in ms
+                            case 'delay'
+                                %take one second after sample goes away
+                                %up through 810ms afterwards. insert in 
+                                %matrix with trial count as 3rd
+                                %dimension = lfp(chan,810,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
+                                lengths(idx) = length(lfp_data(:,trial_info.CueOffset(k):trial_info.MatchOnset(k)-1)) %len of delay in ms
+                            case 'match'
+                                %take first ms match is turned on up
+                                %until 200ms of match. =
+                                %lfp(chan,210,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
+                                lengths(idx) = length(lfp_data(:,trial_info.MatchOnset(k):end)) %len of match in ms
+                            case 'all'
+                                lfp(:,:,idx) = lfp_data;
+                            otherwise
+                                warning('no such epoch exists')
+                        end
+                        %%save entire trial_info and rec_info per day in struct
+                    end
+                else %stable not specified, give stable perf and transition trials
+                    if (trial_info.good_trials(k) == good) && ...%artifacts/none
+                            (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
+                            (trial_info.rule(k) == rule) %identify/location
+                        idx = idx + 1;
+                        trial_lfp = sprintf(lfp_path,monkey,days{1}{i},days{j},monkey,days{1}{i},days{j}{1}(8:9),k);
+                        load(trial_lfp);
+                        %%load up trials accordingly
+                        switch epoch
+                            case 'base'
+                                %take 501ms before sample onset up
+                                %until 1ms before sample onset =
+                                %lfp(chan,500,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
+                                lengths(idx) = length(lfp_data(:,1:trial_info.CueOnset(k)-1)) %len of baseline in ms
+                            case 'sample'
+                                %take first ms sample is turned on up
+                                %until 509ms of sample. turned off
+                                %around 510 or so = lfp(chan,510,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
+                                lengths(idx) = length(lfp_data(:,trial_info.CueOnset(k):trial_info.CueOffset(k)-1)) %len of sample in ms
+                            case 'delay'
+                                %take one second after sample goes away
+                                %up through 810ms afterwards. insert in 
+                                %matrix with trial count as 3rd
+                                %dimension = lfp(chan,810,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
+                                lengths(idx) = length(lfp_data(:,trial_info.CueOffset(k):trial_info.MatchOnset(k)-1)) %len of delay in ms
+                            case 'match'
+                                %take first ms match is turned on up
+                                %until 200ms of match. =
+                                %lfp(chan,210,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
+                                lengths(idx) = length(lfp_data(:,trial_info.MatchOnset(k):end)) %len of match in ms
+                            case 'all'
+                                lfp(:,:,idx) = lfp_data;
+                            otherwise
+                                warning('no such epoch exists')
+                        end
+                    end
+                end
+            end
         end
-    else
+    else % go through all days
         for i=1:length(days{1}) %all days
             for j=2:3
                 if (j==3) && (monkey=="betty") %only one session for betty
                     continue
                 end
-                loadinfo(days{1}{i},days{j}); %load trial & rec info for day
+                [trial_info, ~] = loadinfo(days{1}{i},days{j}); %load trial & rec info for day
                 idx = 0; %init counter
                 for k=1:trial_info.numTrials %parse all trials for day
                     if ~(stable==2) %stable is specified
@@ -98,23 +203,27 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                                     %take 501ms before sample onset up
                                     %until 1ms before sample onset =
                                     %lfp(chan,500,trial)
-                                    lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
+                                    lengths(idx) = length(lfp_data(:,1:trial_info.CueOnset(k)-1)) %len of baseline in ms
                                 case 'sample'
                                     %take first ms sample is turned on up
                                     %until 509ms of sample. turned off
                                     %around 510 or so = lfp(chan,510,trial)
-                                    lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
+                                    lengths(idx) = length(lfp_data(:,trial_info.CueOnset(k):trial_info.CueOffset(k)-1)) %len of sample in ms
                                 case 'delay'
                                     %take one second after sample goes away
                                     %up through 810ms afterwards. insert in 
                                     %matrix with trial count as 3rd
                                     %dimension = lfp(chan,810,trial)
-                                    lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
+                                    lengths(idx) = length(lfp_data(:,trial_info.CueOffset(k):trial_info.MatchOnset(k)-1)) %len of delay in ms
                                 case 'match'
                                     %take first ms match is turned on up
                                     %until 200ms of match. =
                                     %lfp(chan,210,trial)
-                                    lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
+                                    lengths(idx) = length(lfp_data(:,trial_info.MatchOnset(k):end)) %len of match in ms
                                 case 'all'
                                     lfp(:,:,idx) = lfp_data;
                                 otherwise
@@ -123,7 +232,7 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                             idx = idx + 1;
                             %%save entire trial_info and rec_info per day in struct
                         end
-                    else %give stable perf and transition trials
+                    else %stable not specified, give stable perf and transition trials
                         if (trial_info.good_trials(k) == good) && ...%artifacts/none
                                 (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
                                 (trial_info.rule(k) == rule) %identify/location
@@ -131,8 +240,37 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                             trial_lfp = sprintf(lfp_path,monkey,days{1}{i},days{j},monkey,days{1}{i},days{j}{1}(8:9),k);
                             load(trial_lfp);
                             %%load up trials accordingly
-                            lfp(
-                            
+                            switch epoch
+                                case 'base'
+                                    %take 501ms before sample onset up
+                                    %until 1ms before sample onset =
+                                    %lfp(chan,500,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
+                                    lengths(idx) = length(lfp_data(:,1:trial_info.CueOnset(k)-1)) %len of baseline in ms
+                                case 'sample'
+                                    %take first ms sample is turned on up
+                                    %until 509ms of sample. turned off
+                                    %around 510 or so = lfp(chan,510,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
+                                    lengths(idx) = length(lfp_data(:,trial_info.CueOnset(k):trial_info.CueOffset(k)-1)) %len of sample in ms
+                                case 'delay'
+                                    %take one second after sample goes away
+                                    %up through 810ms afterwards. insert in 
+                                    %matrix with trial count as 3rd
+                                    %dimension = lfp(chan,810,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
+                                    lengths(idx) = length(lfp_data(:,trial_info.CueOffset(k):trial_info.MatchOnset(k)-1)) %len of delay in ms
+                                case 'match'
+                                    %take first ms match is turned on up
+                                    %until 200ms of match. =
+                                    %lfp(chan,210,trial)
+%                                     lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
+                                    lengths(idx) = length(lfp_data(:,trial_info.MatchOnset(k):end)) %len of match in ms
+                                case 'all'
+                                    lfp(:,:,idx) = lfp_data;
+                                otherwise
+                                    warning('no such epoch exists')
+                            end
                         end
                     end
                 end
@@ -141,66 +279,40 @@ function [M1,M2] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     end
     
 %------------------     
-        
-        for j=1:trial_info.numTrials
-            if (trial_info.good_trials(j) == 1) && ...%no artifacts
-                    (trial_info.rule(j) == 1) && ... %only identity rule
-                    (trial_info.BehResp(j) == 1)  %only correct resp
-                % extract rule, response and rt in 1x3 matrix
-                idx = idx + 1;
-                trial_lfp_myfilename = sprintf(lfp_path, monkeys(1), betty{1}{i}, betty{2}, monkeys(1), betty{1}{i}, betty{2}{1}(8:9), j);
-                load(trial_lfp_myfilename);
-                chan = length(recording_info.area); %get number of channels
-    %             unique(recording_info.area);
-                %define delay period length
-                delay_period = trial_info.MatchOnset(j)-trial_info.CueOffset(j);
-                %extract LFP during delay period: take one second after sample 
-                %goes away up through 810ms afterwards. insert into delay
-                %matrix with trial count as 3rd dimension
-                delay(:,:,idx) = lfp_data(:,trial_info.CueOffset(j)+1:trial_info.CueOffset(j)+810);
-                obj(idx) = trial_info.CueObj(j);
-            end
-        end
-        m2_obj_delay.day(i).delay = delay;
-        m2_obj_delay.day(i).objects = obj;
-        clearvars delay obj
-        idx=0; %reset counter for new day
-    end
-
-    
-    
-    fieldsBettyDays = fieldnames(bettyGoodStableTrials);
-    for i = 1:numel(fieldsBettyDays)
-        fieldsBettyTrials = fieldnames(bettyGoodStableTrials.(fieldsBettyDays{i}));
-        recordingRegion = bettyGoodStableTrials.(fieldsBettyDays{i}).recording_info.cortex;
-        recordingArea = bettyGoodStableTrials.(fieldsBettyDays{i}).recording_info.area;
-        for j = 1:numel(fieldsBettyTrials)-2
-            if BehResp && Rule && region %provide BehResp,Rule,region slice
-                for k = 1:numel(recordingRegion)                
-                    if (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == BehResp) && ...
-                            (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == Rule) && ...
-                            (recordingRegion(k) == region) %only look at trials from requested region
-                        M2(z,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
-                        M2(z,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
-                        z = z + 1;
-                    end
-                end
-            elseif BehResp && Rule && area %provide BehResp,Rule,area slice
-                for k = 1:numel(recordingArea)
-                   if (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == BehResp) && ...
-                            (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == Rule) && ...
-                            (recordingArea(k) == area) %only look at trials from requested area
-                        M2(z,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
-                        M2(z,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
-                        z = z + 1;
-                   end 
-                end
-            else
-                print("Please enter either BehResp,Rule,Region combo or BehResp,Rule,area");
-            end
-        end
-    end
-end
+%  
+%     
+%     fieldsBettyDays = fieldnames(bettyGoodStableTrials);
+%     for i = 1:numel(fieldsBettyDays)
+%         fieldsBettyTrials = fieldnames(bettyGoodStableTrials.(fieldsBettyDays{i}));
+%         recordingRegion = bettyGoodStableTrials.(fieldsBettyDays{i}).recording_info.cortex;
+%         recordingArea = bettyGoodStableTrials.(fieldsBettyDays{i}).recording_info.area;
+%         for j = 1:numel(fieldsBettyTrials)-2
+%             if BehResp && Rule && region %provide BehResp,Rule,region slice
+%                 for k = 1:numel(recordingRegion)                
+%                     if (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == BehResp) && ...
+%                             (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == Rule) && ...
+%                             (recordingRegion(k) == region) %only look at trials from requested region
+%                         M2(z,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
+%                         M2(z,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
+%                         z = z + 1;
+%                     end
+%                 end
+%             elseif BehResp && Rule && area %provide BehResp,Rule,area slice
+%                 for k = 1:numel(recordingArea)
+%                    if (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.BehResp(j) == BehResp) && ...
+%                             (bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.Rule(j) == Rule) && ...
+%                             (recordingArea(k) == area) %only look at trials from requested area
+%                         M2(z,1:1001) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,1:1001);
+%                         M2(z,1002:1811) = bettyGoodStableTrials.(fieldsBettyDays{i}).(fieldsBettyTrials{j})(k,bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+1:bettyGoodStableTrials.(fieldsBettyDays{i}).new_trial_info.CueOffset(j)+810);
+%                         z = z + 1;
+%                    end 
+%                 end
+%             else
+%                 print("Please enter either BehResp,Rule,Region combo or BehResp,Rule,area");
+%             end
+%         end
+%     end
+% end
     %clark
 %     tic
 %     fieldsClarkDays = fieldnames(clarkGoodStableTrials);
@@ -242,3 +354,4 @@ end
 %     end
 % end
 % toc
+end
