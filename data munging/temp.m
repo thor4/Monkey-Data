@@ -13,16 +13,29 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
-monkey="betty"
+monkey='betty'
+% 
+[lengths,idx] = craw(path,monkey,'090615',1,2,1,1,'base');
+% 
+% 
+% 
+p = inputParser;
+argName = 'monkey';
+monkeys = { 'toejam','earl' };
+validationFcn = @(x) any(validatestring(x,monkeys));
+addRequired(p,argName,validationFcn);
 
-craw(path,monkey,'090615',1,2,1,1,'base')
-
+parse(p,'toejam')
 
 
 p = inputParser;
 argName = 'monkey';
 monkeys = [ "toejam","earl" ];
-validationFcn = @(x) any(validatestring(x,monkeys));
+validationFcn = @(x) validateStringParameter(x,monkeys,mfilename,argName);
 addRequired(p,argName,validationFcn);
 
-parse(p,"toejam")
+function validateStringParameter(varargin)
+    validatestring(varargin{:});
+end
+
+
