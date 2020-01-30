@@ -16,6 +16,17 @@
 monkey='betty'
 % 
 [lengths,idx] = craw(path,monkey,'090615',1,2,1,1,'base');
+
+
+%unit test for craw counter, compare to 'lengths' vector
+length(1:trial_info.CueOnset(k)-1) %epoch length
+for k=8:1000 %don't account for stability
+    if (trial_info.good_trials(k) == 1) && ...%artifacts/none
+            (trial_info.BehResp(k) == 1) && ... %correct/incorrect
+            (trial_info.rule(k) == 1) %identity/location
+        break
+    end
+end
 % 
 % 
 % 
