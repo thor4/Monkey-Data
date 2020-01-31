@@ -21,13 +21,16 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
+%   homepc:
+%   path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
+%   labpc:
+%   path = 'C:\\Users\\bryan\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
+
 % Version 1.0   (2020 January)
 
 
     p = inputParser; %create inputParser object to check inputs
     %define default optional parameter values
-%   homepc  path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
-%   labpc  path = 'C:\\Users\\bryan\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
 %   test  monkey = "betty" 
 %   test day = '090615'
 %   test good = 1;

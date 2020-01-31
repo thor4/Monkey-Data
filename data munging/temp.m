@@ -28,7 +28,7 @@ for k=8:1000 %don't account for stability
     end
 end
 % 
-% 
+% baseline tested fine for 090615
 % 
 p = inputParser;
 argName = 'monkey';
