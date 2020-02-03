@@ -40,7 +40,7 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
 %   test epoch = 'delay';
     monkeys = { 'betty', 'clark' };
     %validate monkey exists and is accurate
-    checkMonkey = @(x) any(validatestring(x,monkeys));
+    checkMonkey = @(x) any(strcmp(x,monkeys));
     days_betty = { '090615', '090616', '090617', '090618', '090622', '090625', '090626', '090629', '090701', '090702', '090706', '090708', '090709', '090901', '090903', '090916', '090917', '090921', '090923', '090924', '090928', '090929', '090930', '091001' };
     days_clark = { '060328', '060406', '060411', '060414', '060426', '060427', '060428', '060502', '060503', '060509', '060511', '060531', '060601', '060602', '060824', '060825', '060831', '060907', '061212', '061213', '061214', '061215', '061221' };
     %validate session exists or if user wants all sessions
@@ -50,7 +50,7 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     checkBehResp = @(x) ismember(x,[0,1]); %0 incorrect trials, 1 correct
     checkRule = @(x) ismember(x,[1,2]); %1 identity, 2 location
     validEpoch = { 'base','sample','delay','match','all' }; 
-    checkEpoch = @(x) any(validatestring(x,validEpoch));
+    checkEpoch = @(x) any(strcmp(x,validEpoch));
     checkStable = @(x) ismember(x,[0,1,2]); %0 transition, 1 stable perf, 2 all
     %add required input + optional parameter values & verify datatype
 %     addRequired(p,'data',@isstruct);

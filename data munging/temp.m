@@ -51,7 +51,8 @@ end
 p = inputParser;
 argName = 'monkey';
 monkeys = { 'toejam','earl' };
-validationFcn = @(x) any(validatestring(x,monkeys));
+% validationFcn = @(x) any(validatestring(x,monkeys));
+validationFcn = @(x) any(strcmp(x,monkeys));
 addRequired(p,argName,validationFcn);
 
 parse(p,'toejam')
@@ -67,4 +68,5 @@ function validateStringParameter(varargin)
     validatestring(varargin{:});
 end
 
+@(inVal)any(strcmp(inVal,possVal)) 
 
