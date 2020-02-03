@@ -13,8 +13,21 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
+%next up, test the sample period to ensure it's pulling correctly
 monkey='betty'
 % 
+i=1; %init counter
+for lp=days_betty %cycle through all days
+%     doSomeOperation( mystruct( lp{:} ) );
+    dayy = append('d',lp{:});
+    [lengths.(dayy),idx(i)] = craw(path,monkey,lp{:},1,2,0,1,'base');
+    mins(i)=min(lengths.(dayy)); %find the shortest length
+    i=i+1;
+end
+
+idx=idx'; mins=mins'; %easier to copy-paste
+fn=fieldnames(lengths);
+
 [lengths,idx] = craw(path,monkey,'090615',1,2,1,1,'base');
 
 
