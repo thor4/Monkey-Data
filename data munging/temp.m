@@ -13,36 +13,41 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
-%next up, test the sample period to ensure it's pulling correctly
+%next up, run the sample period to get counts
+% then test the delay period to ensure it's pulling correctly
 monkey='betty'
 % 
 i=1; %init counter
 for lp=days_betty %cycle through all days
 %     doSomeOperation( mystruct( lp{:} ) );
     dayy = append('d',lp{:});
-    [lengths.(dayy),idx(i)] = craw(path,monkey,lp{:},1,2,0,1,'base');
+    [lengths.(dayy),idx(i)] = craw(path,monkey,lp{:},1,2,0,1,'sample');
     mins(i)=min(lengths.(dayy)); %find the shortest length
     i=i+1;
 end
 
 idx=idx'; mins=mins'; %easier to copy-paste
 fn=fieldnames(lengths);
+clear idx mins lengths %reset each time
 
 [lengths,idx] = craw(path,monkey,'090615',1,2,1,1,'base');
 
 
 %unit test for craw counter, compare to 'lengths' vector
-length(1:trial_info.CueOnset(k)-1) %epoch length
-for k=8:1000 %don't account for stability
+day = days_betty{2}; %assign day
+%switch over to craw function to load trial info for day
+length(1:trial_info.CueOnset(k)-1) %epoch length for baseline
+length(trial_info.CueOnset(k):trial_info.CueOffset(k)-1) %epoch length for sample
+for k=6:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
-            (trial_info.BehResp(k) == 1) && ... %correct/incorrect
+            (trial_info.BehResp(k) == 0) && ... %correct/incorrect
             (trial_info.rule(k) == 1) %identity/location
         break
     end
 end
 % 
-% baseline tested fine for 090615
-% 
+% baseline tested fine for 090615 correct
+% sample tested fine for 090616 incorrect
 p = inputParser;
 argName = 'monkey';
 monkeys = { 'toejam','earl' };
