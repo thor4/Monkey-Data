@@ -159,6 +159,7 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                                 %lfp(chan,500,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
                                 lengths(idx) = length(lfp_data(:,1:trial_info.CueOnset(k)-1)); %len of baseline in ms
+                                data(idx,1:floor(delay_period)) = lfp_data(l,floor(trial_info.CueOffset(k))+1:ceil(trial_info.MatchOnset(k))-1);
                             case 'sample'
                                 %take first ms sample is turned on up
                                 %until 509ms of sample. turned off
