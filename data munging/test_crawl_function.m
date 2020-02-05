@@ -16,6 +16,7 @@
 %next up, test the clark base period to ensure it's pulling correctly
 % use the floor() function in craw to drop the decimals in
 % trial_info.whatever(k).  also test that this doesn't invalidate betty
+% something wrong with the trial loop
 % then run the clark base period to get counts
 monkey='clark'
 % 
@@ -37,16 +38,26 @@ fn=fieldnames(lengths);
 
 
 %unit test for craw counter, compare to 'lengths' vector
-day = days_clark{15}; %assign day
+day = days_clark{1}; %assign day
 %switch over to craw function to load trial info for day
 length(1:trial_info.CueOnset(k)-1) %epoch length for baseline
 length(trial_info.CueOnset(k):trial_info.CueOffset(k)-1) %epoch length for sample
 length(trial_info.CueOffset(k):trial_info.MatchOnset(k)-1) %epoch  length for delay
 length(trial_info.MatchOnset(k):trial_info.TrialLength(k)) %epoch length for match
-for k=10:1000 %don't account for stability
+for k=1:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
             (trial_info.BehResp(k) == 0) && ... %correct/incorrect
             (trial_info.rule(k) == 1) %identity/location
+        break
+    end
+end
+
+
+for k=1:trial_info.numTrials %don't account for stability
+    if (trial_info.good_trials(k) == good) && ...%artifacts/none
+            (trial_info.stable_trials(k) == stable) && ...%stabile/transition
+            (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
+            (trial_info.rule(k) == rule) %identify/location
         break
     end
 end
