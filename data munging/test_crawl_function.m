@@ -13,10 +13,9 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
-%next up, test the clark base period to ensure it's pulling correctly
+% next up, test the clark base period to ensure it's pulling correctly
 % use the floor() function in craw to drop the decimals in
 % trial_info.whatever(k).  also test that this doesn't invalidate betty
-% something wrong with the trial loop
 % then run the clark base period to get counts
 monkey='clark'
 % 
@@ -24,7 +23,8 @@ i=1; %init counter
 for lp=days_clark %cycle through all days
 %     doSomeOperation( mystruct( lp{:} ) );
     dayy = append('d',lp{:});
-    [lengths.(dayy),idx(i)] = craw(path,monkey,lp{:},1,2,0,1,'base');
+    [lengths.(dayy),idx.(dayy)] = craw(path,monkey,lp{:},1,2,0,1,'match');
+    lengths.(dayy)(lengths.(dayy)==0)=[];
     mins(i)=min(lengths.(dayy)); %find the shortest length
     i=i+1;
 end
@@ -40,10 +40,10 @@ fn=fieldnames(lengths);
 %unit test for craw counter, compare to 'lengths' vector
 day = days_clark{1}; %assign day
 %switch over to craw function to load trial info for day
-length(1:trial_info.CueOnset(k)-1) %epoch length for baseline
-length(trial_info.CueOnset(k):trial_info.CueOffset(k)-1) %epoch length for sample
-length(trial_info.CueOffset(k):trial_info.MatchOnset(k)-1) %epoch  length for delay
-length(trial_info.MatchOnset(k):trial_info.TrialLength(k)) %epoch length for match
+length(1:floor(trial_info.CueOnset(k))-1) %epoch length for baseline
+length(floor(trial_info.CueOnset(k)):floor(trial_info.CueOffset(k))-1) %epoch length for sample
+length(floor(trial_info.CueOffset(k)):floor(trial_info.MatchOnset(k))-1) %epoch  length for delay
+length(floor(trial_info.MatchOnset(k)):floor(trial_info.TrialLength(k))) %epoch length for match
 for k=1:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
             (trial_info.BehResp(k) == 0) && ... %correct/incorrect
@@ -55,7 +55,6 @@ end
 
 for k=1:trial_info.numTrials %don't account for stability
     if (trial_info.good_trials(k) == good) && ...%artifacts/none
-            (trial_info.stable_trials(k) == stable) && ...%stabile/transition
             (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
             (trial_info.rule(k) == rule) %identify/location
         break

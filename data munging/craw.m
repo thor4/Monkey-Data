@@ -88,7 +88,8 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     end
     %% fill up trial info in day-loop   
     
-    idx = 0; %init counter
+    idx(1,1:2) = 0; %init counter
+    lengths = zeros(2000,2); %init length mat
     if ~(string(day) == "all") %single day
         for j=2:3
             if (j==3) && (monkey=="betty") %only one session for betty
@@ -104,7 +105,7 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                         (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
                         (trial_info.rule(k) == rule) %identify/location
 %                             idx = idx + length(recording_info.area); %inc by # of channels
-                    idx = idx + 1;                        
+                    idx(j-1) = idx(j-1) + 1;                        
                     trial_lfp = sprintf(lfp_path,monkey,day,days{j},monkey,day,days{j}{1}(8:9),k);
                     load(trial_lfp,'lfp_data');
                     %%verify the timing below with the ERP analysis
@@ -116,29 +117,29 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                             %until 1ms before sample onset =
                             %lfp(chan,500,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
-                            lengths(idx) = length(lfp_data(:,1:floor(trial_info.CueOnset(k))-1)); %len of baseline in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,1:floor(trial_info.CueOnset(k))-1)); %len of baseline in ms
                         case 'sample'
                             %take first ms sample is turned on up
                             %until 509ms of sample. turned off
                             %around 510 or so = lfp(chan,510,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
-                            lengths(idx) = length(lfp_data(:,floor(trial_info.CueOnset(k)):floor(trial_info.CueOffset(k))-1)); %len of sample in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,floor(trial_info.CueOnset(k)):floor(trial_info.CueOffset(k))-1)); %len of sample in ms
                         case 'delay'
                             %take one second after sample goes away
                             %up through 810ms afterwards. insert in 
                             %matrix with trial count as 3rd
                             %dimension = lfp(chan,810,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
-                            lengths(idx) = length(lfp_data(:,floor(trial_info.CueOffset(k)):floor(trial_info.MatchOnset(k))-1)); %len of delay in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,floor(trial_info.CueOffset(k)):floor(trial_info.MatchOnset(k))-1)); %len of delay in ms
                         case 'match'
                             %take first ms match is turned on up
                             %until 200ms of match. =
                             %lfp(chan,210,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
-                            lengths(idx) = length(lfp_data(:,floor(trial_info.MatchOnset(k)):end)); %len of match in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,floor(trial_info.MatchOnset(k)):end)); %len of match in ms
                         case 'all'
 %                                 lfp(:,:,idx) = lfp_data;
-                            lengths(idx) = length(lfp_data); %len of entire trial in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data); %len of entire trial in ms
                         otherwise
                             warning('no such epoch exists')
                     end
@@ -157,36 +158,36 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                             %until 1ms before sample onset =
                             %lfp(chan,500,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k)-501:trial_info.CueOnset(k)-1);
-                            lengths(idx) = length(lfp_data(:,1:floor(trial_info.CueOnset(k))-1)); %len of baseline in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,1:floor(trial_info.CueOnset(k))-1)); %len of baseline in ms
                         case 'sample'
                             %take first ms sample is turned on up
                             %until 509ms of sample. turned off
                             %around 510 or so = lfp(chan,510,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOnset(k):trial_info.CueOnset(k)+509);
-                            lengths(idx) = length(lfp_data(:,floor(trial_info.CueOnset(k)):floor(trial_info.CueOffset(k))-1)); %len of sample in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,floor(trial_info.CueOnset(k)):floor(trial_info.CueOffset(k))-1)); %len of sample in ms
                         case 'delay'
                             %take one second after sample goes away
                             %up through 810ms afterwards. insert in 
                             %matrix with trial count as 3rd
                             %dimension = lfp(chan,810,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.CueOffset(k)+1:trial_info.CueOffset(k)+810);
-                            lengths(idx) = length(lfp_data(:,floor(trial_info.CueOffset(k)):floor(trial_info.MatchOnset(k))-1)); %len of delay in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,floor(trial_info.CueOffset(k)):floor(trial_info.MatchOnset(k))-1)); %len of delay in ms
                         case 'match'
                             %take first ms match is turned on up
                             %until 200ms of match. =
                             %lfp(chan,210,trial)
 %                                     lfp(:,:,idx) = lfp_data(:,trial_info.MatchOnset(k):trial_info.MatchOnset(k)+209);
-                            lengths(idx) = length(lfp_data(:,floor(trial_info.MatchOnset(k)):end)); %len of match in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data(:,floor(trial_info.MatchOnset(k)):end)); %len of match in ms
                         case 'all'
 %                                 lfp(:,:,idx) = lfp_data;
-                            lengths(idx) = length(lfp_data); %len of entire trial in ms
+                            lengths(idx(j-1),j-1) = length(lfp_data); %len of entire trial in ms
                         otherwise
                             warning('no such epoch exists')
                     end
                 end
             end
         end
-    else % go through all days, need to update 'lengths' to store all days
+    else % go through all days, need to update 'lengths' to store all days and sessions
         for i=1:length(days{1}) %all days
             for j=2:3
                 if (j==3) && (monkey=="betty") %only one session for betty
