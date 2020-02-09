@@ -148,7 +148,7 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                         (trial_info.good_trials(k) == good) && ...%artifacts/none
                         (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
                         (trial_info.rule(k) == rule) %identify/location
-                    idx = idx + 1;
+                    idx(j-1) = idx(j-1) + 1;  
                     trial_lfp = sprintf(lfp_path,monkey,day,days{j},monkey,day,days{j}{1}(8:9),k);
                     load(trial_lfp,'lfp_data');
                     %%load up trials accordingly
