@@ -86,8 +86,7 @@ function [lengths, idx] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     else
         days = { days_clark, "session02", "session03" };
     end
-    %% fill up trial info in day-loop   
-    
+        
     idx(1,1:2) = 0; %init counter
     lengths = zeros(2000,2); %init length mat
     if ~(string(day) == "all") %single day

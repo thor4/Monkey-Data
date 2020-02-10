@@ -13,8 +13,8 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
-% next up, test the clark sample period to ensure it's pulling correctly
-% then run the clark sample period to get counts
+% next up, test the clark delay period to ensure it's pulling correctly
+% then run the clark delay period to get counts
 monk = 1; %1 = clark, 2 = betty
 if monk==1
     monkey='clark';
@@ -28,10 +28,8 @@ end
 % 
 i=1; %init counter
 for lp=alldays %cycle through all days
-%     doSomeOperation( mystruct( lp{:} ) );
     dayy = append('d',lp{:});
-%     [lengths.(dayy),idx.(dayy)] = craw(path,monkey,lp{:},1,2,1,1,'base');
-    [lengths.(dayy),numtrials] = craw(path,monkey,lp{:},1,2,0,1,'base');
+    [lengths.(dayy),numtrials] = countDay(path,monkey,lp{:},1,2,0,1,'match');
     lengths.(dayy)(lengths.(dayy)==0)=[]; %get rid of placeholders
     numtrials(numtrials==0)=[]; %get rid of placeholders
     idx(i) = numtrials; %save number of trials per day in array
@@ -42,13 +40,8 @@ end
 idx=idx'; mins=mins'; %easier to copy-paste
 clear idx mins lengths %reset each time
 
-fn=fieldnames(lengths);
-
-[lengths,idx] = craw(path,monkey,'090615',1,2,1,1,'base');
-
-
 %unit test for craw counter, compare to 'lengths' vector
-day = alldays{1}; %assign day
+day = alldays{15}; %assign day
 %switch over to craw function to load trial info for day (line 98)
 length(1:floor(trial_info.CueOnset(k))-1) %epoch length for baseline
 length(floor(trial_info.CueOnset(k)):floor(trial_info.CueOffset(k))-1) %epoch length for sample
@@ -63,21 +56,13 @@ length(floor(trial_info.MatchOnset(k)):length(lfp_data)) %epoch length for match
 % length(floor(trial_info.MatchOnset(k)):floor(trial_info.TrialLength(k))) %epoch length for match
 for k=1:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
-            (trial_info.BehResp(k) == 0) && ... %correct/incorrect
+            (trial_info.BehResp(k) == 1) && ... %correct/incorrect
             (trial_info.rule(k) == 1) %identity/location
         break
     end
 end
 
 
-for k=1:trial_info.numTrials %don't account for stability
-    if (trial_info.good_trials(k) == good) && ...%artifacts/none
-            (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
-            (trial_info.rule(k) == rule) %identify/location
-        break
-    end
-end
-% 
 % baseline tested fine for betty 090615 correct
 % sample tested fine for betty 090616 incorrect
 % delay tested fine for betty 090702 incorrect
@@ -85,29 +70,7 @@ end
 % match tested fine for betty 090615 incorrect after craw floor modification
 % trial_info.Trial_Length is *not correct* for betty day 1
 % baseline tested fine for clark 060509 incorrect
+% sample tested fine for clark 060426 incorrect
+% delay tested fine for clark 060824 correct (j=3)
 % match tested fine for clark 060328 incorrect
-
-
-%% test string validation
-p = inputParser;
-argName = 'monkey';
-monkeys = { 'toejam','earl' };
-% validationFcn = @(x) any(validatestring(x,monkeys));
-validationFcn = @(x) any(strcmp(x,monkeys));
-addRequired(p,argName,validationFcn);
-
-parse(p,'toejam')
-
-
-p = inputParser;
-argName = 'monkey';
-monkeys = [ "toejam","earl" ];
-validationFcn = @(x) validateStringParameter(x,monkeys,mfilename,argName);
-addRequired(p,argName,validationFcn);
-
-function validateStringParameter(varargin)
-    validatestring(varargin{:});
-end
-
-@(inVal)any(strcmp(inVal,possVal)) 
 
