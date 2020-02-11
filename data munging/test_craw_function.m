@@ -13,10 +13,9 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
-% next up, update craw function to pull entire epochs
-% decide whether to do it per day or all days (prob per)
-% use min lengths determined from counts spreadsheet
-% then test to ensure correct epochs are getting pulled
+% next up, test to ensure correct epochs are getting pulled
+% then test clark to ensure correct epochs get pulled for her
+% then begin to build loop for ERP analysis in time_domain analysis
 monk = 1; %1 = clark, 2 = betty
 if monk==1
     monkey='clark';

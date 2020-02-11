@@ -331,9 +331,9 @@ switch f_dattype,
 
 
         figure;
-        h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
-        h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
-        h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
+        h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
+        h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',4); %power law fit
+        h(3) = loglog(xi,yi,'b:','LineWidth',4); hold off; %exp fit
 %         h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
@@ -355,13 +355,12 @@ end;
 
 
 set(gca,'XLim',[1,30],'XTick',10.^xrt);
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',16);
-ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
+set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',20);
+ylabel('P(degree \geq x)','FontSize',22); xlabel('x','FontSize',22)
 title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 % legend('empirical data','power-law fit','exponential fit')
 export_fig id_ccdf.eps -transparent % no background
 export_fig id_ccdf.png -transparent % no background
-
 
 
 
