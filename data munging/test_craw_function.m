@@ -13,10 +13,10 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
-% next up, test to ensure correct epochs are getting pulled
+% next up, test sample, delay and match of betty to ensure correctness
 % then test clark to ensure correct epochs get pulled for her
 % then begin to build loop for ERP analysis in time_domain analysis
-monk = 1; %1 = clark, 2 = betty
+monk = 2; %1 = clark, 2 = betty
 if monk==1
     monkey='clark';
     alldays = days_clark;
@@ -27,35 +27,26 @@ else
     days = { days_betty, "session01" };
 end
 % 
-i=1; %init counter
+tic
 for lp=alldays %cycle through all days
     dayy = append('d',lp{:});
-    [lengths.(dayy),numtrials] = countDay(path,monkey,lp{:},1,2,0,1,'match');
-    lengths.(dayy)(lengths.(dayy)==0)=[]; %get rid of placeholders
-    numtrials(numtrials==0)=[]; %get rid of placeholders
-    idx(i) = numtrials; %save number of trials per day in array
-    mins(i)=min(lengths.(dayy)); %find the shortest length
-    i=i+1;
+    [data.(dayy).lfp,data.(dayy).areas] = craw(path,monkey,lp{:},1,2,1,1,'base');
 end
+toc
+%94 seconds  for baseline
 
-idx=idx'; mins=mins'; %easier to copy-paste
-clear idx mins lengths %reset each time
+clear data %reset each time
 
-%unit test for craw counter, compare to 'lengths' vector
-day = alldays{15}; %assign day
-%switch over to craw function to load trial info for day (line 98)
-length(1:floor(trial_info.CueOnset(k))-1) %epoch length for baseline
-length(floor(trial_info.CueOnset(k)):floor(trial_info.CueOffset(k))-1) %epoch length for sample
-length(floor(trial_info.CueOffset(k)):floor(trial_info.MatchOnset(k))-1) %epoch  length for delay
-%for match
-lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.%04d.mat'); %build lfp raw data path
-j=2; %betty and session 2 clark
-j=3; %session 3 clark
-trial_lfp = sprintf(lfp_path,monkey,day,days{j},monkey,day,days{j}{1}(8:9),k);
-load(trial_lfp,'lfp_data');
-length(floor(trial_info.MatchOnset(k)):length(lfp_data)) %epoch length for match
-% length(floor(trial_info.MatchOnset(k)):floor(trial_info.TrialLength(k))) %epoch length for match
-for k=1:1000 %don't account for stability
+
+%unit test for craw, compare to data struct
+day = alldays{1}; %assign day
+%switch over to craw function to load trial info for day (line 92)
+[lfp,areas] = craw(path,monkey,day,1,2,1,1,'base'); %one day
+[data.(dayy).lfp,data.(dayy).areas] = craw(path,monkey,day,1,2,1,1,'base'); %one day
+trial3 = lfp(:,:,3); %extract trial to compare with raw, k will differ
+
+%find trials where parameters are met
+for k=7:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
             (trial_info.BehResp(k) == 1) && ... %correct/incorrect
             (trial_info.rule(k) == 1) %identity/location
@@ -63,8 +54,20 @@ for k=1:1000 %don't account for stability
     end
 end
 
+%load raw lfp
+lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.%04d.mat'); %build lfp raw data path
+j=2; %betty and session 2 clark
+j=3; %session 3 clark
+trial_lfp = sprintf(lfp_path,monkey,day,days{j},monkey,day,days{j}{1}(8:9),k);
+load(trial_lfp,'lfp_data');
+
+floor(trial_info.CueOnset(k))-504 %beginning of sample period to compare
+
+
+
 
 % baseline tested fine for betty 090615 correct
+
 % sample tested fine for betty 090616 incorrect
 % delay tested fine for betty 090702 incorrect
 % match tested fine for betty 090903 incorrect
