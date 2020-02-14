@@ -13,7 +13,7 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
-% next up, test sample, delay and match of betty to ensure correctness
+% next up, test delay and match of betty to ensure correctness
 % then test clark to ensure correct epochs get pulled for her
 % then begin to build loop for ERP analysis in time_domain analysis
 monk = 2; %1 = clark, 2 = betty
@@ -30,25 +30,27 @@ end
 tic
 for lp=alldays %cycle through all days
     dayy = append('d',lp{:});
-    [data.(dayy).lfp,data.(dayy).areas] = craw(path,monkey,lp{:},1,2,1,1,'base');
+    [data.(dayy).lfp,data.(dayy).areas] = craw(path,monkey,lp{:},1,2,0,1,'sample');
 end
 toc
-%94 seconds  for baseline
+%94 seconds  for baseline on home pc
+%29.27 seconds for sample on labpc
 
 clear data %reset each time
 
 
 %unit test for craw, compare to data struct
-day = alldays{1}; %assign day
+day = alldays{10}; %assign day
+dayy = append('d',alldays{10}); %setup day for test indexing
 %switch over to craw function to load trial info for day (line 92)
-[lfp,areas] = craw(path,monkey,day,1,2,1,1,'base'); %one day
-[data.(dayy).lfp,data.(dayy).areas] = craw(path,monkey,day,1,2,1,1,'base'); %one day
-trial3 = lfp(:,:,3); %extract trial to compare with raw, k will differ
+% [lfp,areas] = craw(path,monkey,day,1,2,0,1,'sample'); %one day
+% [data.(dayy).lfp,data.(dayy).areas] = craw(path,monkey,day,1,2,0,1,'sample'); %one day
+trial9 = data.(dayy).lfp(:,:,1); %extract trial to compare with raw, k will differ
 
 %find trials where parameters are met
-for k=7:1000 %don't account for stability
+for k=1:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
-            (trial_info.BehResp(k) == 1) && ... %correct/incorrect
+            (trial_info.BehResp(k) == 0) && ... %correct/incorrect
             (trial_info.rule(k) == 1) %identity/location
         break
     end
@@ -61,12 +63,14 @@ j=3; %session 3 clark
 trial_lfp = sprintf(lfp_path,monkey,day,days{j},monkey,day,days{j}{1}(8:9),k);
 load(trial_lfp,'lfp_data');
 
-floor(trial_info.CueOnset(k))-504 %beginning of sample period to compare
+floor(trial_info.CueOnset(k))-504 %beginning of baseline period to compare
+floor(trial_info.CueOnset(k)) %beginning of sample period to compare
 
 
 
 
 % baseline tested fine for betty 090615 correct
+% sample tested fine for betty 090702 incorrect
 
 % sample tested fine for betty 090616 incorrect
 % delay tested fine for betty 090702 incorrect

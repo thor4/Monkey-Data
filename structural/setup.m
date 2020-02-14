@@ -334,7 +334,7 @@ switch f_dattype,
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',4); %power law fit
         h(3) = loglog(xi,yi,'b:','LineWidth',4); hold off; %exp fit
-%         h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
+%         h(3) = loglog(xo,yo,'b:','LineWidth',4); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
