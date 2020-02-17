@@ -13,6 +13,9 @@
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
 
+% create epoch named 'entire' for entire trial, redo 'all' to stitch
+% together all epochs and return a uniformly sized trial. test this for
+% betty and clark. be sure to update top of func and top of this test
 % begin to build loop for ERP analysis in time_domain analysis
 monk = 1; %1 = clark, 2 = betty
 if monk==1
