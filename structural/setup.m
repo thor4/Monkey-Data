@@ -173,6 +173,7 @@ xo_deg = c(:,1); yo_pdk = c(:,2); %out-deg cCDF
 save('fitted_models','fpnresult'); save('gof_models','fpngof') %save models and their gof
 
 % now pass the xi/o_deg into each model to get its prediction
+load('fitted_models.mat') %saved fits
 % yi_poly = fpnresult{1}(xi_deg); %Polynomial best fit of cCDF in-deg fpn
 yi_pow = fpnresult{2}(xi_deg); %Power best fit of cCDF in-deg fpn
 yi_exp = fpnresult{3}(xi_deg); %Exponential best fit of cCDF in-deg fpn
@@ -184,29 +185,29 @@ yo_gauss = fpnresult{4}(xo_deg); %Gaussian best fit of cCDF out-deg fpn
 
 
 figure(9), clf %cCDF in-deg fits
-loglog(xi_deg,yi_pdk,'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); %in
+loglog(xi_deg,yi_pdk,'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); %in
 hold on
-loglog(xi_deg,yi_exp,'b:','LineWidth',2); %exp fit
-loglog(xi_deg,yi_pow,'r--','LineWidth',2); %power law fit
-loglog(xi_deg,yi_gauss,'m-.','LineWidth',2); %gaussian fit
+loglog(xi_deg,yi_exp,'b:','LineWidth',4); %exp fit
+loglog(xi_deg,yi_pow,'r--','LineWidth',4); %power law fit
+loglog(xi_deg,yi_gauss,'m-.','LineWidth',4); %gaussian fit
 hold off; 
 set(gca,'XLim',[1,30],'XTick',10.^xrt);
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',16);
-ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
+set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',20);
+ylabel('P(degree \geq x)','FontSize',22); xlabel('x','FontSize',22)
 title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 export_fig id_ccdf_matlab.eps -transparent % no background
 export_fig id_ccdf_matlab.png -transparent % no background
 
 figure(10), clf %cCDF out-deg fits
-loglog(xo_deg,yo_pdk,'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); %out
+loglog(xo_deg,yo_pdk,'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); %out
 hold on
-loglog(xo_deg,yo_exp,'b:','LineWidth',2); %exp fit
-loglog(xo_deg,yo_pow,'r--','LineWidth',2); %power law fit
-loglog(xo_deg,yo_gauss,'m-.','LineWidth',2); %gaussian fit
+loglog(xo_deg,yo_exp,'b:','LineWidth',4); %exp fit
+loglog(xo_deg,yo_pow,'r--','LineWidth',4); %power law fit
+loglog(xo_deg,yo_gauss,'m-.','LineWidth',4); %gaussian fit
 hold off; 
 set(gca,'XLim',[2,30],'XTick',10.^xrt);
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',16);
-ylabel('P(degree \geq x)','FontSize',18); xlabel('x','FontSize',18)
+set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',20);
+ylabel('P(degree \geq x)','FontSize',22); xlabel('x','FontSize',22)
 title('Out-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 export_fig od_ccdf_matlab.eps -transparent % no background
 export_fig od_ccdf_matlab.png -transparent % no background
@@ -268,7 +269,7 @@ export_fig od_ccdf_matlab.png -transparent % no background
 %% visualize id+od dist along with fitted power-law dist on log-log axes
 % 99% of this taken directly from plplot
 % reshape input vector
-x = reshape(id,numel(id),1); %state whether looking at in/out/total deg
+x = reshape(od,numel(od),1); %state whether looking at in/out/total deg
 % initialize storage for output handles
 h = zeros(2,1);
 
@@ -290,18 +291,18 @@ switch f_dattype,
         q = sort(x(x>=xmin));
         cf = [q (q./xmin).^(1-alpha)];
         cf(:,2) = cf(:,2) .* c(find(c(:,1)>=xmin,1,'first'),2);
-        xi= c(9:end,1); %start from xmin (12)
-        yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
-            0.192623 0.120321]; %exp fit from python from xmin (12) to 21
-%         xo= c(9:end,1); %start from xmin (10)
-%         yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
-%             0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
+%         xi= c(9:end,1); %start from xmin (12)
+%         yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
+%             0.192623 0.120321]; %exp fit from python from xmin (12) to 21
+        xo= c(9:end,1); %start from xmin (10)
+        yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
+            0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
-        h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
-%         h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
+%         h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
+        h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -321,20 +322,20 @@ switch f_dattype,
         cf = ((xmin:q(end))'.^-alpha)./(zeta(alpha) - sum((1:xmin-1).^-alpha));
         cf = [(xmin:q(end)+1)' 1-[0; cumsum(cf)]];
         cf(:,2) = cf(:,2) .* c(c(:,1)==xmin,2);
-        xi= c(9:end,1); %start from xmin (12)
-        yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
-            0.192623 0.120321]; %exp fit from python from xmin (12) to 21
+%         xi= c(9:end,1); %start from xmin (12)
+%         yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
+%             0.192623 0.120321]; %exp fit from python from xmin (12) to 21
         %exp fit from python from xmin (10) to 23
-%         xo= c(6:end,1); %start from xmin (10) 
-%         yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
-%             0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
+        xo= c(6:end,1); %start from xmin (10) 
+        yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
+            0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
 
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',4); %power law fit
-        h(3) = loglog(xi,yi,'b:','LineWidth',4); hold off; %exp fit
-%         h(3) = loglog(xo,yo,'b:','LineWidth',4); hold off; %exp fit
+%         h(3) = loglog(xi,yi,'b:','LineWidth',4); hold off; %exp fit
+        h(3) = loglog(xo,yo,'b:','LineWidth',4); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;

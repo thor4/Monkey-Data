@@ -1,4 +1,4 @@
-function [lfp, areas] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
+function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoch)
 %%%% Crawler for raw data %%%%
 %Will crawl specific file location based on PC used: koko, home or lab
 
@@ -53,7 +53,6 @@ function [lfp, areas] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
     checkEpoch = @(x) any(strcmp(x,validEpoch));
     checkStable = @(x) ismember(x,[0,1,2]); %0 transition, 1 stable perf, 2 all
     %add required input + optional parameter values & verify datatype
-%     addRequired(p,'data',@isstruct);
     addRequired(p,'path',@ischar);
     addRequired(p,'monkey',checkMonkey)
     addRequired(p,'day',checkDay)
@@ -81,9 +80,7 @@ function [lfp, areas] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
         days = { days_clark, "session02", "session03" };
     end
         
-%     idx(1,1:2) = 0; %init counter
     idx = 0; %init counter
-%     lengths = zeros(2000,2); %init length mat
     if ~(string(day) == "all") %single day
         for j=2:3
             if (j==3) && (monkey=="betty") %only one session for betty
@@ -100,13 +97,9 @@ function [lfp, areas] = craw(path,monkey,day,good,stable,behResp,rule,epoch)
                         (trial_info.stable_trials(k) == stable) && ...%stabile/transition
                         (trial_info.BehResp(k) == behResp) && ... %correct/incorrect
                         (trial_info.rule(k) == rule) %identify/location
-%                             idx = idx + length(recording_info.area); %inc by # of channels
                     idx = idx + 1;                        
                     trial_lfp = sprintf(lfp_path,monkey,day,days{j},monkey,day,days{j}{1}(8:9),k);
                     load(trial_lfp,'lfp_data');
-                    %%verify the timing below with the ERP analysis
-                    %done before. Ensure same time periods are
-                    %taken
                     switch epoch
                         case 'base'
                             %take 504ms before sample onset up until 1ms 
