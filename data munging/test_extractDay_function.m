@@ -11,13 +11,10 @@
 % stable: [ 0(transition), 1(stable performance), 2(both) ]
 % behResp: [0(incorrect), 1(correct) ]
 % rule: [ 1(identity), 2(location) ]
-% epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
+% epoch: [ 'base', 'sample', 'delay', 'match', 'all', 'entire' ]
 
-% create epoch named 'entire' for entire trial, redo 'all' to stitch
-% together all epochs and return a uniformly sized trial. test this for
-% betty and clark. be sure to update top of func and top of this test
 % begin to build loop for ERP analysis in time_domain analysis
-monk = 1; %1 = clark, 2 = betty
+monk = 2; %1 = clark, 2 = betty
 if monk==1
     monkey='clark';
     alldays = days_clark;
@@ -31,25 +28,26 @@ end
 tic
 for lp=alldays %cycle through all days
     dayy = append('d',lp{:});
-    [data.(dayy).lfp,data.(dayy).areas] = extractDay(path,monkey,lp{:},1,2,0,1,'match');
+    [data.(dayy).lfp,data.(dayy).areas] = extractDay(path,monkey,lp{:},1,2,0,1,'all');
 end
 toc
 %94 seconds  for baseline on home pc
 %29.27 seconds for sample on labpc
 %151.08 seconds for delay on home pc
 %27.30 seconds for match on home pc (2nd time)
+%28.28 seconds for all on home pc (multiple times)
 
 clear data %reset each time
 
 
 %unit test for craw, compare to data struct
-day = alldays{21}; %assign day
+day = alldays{6}; %assign day
 dayy = append('d',day); %setup day for test indexing
 %switch over to craw function to load j and trial_info_path, then load 
 %trial info for day (line 92)
 
 %find trials where parameters are met
-for k=3:1000 %don't account for stability
+for k=2:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
             (trial_info.BehResp(k) == 0) && ... %correct/incorrect
             (trial_info.rule(k) == 1) %identity/location
@@ -57,7 +55,7 @@ for k=3:1000 %don't account for stability
     end
 end
 
-trial3 = data.(dayy).lfp(:,:,2); %extract 1st trial to compare with raw, k is in trial name
+trial15 = data.(dayy).lfp(:,:,2); %extract 1st trial to compare with raw, k is in trial name
 
 %load raw lfp
 lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.%04d.mat'); %build lfp raw data path
@@ -81,9 +79,11 @@ floor(trial_info.MatchOnset(k))+273 %end of match period to compare
 % sample tested fine for betty 090702 incorrect
 % delay tested fine for betty 090709 correct
 % match tested fine for betty 090921 correct
+% all tested fine for betty 090625 incorrect
 % baseline tested fine for clark 060406 correct
 % sample tested fine for clark 060503 incorrect
 % delay tested fine for clark 060825 incorrect
 % match tested fine for clark 061214 incorrect
+% all tested fine for clark 060531 incorrect
 
 % trial_info.Trial_Length is *not correct* for betty day 1

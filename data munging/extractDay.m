@@ -19,7 +19,7 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
 % stable: [ 0(transition), 1(stable performance), 2(both) ]
 % behResp: [0(incorrect), 1(correct) ]
 % rule: [ 1(identity), 2(location) ]
-% epoch: [ 'base', 'sample', 'delay', 'match', 'all' ]
+% epoch: [ 'base', 'sample', 'delay', 'match', 'all', 'entire' ]
 
 %   homepc:
 %   path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
@@ -49,7 +49,7 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
     checkGood = @(x) ismember(x,[0,1]); %0 bad trials, 1 good/no artifacts
     checkBehResp = @(x) ismember(x,[0,1]); %0 incorrect trials, 1 correct
     checkRule = @(x) ismember(x,[1,2]); %1 identity, 2 location
-    validEpoch = { 'base','sample','delay','match','all' }; 
+    validEpoch = { 'base','sample','delay','match','all','entire' }; 
     checkEpoch = @(x) any(strcmp(x,validEpoch));
     checkStable = @(x) ismember(x,[0,1,2]); %0 transition, 1 stable perf, 2 all
     %add required input + optional parameter values & verify datatype
@@ -118,6 +118,12 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
                             %273ms of match = lfp(chan,274,trial)
                             lfp(:,:,idx) = lfp_data(:,floor(trial_info.MatchOnset(k)):floor(trial_info.MatchOnset(k))+273);
                         case 'all'
+                            base = lfp_data(:,floor(trial_info.CueOnset(k))-504:floor(trial_info.CueOnset(k))-1);
+                            sample = lfp_data(:,floor(trial_info.CueOnset(k)):floor(trial_info.CueOnset(k))+504);
+                            delay = lfp_data(:,floor(trial_info.CueOffset(k)):floor(trial_info.CueOffset(k))+810);
+                            match = lfp_data(:,floor(trial_info.MatchOnset(k)):floor(trial_info.MatchOnset(k))+273);
+                            lfp(:,:,idx) = cat(2,base,sample,delay,match);
+                        case 'entire'
                             lfp(:,:,idx) = lfp_data;
                         otherwise
                             warning('no such epoch exists')
@@ -148,6 +154,12 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
                             %273ms of match = lfp(chan,274,trial)
                             lfp(:,:,idx) = lfp_data(:,floor(trial_info.MatchOnset(k)):floor(trial_info.MatchOnset(k))+273);
                         case 'all'
+                            base = lfp_data(:,floor(trial_info.CueOnset(k))-504:floor(trial_info.CueOnset(k))-1);
+                            sample = lfp_data(:,floor(trial_info.CueOnset(k)):floor(trial_info.CueOnset(k))+504);
+                            delay = lfp_data(:,floor(trial_info.CueOffset(k)):floor(trial_info.CueOffset(k))+810);
+                            match = lfp_data(:,floor(trial_info.MatchOnset(k)):floor(trial_info.MatchOnset(k))+273);
+                            lfp(:,:,idx) = cat(2,base,sample,delay,match);
+                        case 'entire'
                             lfp(:,:,idx) = lfp_data;
                         otherwise
                             warning('no such epoch exists')

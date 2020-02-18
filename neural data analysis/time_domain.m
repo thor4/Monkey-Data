@@ -49,3 +49,8 @@ dayy = append('d',lp{:});
 day = alldays{21}; %assign day
 [lfp,areas] = extractDay(path,monkey,day,1,2,1,1,'match'); %correct match
 lfp_avg_mv = mean(lfp,3) .* 1e6; % avg over trials & convert to µV (1V = 10^6µV = 1,000,000µV)
+
+% 1-504: baseline
+% 505-1009: sample
+% 1010-1820: delay
+% 1821-2094: match
