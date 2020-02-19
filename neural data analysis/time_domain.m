@@ -26,7 +26,8 @@
 % filtbIFdpfc = filtfilt(b,a,bIFdpfc);  
 % filtbIPpec = filtfilt(b,a,bIPpec);
 
-%% ERP %%
+%% Step 1: Extract good, cor+inc rule 1 trials from both monkeys %%
+%include both stable & unstable (monkey maybe not sure which rule in play)
 %initialize variables
 % homepc:
 path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\';
@@ -44,11 +45,34 @@ else
     alldays = days_betty;
     days = { days_betty, "session01" };
 end
-dayy = append('d',lp{:});
-% [data.(dayy).lfp,data.(dayy).areas] = extractDay(path,monkey,lp{:},1,2,1,1,'match'); %correct match
-day = alldays{21}; %assign day
-[lfp,areas] = extractDay(path,monkey,day,1,2,1,1,'match'); %correct match
-lfp_avg_mv = mean(lfp,3) .* 1e6; % avg over trials & convert to µV (1V = 10^6µV = 1,000,000µV)
+day = alldays{6}; %assign day
+dayy = append('d',day); %setup day for test indexing
+i=0; %init counter
+
+%change var name per monkey/resp combo (4x)
+for lp=alldays %cycle through all days
+    i = i+1;
+    dayy = append('d',lp{:});
+    [dataM2goodCorR1.(dayy).lfp,dataM2goodCorR1.(dayy).areas] = extractDay(path,monkey,lp{:},1,2,1,1,'all');
+    % avg over trials & convert to µV (1V = 10^6µV = 1,000,000µV) for ERP
+    dataM2goodCorR1.(dayy).erp = mean(dataM2goodCorR1.(dayy).lfp,3) .* 1e6;
+end
+
+%test
+dataM2goodCorR1.(dayy).erp == mean(dataM2goodCorR1.(dayy).lfp,3) .* 1e6
+
+save('time_domain-m1','dataM1goodCorR1','dataM1goodIncR1')
+save('time_domain-m2','dataM2goodCorR1','dataM2goodIncR1','-v7.3') %v7.3 since filesize so big
+%home pc: D:\OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data
+
+%% Step 2: Visualize ERPs for each chan from every day in same fig
+
+load('time_domain-m1.mat')
+load('time_domain-m2.mat')
+
+%next plot each ERP for each chan day by day one on top of the other
+%use red/blue color scheme from FPN fig for active ERP, keep old ones in 
+%grey, update title each time with chan (row #), area, day, monkey & resp
 
 % 1-504: baseline
 % 505-1009: sample
