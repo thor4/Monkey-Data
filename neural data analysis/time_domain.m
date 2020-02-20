@@ -73,8 +73,19 @@ load('time_domain-m2.mat')
 %next plot each ERP for each chan day by day one on top of the other
 %use red/blue color scheme from FPN fig for active ERP, keep old ones in 
 %grey, update title each time with chan (row #), area, day, monkey & resp
+%show correct and incorrect at same time for same chan
 
-% 1-504: baseline
-% 505-1009: sample
-% 1010-1820: delay
-% 1821-2094: match
+time  = -504:size(dataM2goodCorR1.d090709.erp(2,:),2)-505; % time, from -504ms baseline
+triggers = [0 505 1316]; %epoch switches base/sample, sample/delay, delay/match
+figure(2)
+plot(time,[dataM2goodCorR1.d090709.erp]);
+set(gca,'box','off','Xlim',[time(1);time(end)]);
+y1 = get(gca,'ylim'); hold on
+triggers1 = plot([triggers(1) triggers(1)],y1,'--', ...
+    [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
+hold off 
+
+% 1-504: baseline  (505) graph: -504-1
+% 505-1009: sample (505) graph: 0-504
+% 1010-1820: delay (811) graph: 505-1315
+% 1821-2094: match (274) graph: 1316-1589
