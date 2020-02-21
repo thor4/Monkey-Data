@@ -74,16 +74,24 @@ load('time_domain-m2.mat')
 %use red/blue color scheme from FPN fig for active ERP, keep old ones in 
 %grey, update title each time with chan (row #), area, day, monkey & resp
 %show correct and incorrect at same time for same chan
+%see about saving as a movie, not a gif
+%gif is here: https://www.mathworks.com/matlabcentral/answers/422908-animation-using-plot-inside-for-loop
 
 time  = -504:size(dataM2goodCorR1.d090709.erp(2,:),2)-505; % time, from -504ms baseline
 triggers = [0 505 1316]; %epoch switches base/sample, sample/delay, delay/match
-figure(2)
-plot(time,[dataM2goodCorR1.d090709.erp]);
+figure(2), clf
+%correct #6DB3A5: [0.4941 0.7294 0.8000], incorrect #C9778F: [0.7882 0.4667 0.5608] 
+newcolors = {'[0.4941 0.7294 0.8000]','[0.7882 0.4667 0.5608]'};
+colororder(newcolors)
+chanERP = plot(time,[dataM2goodCorR1.d090709.erp(2,:)],time,[dataM2goodIncR1.d090709.erp(2,:)]);
+chanERP = plot(time,[dataM2goodCorR1.d090709.erp(1,:)]);
 set(gca,'box','off','Xlim',[time(1);time(end)]);
 y1 = get(gca,'ylim'); hold on
 triggers1 = plot([triggers(1) triggers(1)],y1,'--', ...
     [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
-hold off 
+title(['Trial-averaged Monkey ' num2str(monk) ' Area ' dataM2goodCorR1.d090709.areas{1}]); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+pause %pauses until user presses key
+chanERP(1).Color = [0.75 0.75 0.75]; chanERP(2).Color = [0.75 0.75 0.75]; %light gray
 
 % 1-504: baseline  (505) graph: -504-1
 % 505-1009: sample (505) graph: 0-504
