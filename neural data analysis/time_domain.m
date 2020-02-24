@@ -45,8 +45,9 @@ else
     alldays = days_betty;
     days = { days_betty, "session01" };
 end
-day = alldays{6}; %assign day
-dayy = append('d',day); %setup day for test indexing
+dayN = 13; %day number
+day = alldays{dayN}; %assign day
+dday = append('d',day); %setup day for test indexing
 i=0; %init counter
 
 %change var name per monkey/resp combo (4x)
@@ -70,28 +71,42 @@ save('time_domain-m2','dataM2goodCorR1','dataM2goodIncR1','-v7.3') %v7.3 since f
 load('time_domain-m1.mat')
 load('time_domain-m2.mat')
 
-%next plot each ERP for each chan day by day one on top of the other
-%use red/blue color scheme from FPN fig for active ERP, keep old ones in 
-%grey, update title each time with chan (row #), area, day, monkey & resp
-%show correct and incorrect at same time for same chan
+monk = 2; %1 = clark, 2 = betty
+
+
+%plot day's avg ERP to see if it's interesting
+%make loop to go through all days+chans both monkeys
+%see about showing day's average at end of each day as well in loop
 %see about saving as a movie, not a gif
 %gif is here: https://www.mathworks.com/matlabcentral/answers/422908-animation-using-plot-inside-for-loop
 
 time  = -504:size(dataM2goodCorR1.d090709.erp(2,:),2)-505; % time, from -504ms baseline
 triggers = [0 505 1316]; %epoch switches base/sample, sample/delay, delay/match
+chan=3;
 figure(2), clf
 %correct #6DB3A5: [0.4941 0.7294 0.8000], incorrect #C9778F: [0.7882 0.4667 0.5608] 
 newcolors = {'[0.4941 0.7294 0.8000]','[0.7882 0.4667 0.5608]'};
 colororder(newcolors)
-chanERP = plot(time,[dataM2goodCorR1.d090709.erp(2,:)],time,[dataM2goodIncR1.d090709.erp(2,:)]);
-chanERP = plot(time,[dataM2goodCorR1.d090709.erp(1,:)]);
+%shift correct and incorrect traces to start at 0
+correct = dataM2goodCorR1.(dday).erp(chan,:) + (-dataM2goodCorR1.(dday).erp(chan,1));
+incorrect = dataM2goodIncR1.(dday).erp(chan,:) + (-dataM2goodIncR1.(dday).erp(chan,1));
+chanERP = plot(time,correct,time,incorrect,':', 'LineWidth', 2);
+% chanERP = plot(time,[dataM2goodCorR1.d090709.erp(1,:)]);
 set(gca,'box','off','Xlim',[time(1);time(end)]);
 y1 = get(gca,'ylim'); hold on
-triggers1 = plot([triggers(1) triggers(1)],y1,'--', ...
+epochs = plot([triggers(1) triggers(1)],y1,'--', ...
     [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
-title(['Trial-averaged Monkey ' num2str(monk) ' Area ' dataM2goodCorR1.d090709.areas{1}]); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
+epochs(3).Color = [0.5 0.5 0.5];
+erptitle = sprintf('Trial-averaged Monkey %d Day %d / %d Area %s Chan %d / %d',...
+    monk,dayN,size(fieldnames(dataM2goodCorR1),1),...
+    dataM2goodCorR1.(dday).areas{chan},chan,size(dataM2goodCorR1.(dday).erp,1));
+title(erptitle)
+xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+text(time(1)+100,y1(2)-1,'baseline'); text(triggers(1)+100,y1(2)-1,'sample');
+text(triggers(2)+100,y1(2)-1,'delay'); text(triggers(3)+100,y1(2)-1,'match');
 pause %pauses until user presses key
-chanERP(1).Color = [0.75 0.75 0.75]; chanERP(2).Color = [0.75 0.75 0.75]; %light gray
+% chanERP(1).Color = [0.75 0.75 0.75]; chanERP(2).Color = [0.75 0.75 0.75]; %light gray
 
 % 1-504: baseline  (505) graph: -504-1
 % 505-1009: sample (505) graph: 0-504
