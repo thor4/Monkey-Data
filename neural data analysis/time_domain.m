@@ -77,13 +77,6 @@ data.M2goodR1(1) = dataM2goodCorR1; data.M2goodR1(2) = dataM2goodIncR1;
 %data.M1goodR1(1).d060328 %correct then .lfp, .erp or .areas
 %data.M2goodR1(2).d090618 %incorrect then .lfp, .erp or .areas
 
-monk = 2; %1 = clark, 2 = betty
-
-%figure out what's going on with accessing the struct within nested loop,
-%instead of taking one value at a time, it just copies the entire struct,
-%check test_extractDay_function to see how that was working, it used
-%"alldays" which was not a struct...
-
 %make loop to go through all days+chans both monkeys
 %see about showing day's average at end of each day as well in loop
 %see about saving as a movie, not a gif
@@ -91,28 +84,36 @@ monk = 2; %1 = clark, 2 = betty
 
 time  = -504:size(dataM2goodCorR1.d090709.erp(2,:),2)-505; % time, from -504ms baseline
 triggers = [0 505 1316]; %epoch switches base/sample, sample/delay, delay/match
-monkeys = fieldnames(data); %extract both monkeys (2)
+monkeys = fieldnames(data)'; %extract both monkeys (2)
 % monkey = 'M2goodR1';
-for monkey=1:length(monkeys)
-    behresponses = size(data.(monkeys{monkey}),2); %extract # of responses (2)
+
+fileID = fopen('total_erps.txt','a');
+for monkey=monkeys
+    behresponses = size(data.(monkey{:}),2); %extract # of responses (2)
     for response=1:behresponses
-        alldays = fieldnames(data.(monkeys{monkey})(response)); %extract all days
+        alldays = fieldnames(data.(monkey{:})(response))'; %extract all days
         for dday=alldays
-            allchans = size(data.(monkeys{monkey})(response).(dday{:}).erp,1);
-            for chan=allchans
-                erpN = data.(monkeys{monkey})(response).(dday{:}).erp(chan,:);
+            allchans = size(data.(monkey{:})(response).(dday{:}).erp,1);
+            for chan=1:allchans
+                erpN = data.(monkey{:})(response).(dday{:}).erp(chan,:);
                 if (response==1); resp = "Correct";
                 else; resp = "Incorrect"; end
                 erptitle = sprintf('%d %s Trial-averaged Monkey %d Day %d / %d Area %s Chan %d / %d',...
-                    size(data.(monkeys{monkey})(response).(dday{:}).lfp,3),resp,...
-                    monkey,dday{:},size(fieldnames(data.(monkeys{monkey})(response)),1),...
-                    data.(monkeys{monkey})(response).(dday{:}).areas{chan},chan,size(data.(monkeys{monkey})(response).(dday{:}).erp,1));
-                fprintf(erptitle\n);
-                pause(1) %pause 1 second
+                    size(data.(monkey{:})(response).(dday{:}).lfp,3),resp,...
+                    find(strcmp(monkeys,monkey{:})),...
+                    find(strcmp(alldays,dday{:})),...
+                    size(fieldnames(data.(monkey{:})(response)),1),...
+                    data.(monkey{:})(response).(dday{:}).areas{chan},chan,...
+                    size(data.(monkey{:})(response).(dday{:}).erp,1));
+                fprintf(fileID,'%s\n',erptitle);
+%                 pause(1) %pause 1 second
             end
         end
     end
 end
+fclose(fileID);
+
+
 
 for dataset=data
     alldays = fieldnames((dataset{:}));
