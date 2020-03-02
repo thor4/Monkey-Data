@@ -74,88 +74,81 @@ load('time_domain-m2.mat')
 %package into data variable 1: correct & 2: incorrect
 data.M1goodR1(1) = dataM1goodCorR1; data.M1goodR1(2) = dataM1goodIncR1; 
 data.M2goodR1(1) = dataM2goodCorR1; data.M2goodR1(2) = dataM2goodIncR1; 
-%data.M1goodR1(1).d060328 %correct then .lfp, .erp or .areas
-%data.M2goodR1(2).d090618 %incorrect then .lfp, .erp or .areas
 
-%make loop to go through all days+chans both monkeys
-%see about showing day's average at end of each day as well in loop
-%see about saving as a movie, not a gif
-%gif is here: https://www.mathworks.com/matlabcentral/answers/422908-animation-using-plot-inside-for-loop
+figure(1), clf %open fig and maximize to prepare for viewing
 
+%init variables
 time  = -504:size(dataM2goodCorR1.d090709.erp(2,:),2)-505; % time, from -504ms baseline
 triggers = [0 505 1316]; %epoch switches base/sample, sample/delay, delay/match
 monkeys = fieldnames(data)'; %extract both monkeys (2)
-% monkey = 'M2goodR1';
+%init video
+erpVid = VideoWriter('erpVid'); %open video file
+erpVid.FrameRate = 5;  %can adjust this, 5 - 10 seems to work
+open(erpVid)
 
-fileID = fopen('total_erps.txt','a');
+% fileID = fopen('total_erps.txt','a'); %record all erp titles
 for monkey=monkeys
-    behresponses = size(data.(monkey{:}),2); %extract # of responses (2)
-    for response=1:behresponses
-        alldays = fieldnames(data.(monkey{:})(response))'; %extract all days
-        for dday=alldays
-            allchans = size(data.(monkey{:})(response).(dday{:}).erp,1);
-            for chan=1:allchans
-                erpN = data.(monkey{:})(response).(dday{:}).erp(chan,:);
-                if (response==1); resp = "Correct";
-                else; resp = "Incorrect"; end
-                erptitle = sprintf('%d %s Trial-averaged Monkey %d Day %d / %d Area %s Chan %d / %d',...
-                    size(data.(monkey{:})(response).(dday{:}).lfp,3),resp,...
-                    find(strcmp(monkeys,monkey{:})),...
-                    find(strcmp(alldays,dday{:})),...
-                    size(fieldnames(data.(monkey{:})(response)),1),...
-                    data.(monkey{:})(response).(dday{:}).areas{chan},chan,...
-                    size(data.(monkey{:})(response).(dday{:}).erp,1));
-                fprintf(fileID,'%s\n',erptitle);
-%                 pause(1) %pause 1 second
-            end
+%     behresponses = size(data.(monkey{:}),2); %extract # of responses (2)
+    alldays = fieldnames(data.(monkey{:})(1))'; %extract all days
+    for dday=alldays
+        allchans = size(data.(monkey{:})(1).(dday{:}).erp,1);
+        for chan=1:allchans
+            erptitle = sprintf('%d %s & %d %s Trial-averaged Monkey %d Day %d / %d Area %s Chan %d / %d',...
+                size(data.(monkey{:})(1).(dday{:}).lfp,3),"Correct",...
+                size(data.(monkey{:})(2).(dday{:}).lfp,3),"Incorrect",...
+                find(strcmp(monkeys,monkey{:})),...
+                find(strcmp(alldays,dday{:})),...
+                size(fieldnames(data.(monkey{:})(1)),1),...
+                data.(monkey{:})(1).(dday{:}).areas{chan},chan,...
+                size(data.(monkey{:})(1).(dday{:}).erp,1));
+%                 fprintf(fileID,'%s\n',erptitle); %record erp title
+            correct = data.(monkey{:})(1).(dday{:}).erp(chan,:) + (-data.(monkey{:})(1).(dday{:}).erp(chan,1));
+            incorrect = data.(monkey{:})(2).(dday{:}).erp(chan,:) + (-data.(monkey{:})(2).(dday{:}).erp(chan,1));
+            figure(1), clf
+            erp = plot(time,correct,time,incorrect,':', 'LineWidth', 2);
+            set(gca,'box','off','Xlim',[time(1);time(end)]);
+            y1 = get(gca,'ylim'); hold on
+            epochs = plot([triggers(1) triggers(1)],y1,'--', ...
+            [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
+            epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
+            epochs(3).Color = [0.5 0.5 0.5];
+            title(erptitle); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+            text(time(1)+100,y1(2)-1,'baseline'); text(triggers(1)+100,y1(2)-1,'sample');
+            text(triggers(2)+100,y1(2)-1,'delay'); text(triggers(3)+100,y1(2)-1,'match');
+%             pause(1) %pause 1 second
+            pause(0.01) %pause to grab frame
+            frame = getframe(gcf); %get frame
+            writeVideo(erpVid, frame); %add frame to vid
         end
+        %make day-level erp
+        correct = mean(data.(monkey{:})(1).(dday{:}).erp,1) + (-mean(data.(monkey{:})(1).(dday{:}).erp(:,1)));
+        incorrect = mean(data.(monkey{:})(2).(dday{:}).erp,1) + (-mean(data.(monkey{:})(2).(dday{:}).erp(:,1)));
+        erptitle = sprintf('%d %s & %d %s Trial-averaged Monkey %d Day %d / %d All Areas & Chans',...
+                size(data.(monkey{:})(1).(dday{:}).lfp,3),"Correct",...
+                size(data.(monkey{:})(2).(dday{:}).lfp,3),"Incorrect",...
+                find(strcmp(monkeys,monkey{:})),...
+                find(strcmp(alldays,dday{:})),...
+                size(fieldnames(data.(monkey{:})(1)),1));
+        figure(1), clf
+        erpD = plot(time,correct,time,incorrect,':', 'LineWidth', 2);
+        set(gca,'box','off','Xlim',[time(1);time(end)]);
+        y1 = get(gca,'ylim'); hold on
+        epochs = plot([triggers(1) triggers(1)],y1,'--', ...
+        [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
+        epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
+        epochs(3).Color = [0.5 0.5 0.5];
+        title(erptitle); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+        text(time(1)+100,y1(2)-1,'baseline'); text(triggers(1)+100,y1(2)-1,'sample');
+        text(triggers(2)+100,y1(2)-1,'delay'); text(triggers(3)+100,y1(2)-1,'match');
+%         pause(1) %pause 1 second
+        pause(0.01) %pause to grab frame
+        frame = getframe(gcf); %get frame
+        writeVideo(erpVid, frame); %add frame to vid
     end
 end
-fclose(fileID);
+% fclose(fileID);
+close(erpVid)
 
+%saved total_erps.txt in D:\OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\results
+%saved erpVid.avi in same
 
-
-for dataset=data
-    alldays = fieldnames((dataset{:}));
-    for dday=alldays
-        totalchans = size((dataset{:}).(dday).lfp,1);
-        for chan=1:totalchans
-            
-    (i{:})
-chan=3;
-figure(2), clf
-%correct #6DB3A5: [0.4941 0.7294 0.8000], incorrect #C9778F: [0.7882 0.4667 0.5608] 
-% newcolors = {'[0.4941 0.7294 0.8000]','[0.7882 0.4667 0.5608]'};
-% colororder(newcolors)
-%shift correct and incorrect traces to start at 0
-correct = dataM2goodCorR1.(dday).erp(chan,:) + (-dataM2goodCorR1.(dday).erp(chan,1));
-incorrect = dataM2goodIncR1.(dday).erp(chan,:) + (-dataM2goodIncR1.(dday).erp(chan,1));
-%day ERPs
-correctD = mean(dataM2goodCorR1.(dday).erp,1) + (-mean(dataM2goodCorR1.(dday).erp(:,1)));
-incorrectD = mean(dataM2goodIncR1.(dday).erp,1) + (-mean(dataM2goodIncR1.(dday).erp(:,1)));
-erp = plot(time,correctD,time,incorrectD,':', 'LineWidth', 2);
-% chanERP = plot(time,[dataM2goodCorR1.d090709.erp(1,:)]);
-set(gca,'box','off','Xlim',[time(1);time(end)]);
-y1 = get(gca,'ylim'); hold on
-epochs = plot([triggers(1) triggers(1)],y1,'--', ...
-    [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
-epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
-epochs(3).Color = [0.5 0.5 0.5];
-erptitleD = sprintf('%d Correct & %d Incorrect Trial-averaged Monkey %d Day %d / %d All areas/chans',...
-    size(dataM2goodCorR1.(dday).lfp,3),size(dataM2goodIncR1.(dday).lfp,3),...
-    monk,dayN,size(fieldnames(dataM2goodCorR1),1)); %day
-erptitle = sprintf('%d Correct & %d Incorrect Trial-averaged Monkey %d Day %d / %d Area %s Chan %d / %d',...
-    size(dataM2goodCorR1.(dday).lfp,3),size(dataM2goodIncR1.(dday).lfp,3),...
-    monk,dayN,size(fieldnames(dataM2goodCorR1),1),...
-    dataM2goodCorR1.(dday).areas{chan},chan,size(dataM2goodCorR1.(dday).erp,1));
-title(erptitleD)
-xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
-text(time(1)+100,y1(2)-1,'baseline'); text(triggers(1)+100,y1(2)-1,'sample');
-text(triggers(2)+100,y1(2)-1,'delay'); text(triggers(3)+100,y1(2)-1,'match');
-pause %pauses until user presses key
-% chanERP(1).Color = [0.75 0.75 0.75]; chanERP(2).Color = [0.75 0.75 0.75]; %light gray
-
-% 1-504: baseline  (505) graph: -504-1
-% 505-1009: sample (505) graph: 0-504
-% 1010-1820: delay (811) graph: 505-1315
-% 1821-2094: match (274) graph: 1316-1589
