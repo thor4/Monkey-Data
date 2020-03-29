@@ -630,3 +630,12 @@ omega = (mean(L_ensemble) / L) - (C / mean(C_latt_ensemble));
 %omega index ranges between -1 and 1. Values close to 0 are indicative of 
 %small-worldness. Positive values suggest more random characteristics and 
 %negative values indicate a lattice-like structure
+
+%% Modeling analysis to see if Gaussian deg dist leads to a particular kind of motif overrepresentation
+
+%FPN has 30 nodes and 399 directed edges
+N = 30; %number of nodes in network
+K = 399; %number of directed edges in network
+s = 1; %std of toeplitz
+
+CIJ = maketoeplitzCIJ(N,K,s);
