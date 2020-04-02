@@ -152,3 +152,28 @@ close(erpVid)
 %saved total_erps.txt in D:\OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\results
 %saved erpVid.avi in same
 
+%% Step 3 Explore Days 17-24 from Monkey 2 where there is clear separation
+% between correct and incorrect trials, esp during delay that doesn't
+% appear physiological in origin. Focus on correct+good trials only
+
+% 30Khz = 1/30,000 sec %eye tracking signal
+% 1Khz = 1/1,000 sec %lfp signal
+% 
+% 30,000 / 30 = 1000
+% [1:30:30001] % subsample the 30Khz signal to get it down to 1Khz
+
+%init variables
+path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\';
+monkey='betty'; %only betty
+days_betty = { '090615', '090616', '090617', '090618', '090622', '090625', '090626', '090629', '090701', '090702', '090706', '090708', '090709', '090901', '090903', '090916', '090917', '090921', '090923', '090924', '090928', '090929', '090930', '091001' };
+day = 17; %look at 17-24
+
+%extract entire trial lfp for good/correct/rule1
+[dayN,areasN] = extractDay(path,monkey,days_betty{day},1,2,1,1,'entire'); 
+length(fieldnames(dayN)) %total number of good/correct/rule1 trials
+
+%next: work on subplots. should be 13 of them on top of each other for
+%day17. use "areasN" to identify them. make sure scale is right, epochs in,
+%later subsample then plot the eye tracking data and try to draw lines
+%where there are eye saccades
+

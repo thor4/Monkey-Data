@@ -47,9 +47,9 @@ dayy = append('d',day); %setup day for test indexing
 %trial info for day (line 92)
 
 %find trials where parameters are met
-for k=2:1000 %don't account for stability
+for k=308:1000 %don't account for stability
     if (trial_info.good_trials(k) == 1) && ...%artifacts/none
-            (trial_info.BehResp(k) == 0) && ... %correct/incorrect
+            (trial_info.BehResp(k) == 1) && ... %correct/incorrect
             (trial_info.rule(k) == 1) %identity/location
         break
     end
@@ -72,6 +72,10 @@ floor(trial_info.CueOffset(k))+810 %end of delay period to compare
 floor(trial_info.MatchOnset(k)) %beginning of match period to compare
 floor(trial_info.MatchOnset(k))+273 %end of match period to compare
 
+%for 'entire' test, load appropriate day's trial_info, find k that matches 
+%your parameters then navigate to day folder and highlight that trial 
+%number to confirm length of lfp_data matrix is first entry in struct 
+%returned by extractDay. proceed for other k's
 
 
 
@@ -80,6 +84,7 @@ floor(trial_info.MatchOnset(k))+273 %end of match period to compare
 % delay tested fine for betty 090709 correct
 % match tested fine for betty 090921 correct
 % all tested fine for betty 090625 incorrect
+% entire tested fine for betty 090917 correct
 % baseline tested fine for clark 060406 correct
 % sample tested fine for clark 060503 incorrect
 % delay tested fine for clark 060825 incorrect
