@@ -167,13 +167,51 @@ path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity
 monkey='betty'; %only betty
 days_betty = { '090615', '090616', '090617', '090618', '090622', '090625', '090626', '090629', '090701', '090702', '090706', '090708', '090709', '090901', '090903', '090916', '090917', '090921', '090923', '090924', '090928', '090929', '090930', '091001' };
 day = 17; %look at 17-24
+trial_info_path = strcat(path,'%s\\%s\\%s\\trial_info.mat'); %build trial_info path
+trial_infoN = sprintf(trial_info_path,monkey,days_betty{day},"session01"); %create full path to trial_info.mat
+load(trial_infoN,'trial_info'); %load trial_info for day's trials
 
 %extract entire trial lfp for good/correct/rule1
 [dayN,areasN] = extractDay(path,monkey,days_betty{day},1,2,1,1,'entire'); 
+chans = length(areasN); %total number of channels
 length(fieldnames(dayN)) %total number of good/correct/rule1 trials
+trialNames = fieldnames(dayN);
+trials = str2double(strip(trials,'left','t')); %identify trials used
+currTrial = trials(1); %identify current trial
+
+% define time, from -ms baseline prior to stimulus onset
+time  = 0-trial_info.CueOnset(currTrial):size(dayN.(trialNames{1})(1,:),2)-trial_info.CueOnset(currTrial)-1;
+triggers = [0 ... %epoch switch base/sample
+    trial_info.CueOffset(currTrial)-trial_info.CueOnset(currTrial) ... %sample/delay
+    trial_info.MatchOnset(currTrial)-trial_info.CueOnset(currTrial)]; %delay/match
+
 
 %next: work on subplots. should be 13 of them on top of each other for
 %day17. use "areasN" to identify them. make sure scale is right, epochs in,
 %later subsample then plot the eye tracking data and try to draw lines
 %where there are eye saccades
 
+%keep working on figure
+% https://www.mathworks.com/help/matlab/ref/linkaxes.html
+
+figure, clf
+tiledlayout(chans,1)
+for subplotN=1:chans
+%     axString = ('ax%d'); %build trial_info path
+%     trial_infoN = sprintf('ax%d',subplotN); %create 
+    subplot(chans,1,subplotN)
+    plot(time,dayN.(trialNames{1})(subplotN,:))
+end
+
+axes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
+linkaxes(axes,'xy') %link all subplots so axes are on same scale
+set(gca,'box','off','Xlim',[time(1);time(end)]); %set x-axis scale
+y1 = get(gca,'ylim'); hold on %this only plots on last figure at bottom (first technically)
+epochs = plot([triggers(1) triggers(1)],y1,'--', ...
+    [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
+epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
+epochs(3).Color = [0.5 0.5 0.5];
+
+
+
+axes(1)

@@ -124,7 +124,7 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
                             match = lfp_data(:,floor(trial_info.MatchOnset(k)):floor(trial_info.MatchOnset(k))+273);
                             lfp(:,:,idx) = cat(2,base,sample,delay,match);
                         case 'entire'
-                            trl = sprintf('%s%d','t',idx); %setup current trial for saving into struct
+                            trl = sprintf('%s%d','t',k); %setup current trial for saving into struct
                             lfp.(trl) = lfp_data;
                         otherwise
                             warning('no such epoch exists')
@@ -161,7 +161,7 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
                             match = lfp_data(:,floor(trial_info.MatchOnset(k)):floor(trial_info.MatchOnset(k))+273);
                             lfp(:,:,idx) = cat(2,base,sample,delay,match);
                         case 'entire'
-                            trl = sprintf('%s%d','t',idx); %setup current trial for saving into struct
+                            trl = sprintf('%s%d','t',k); %setup current trial for saving into struct
                             lfp.(trl) = lfp_data;
                         otherwise
                             warning('no such epoch exists')
