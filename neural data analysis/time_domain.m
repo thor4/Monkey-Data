@@ -173,6 +173,8 @@ load(trial_infoN,'trial_info'); %load trial_info for day's trials
 
 %extract entire trial lfp for good/correct/rule1
 [dayN,areasN] = extractDay(path,monkey,days_betty{day},1,2,1,1,'entire'); 
+% avg over trials & convert to µV (1V = 10^6µV = 1,000,000µV) for ERP
+
 chans = length(areasN); %total number of channels
 length(fieldnames(dayN)) %total number of good/correct/rule1 trials
 trialNames = fieldnames(dayN);
@@ -186,8 +188,8 @@ triggers = [0 ... %epoch switch base/sample
     trial_info.MatchOnset(currTrial)-trial_info.CueOnset(currTrial)]; %delay/match
 
 
-%next: work on subplots. should be 13 of them on top of each other for
-%day17. use "areasN" to identify them. make sure scale is right, epochs in,
+%next: work on subplots. make sure to change the color per trace. also add 
+%a key showing scale at botom, x and y axis like in Dotson 2014
 %later subsample then plot the eye tracking data and try to draw lines
 %where there are eye saccades
 
@@ -195,23 +197,31 @@ triggers = [0 ... %epoch switch base/sample
 % https://www.mathworks.com/help/matlab/ref/linkaxes.html
 
 figure, clf
-tiledlayout(chans,1)
+t = tiledlayout(chans,1);
 for subplotN=1:chans
-%     axString = ('ax%d'); %build trial_info path
-%     trial_infoN = sprintf('ax%d',subplotN); %create 
-    subplot(chans,1,subplotN)
-    plot(time,dayN.(trialNames{1})(subplotN,:))
+    nexttile
+%     subplot(chans,1,subplotN)
+    %plot and convert to µV (1V = 10^6µV = 1,000,000µV)
+    plot(time,dayN.(trialNames{1})(subplotN,:) .* 1e6,'LineWidth',2) 
 end
 
-axes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
-linkaxes(axes,'xy') %link all subplots so axes are on same scale
-set(gca,'box','off','Xlim',[time(1);time(end)]); %set x-axis scale
-y1 = get(gca,'ylim'); hold on %this only plots on last figure at bottom (first technically)
-epochs = plot([triggers(1) triggers(1)],y1,'--', ...
-    [triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
-epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
-epochs(3).Color = [0.5 0.5 0.5];
+axes = findobj(gcf,'type','axes'); %aggregate all axes from all tiles (not subplots)
+linkaxes(axes,'xy') %link all tiles so axes are on same scale
+y1 = get(gca,'ylim'); %get y-axis limits
+%set x-axis scale + turn off box + xtick labels and rename y labels
+set(axes,'Xlim',[time(1);time(end)],'Visible','off'); 
 
+%minimize the spacing around the perimeter of the layout & around each tile
+t.Padding = 'compact'; t.TileSpacing = 'none';
+% axes(13).YAxis.Visible = 'on'; axes(1).YTick = (y1(1)+y1(2))/2;
 
+for axN=1:chans
+    %add channel label to each tile
+    text(axes(axN),time(1)-25,(y1(1)+y1(2))/2,areasN{14-axN},'FontSize',14,'HorizontalAlignment','right')
+end
 
-axes(1)
+%make a line across multiple subplots
+set(axes(1),'Clipping','Off') %turn off clipping in bottom plot
+h1 = line([triggers(1) triggers(1)],[y1(1) (y1(2)-y1(1)*chans)+(500*chans)]); %primitive line, bottom up 
+ylim([y1(1) y1(2)]) %reset ylim so plot doesn't resize to accommodate line
+set(h1,'LineWidth',2,'Color','k')
