@@ -190,6 +190,7 @@ triggers = [0 ... %epoch switch base/sample
 
 %next: work on subplots. make sure to change the color per trace. also add 
 %a key showing scale at botom, x and y axis like in Dotson 2014
+%how to set background to white and each channel as different color?
 %later subsample then plot the eye tracking data and try to draw lines
 %where there are eye saccades
 
@@ -219,9 +220,17 @@ for axN=1:chans
     %add channel label to each tile
     text(axes(axN),time(1)-25,(y1(1)+y1(2))/2,areasN{14-axN},'FontSize',14,'HorizontalAlignment','right')
 end
+text(triggers(1)-300,(y1(2)-y1(1)*chans)+(350*chans),'Baseline','FontSize',16,'HorizontalAlignment','right')
+text(triggers(2)-200,(y1(2)-y1(1)*chans)+(350*chans),'Sample','FontSize',16,'HorizontalAlignment','right')
+text(triggers(2)+500,(y1(2)-y1(1)*chans)+(350*chans),'Delay','FontSize',16,'HorizontalAlignment','right')
+text(triggers(3)+100,(y1(2)-y1(1)*chans)+(350*chans),'Match','FontSize',16,'HorizontalAlignment','left')
 
 %make a line across multiple subplots
 set(axes(1),'Clipping','Off') %turn off clipping in bottom plot
-h1 = line([triggers(1) triggers(1)],[y1(1) (y1(2)-y1(1)*chans)+(500*chans)]); %primitive line, bottom up 
+h1 = line([triggers(1) triggers(1)],[y1(1) (y1(2)-y1(1)*chans)+(350*chans)]); %primitive line, bottom up 
+h2 = line([triggers(2) triggers(2)],[y1(1) (y1(2)-y1(1)*chans)+(350*chans)]); %primitive line, bottom up 
+h3 = line([triggers(3) triggers(3)],[y1(1) (y1(2)-y1(1)*chans)+(350*chans)]); %primitive line, bottom up 
 ylim([y1(1) y1(2)]) %reset ylim so plot doesn't resize to accommodate line
-set(h1,'LineWidth',2,'Color','k')
+set(h1,'LineWidth',2,'Color','k'); set(h2,'LineWidth',2,'Color','k')
+set(h3,'LineWidth',2,'Color','k')
+
