@@ -173,8 +173,6 @@ load(trial_infoN,'trial_info'); %load trial_info for day's trials
 
 %extract entire trial lfp for good/correct/rule1
 [dayN,areasN] = extractDay(path,monkey,days_betty{day},1,2,1,1,'entire'); 
-% avg over trials & convert to µV (1V = 10^6µV = 1,000,000µV) for ERP
-
 chans = length(areasN); %total number of channels
 length(fieldnames(dayN)) %total number of good/correct/rule1 trials
 trialNames = fieldnames(dayN);
@@ -188,29 +186,34 @@ triggers = [0 ... %epoch switch base/sample
     trial_info.MatchOnset(currTrial)-trial_info.CueOnset(currTrial)]; %delay/match
 
 
-%next: work on subplots. make sure to change the color per trace. also add 
-%a key showing scale at botom, x and y axis like in Dotson 2014
-%how to set background to white and each channel as different color?
+%next: work on subplots. add text for key: 0 & 0.5mv for y axis and 
+%200ms for x. figure out how to get coordinates for top of figure to add
+%text and to gauge how long to make lines
 %later subsample then plot the eye tracking data and try to draw lines
 %where there are eye saccades
 
-%keep working on figure
-% https://www.mathworks.com/help/matlab/ref/linkaxes.html
-
-figure, clf
-t = tiledlayout(chans,1);
+hf=figure; clf
+t = tiledlayout(chans+3,1); %setup tile for all subplots
+cmap = colormap; %get current colormap
+allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
 for subplotN=1:chans
     nexttile
-%     subplot(chans,1,subplotN)
     %plot and convert to µV (1V = 10^6µV = 1,000,000µV)
-    plot(time,dayN.(trialNames{1})(subplotN,:) .* 1e6,'LineWidth',2) 
+    plot(time,dayN.(trialNames{1})(subplotN,:) .* 1e6,'LineWidth',2,'Color',allColors(subplotN,:)) 
 end
+% 
+% nexttile([chans+1,2])
+% plot(triggers(1):300,zeros(length(triggers(1):300),1));
 
 axes = findobj(gcf,'type','axes'); %aggregate all axes from all tiles (not subplots)
 linkaxes(axes,'xy') %link all tiles so axes are on same scale
 y1 = get(gca,'ylim'); %get y-axis limits
 %set x-axis scale + turn off box + xtick labels and rename y labels
 set(axes,'Xlim',[time(1);time(end)],'Visible','off'); 
+nexttile %add key for scale
+line([time(end-201) time(end-201)],[y1(1) y1(1)+500],'LineWidth',2); %y line
+line([time(end-201) time(end-201)+200],[y1(1) y1(1)],'LineWidth',2); %x line
+set(gca,'ylim',y1,'xlim',[time(1);time(end)],'Visible','off');
 
 %minimize the spacing around the perimeter of the layout & around each tile
 t.Padding = 'compact'; t.TileSpacing = 'none';
@@ -233,4 +236,6 @@ h3 = line([triggers(3) triggers(3)],[y1(1) (y1(2)-y1(1)*chans)+(350*chans)]); %p
 ylim([y1(1) y1(2)]) %reset ylim so plot doesn't resize to accommodate line
 set(h1,'LineWidth',2,'Color','k'); set(h2,'LineWidth',2,'Color','k')
 set(h3,'LineWidth',2,'Color','k')
+
+hf.Color='w'; %Set background color of figure window
 
