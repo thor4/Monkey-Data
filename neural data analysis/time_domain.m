@@ -173,7 +173,7 @@ load(trial_infoN,'trial_info'); %load trial_info for day's trials
 
 %extract entire trial lfp for good/correct/rule1
 [dayN,areasN] = extractDay(path,monkey,days_betty{day},1,2,1,1,'entire'); 
-chans = length(areasN); %total number of channels
+chans = length(areasN)+3; %total number of channels + key + 2 eye chans
 length(fieldnames(dayN)) %total number of good/correct/rule1 trials
 trialNames = fieldnames(dayN);
 trials = str2double(strip(trials,'left','t')); %identify trials used
@@ -185,57 +185,84 @@ triggers = [0 ... %epoch switch base/sample
     trial_info.CueOffset(currTrial)-trial_info.CueOnset(currTrial) ... %sample/delay
     trial_info.MatchOnset(currTrial)-trial_info.CueOnset(currTrial)]; %delay/match
 
+%load eye channels
+trial_path = strcat(path,'%s\\%s\\%s\\%s%s%s.%04d.mat'); %build trial data path
+trial_data = sprintf(trial_path,monkey,days_betty{day},"session01",monkey,days_betty{day},'01',currTrial);
+load(trial_data,'vertical_eye'); load(trial_data,'horizontal_eye');
+%subsample eye channels to get them to 10kHz
+downH = downsample(horizontal_eye,30); downV = downsample(vertical_eye,30);
+h_eye = [downH downH(end)]; v_eye = [downV downV(end)]; %repeat last measurement to = lfp
 
-%next: work on subplots. add text for key: 0 & 0.5mv for y axis and 
-%200ms for x. figure out how to get coordinates for top of figure to add
-%text and to gauge how long to make lines
-%later subsample then plot the eye tracking data and try to draw lines
-%where there are eye saccades
+%temp figure for Charlie to see eye movements and comment on scale
+figure, clf
+tiledlayout(2,1); %setup tile for all subplots
+nexttile
+plot(time,h_eye,'LineWidth',2)
+title('Horizontal eye movements')
+nexttile
+plot(time,v_eye,'LineWidth',2)
+xlabel('Time (ms)')
+title('Vertical eye movements')
+export_fig eye_movements_trial_302.png -transparent % no background
+
+%next: work on subplots. figure out scale of eye movements to add those
+%subplots as tiles
 
 hf=figure; clf
-t = tiledlayout(chans+3,1); %setup tile for all subplots
+t = tiledlayout(chans,1); %setup tile for all subplots
 cmap = colormap; %get current colormap
 allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
-for subplotN=1:chans
+for subplotN=1:chans-3
     nexttile
     %plot and convert to µV (1V = 10^6µV = 1,000,000µV)
     plot(time,dayN.(trialNames{1})(subplotN,:) .* 1e6,'LineWidth',2,'Color',allColors(subplotN,:)) 
 end
-% 
-% nexttile([chans+1,2])
-% plot(triggers(1):300,zeros(length(triggers(1):300),1));
 
+%group the raw plots
 axes = findobj(gcf,'type','axes'); %aggregate all axes from all tiles (not subplots)
 linkaxes(axes,'xy') %link all tiles so axes are on same scale
 y1 = get(gca,'ylim'); %get y-axis limits
 %set x-axis scale + turn off box + xtick labels and rename y labels
 set(axes,'Xlim',[time(1);time(end)],'Visible','off'); 
+
 nexttile %add key for scale
-line([time(end-201) time(end-201)],[y1(1) y1(1)+500],'LineWidth',2); %y line
-line([time(end-201) time(end-201)+200],[y1(1) y1(1)],'LineWidth',2); %x line
+line([time(end-201) time(end-201)],[y1(1) y1(1)+500],'LineWidth',2,'Color','k'); %y line
+line([time(end-201) time(end-201)+200],[y1(1) y1(1)],'LineWidth',2,'Color','k'); %x line
 set(gca,'ylim',y1,'xlim',[time(1);time(end)],'Visible','off');
+text(time(end-201)+50,y1(1)-175,'200 ms','FontSize',12,'HorizontalAlignment','left')
+text(time(end-201)-10,y1(1)+75,'0 mV','FontSize',12,'HorizontalAlignment','right')
+text(time(end-201)-10,y1(1)+550,'0.5 mV','FontSize',12,'HorizontalAlignment','right')
 
 %minimize the spacing around the perimeter of the layout & around each tile
 t.Padding = 'compact'; t.TileSpacing = 'none';
-% axes(13).YAxis.Visible = 'on'; axes(1).YTick = (y1(1)+y1(2))/2;
 
+%add channel label to each tile
 for axN=1:chans
-    %add channel label to each tile
     text(axes(axN),time(1)-25,(y1(1)+y1(2))/2,areasN{14-axN},'FontSize',14,'HorizontalAlignment','right')
 end
-text(triggers(1)-300,(y1(2)-y1(1)*chans)+(350*chans),'Baseline','FontSize',16,'HorizontalAlignment','right')
-text(triggers(2)-200,(y1(2)-y1(1)*chans)+(350*chans),'Sample','FontSize',16,'HorizontalAlignment','right')
-text(triggers(2)+500,(y1(2)-y1(1)*chans)+(350*chans),'Delay','FontSize',16,'HorizontalAlignment','right')
-text(triggers(3)+100,(y1(2)-y1(1)*chans)+(350*chans),'Match','FontSize',16,'HorizontalAlignment','left')
+%add epoch labels
+text(axes(end),triggers(1)-300,y1(2)+150,'Baseline','FontSize',16,'HorizontalAlignment','right')
+text(axes(end),triggers(2)-200,y1(2)+150,'Sample','FontSize',16,'HorizontalAlignment','right')
+text(axes(end),triggers(2)+500,y1(2)+150,'Delay','FontSize',16,'HorizontalAlignment','right')
+text(axes(end),triggers(3)+100,y1(2)+150,'Match','FontSize',16,'HorizontalAlignment','left')
 
-%make a line across multiple subplots
-set(axes(1),'Clipping','Off') %turn off clipping in bottom plot
-h1 = line([triggers(1) triggers(1)],[y1(1) (y1(2)-y1(1)*chans)+(350*chans)]); %primitive line, bottom up 
-h2 = line([triggers(2) triggers(2)],[y1(1) (y1(2)-y1(1)*chans)+(350*chans)]); %primitive line, bottom up 
-h3 = line([triggers(3) triggers(3)],[y1(1) (y1(2)-y1(1)*chans)+(350*chans)]); %primitive line, bottom up 
-ylim([y1(1) y1(2)]) %reset ylim so plot doesn't resize to accommodate line
-set(h1,'LineWidth',2,'Color','k'); set(h2,'LineWidth',2,'Color','k')
-set(h3,'LineWidth',2,'Color','k')
+%add epoch lines across multiple subplots, bottom to top and top to bottom
+set(gca,'Clipping','Off'), set(axes(end),'Clipping','Off'),  %turn off clipping in top & bottom plots
+h1 = line([triggers(1) triggers(1)],[y1(1) (y1(2)-y1(1))*(chans+3)]); %primitive line, bottom up 
+h12 = line(axes(end),[triggers(1) triggers(1)],[y1(2)+150 -(y1(2)-y1(1))*(chans+3)]); %primitive line, top down
+h2 = line([triggers(2) triggers(2)],[y1(1) (y1(2)-y1(1))*(chans+3)]); %primitive line, bottom up 
+h22 = line(axes(end),[triggers(2) triggers(2)],[y1(2)+150 -(y1(2)-y1(1))*(chans+3)]); %primitive line, top down
+h3 = line([triggers(3) triggers(3)],[y1(1) (y1(2)-y1(1))*(chans+3)]); %primitive line, bottom up 
+h32 = line(axes(end),[triggers(3) triggers(3)],[y1(2)+150 -(y1(2)-y1(1))*(chans+3)]); %primitive line, top down
+%reset ylim so plot doesn't resize to accommodate line
+ylim([y1(1) y1(2)]); ylim(axes(end),[y1(1) y1(2)])
+set(h1,'LineWidth',2,'Color','k'); set(h12,'LineWidth',2,'Color','k')
+set(h2,'LineWidth',2,'Color','k'); set(h22,'LineWidth',2,'Color','k')
+set(h3,'LineWidth',2,'Color','k'); set(h32,'LineWidth',2,'Color','k')
+
+% title('Monkey 2, Day 17, Good, Correct, Rule 1, Trial 302')
+
+export_fig monkey_2_day_17_good_correct_rule_1_trial_302.png -transparent % no background
 
 hf.Color='w'; %Set background color of figure window
 
