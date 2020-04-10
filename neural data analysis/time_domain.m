@@ -167,6 +167,7 @@ path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity
 monkey='betty'; %only betty
 days_betty = { '090615', '090616', '090617', '090618', '090622', '090625', '090626', '090629', '090701', '090702', '090706', '090708', '090709', '090901', '090903', '090916', '090917', '090921', '090923', '090924', '090928', '090929', '090930', '091001' };
 day = 17; %look at 17-24
+trial = 450; %look at second trial for test
 trial_info_path = strcat(path,'%s\\%s\\%s\\trial_info.mat'); %build trial_info path
 trial_infoN = sprintf(trial_info_path,monkey,days_betty{day},"session01"); %create full path to trial_info.mat
 load(trial_infoN,'trial_info'); %load trial_info for day's trials
@@ -176,11 +177,11 @@ load(trial_infoN,'trial_info'); %load trial_info for day's trials
 chans = length(areasN)+3; %total number of channels + key + 2 eye chans
 length(fieldnames(dayN)) %total number of good/correct/rule1 trials
 trialNames = fieldnames(dayN);
-trials = str2double(strip(trials,'left','t')); %identify trials used
-currTrial = trials(1); %identify current trial
+trials = str2double(strip(trialNames,'left','t')); %identify trials used
+currTrial = trials(trial); %identify current trial
 
 % define time, from -ms baseline prior to stimulus onset
-time  = 0-trial_info.CueOnset(currTrial):size(dayN.(trialNames{1})(1,:),2)-trial_info.CueOnset(currTrial)-1;
+time  = 0-trial_info.CueOnset(currTrial):size(dayN.(trialNames{trial})(1,:),2)-trial_info.CueOnset(currTrial)-1;
 triggers = [0 ... %epoch switch base/sample
     trial_info.CueOffset(currTrial)-trial_info.CueOnset(currTrial) ... %sample/delay
     trial_info.MatchOnset(currTrial)-trial_info.CueOnset(currTrial)]; %delay/match
@@ -191,7 +192,10 @@ trial_data = sprintf(trial_path,monkey,days_betty{day},"session01",monkey,days_b
 load(trial_data,'vertical_eye'); load(trial_data,'horizontal_eye');
 %subsample eye channels to get them to 10kHz
 downH = downsample(horizontal_eye,30); downV = downsample(vertical_eye,30);
-h_eye = [downH downH(end)]; v_eye = [downV downV(end)]; %repeat last measurement to = lfp
+%repeat last eye measurement until vector length equals total time
+fillerH = repmat(downH(end),1,length(time)-length(downH));
+fillerV = repmat(downV(end),1,length(time)-length(downV));
+h_eye = [downH fillerH]; v_eye = [downV fillerV]; %repeat last measurement to = lfp
 
 %temp figure for Charlie to see eye movements and comment on scale
 figure, clf
@@ -203,10 +207,11 @@ nexttile
 plot(time,v_eye,'LineWidth',2)
 xlabel('Time (ms)')
 title('Vertical eye movements')
-export_fig eye_movements_trial_302.png -transparent % no background
+% export_fig eye_movements_trial_302.png -transparent % no background
 
-%next: work on subplots. figure out scale of eye movements to add those
-%subplots as tiles
+%next: work on subplots. define y-axis limits according to Charlie's
+%recommendations (.100-.200mv), see what it looks like. add eye movements 
+%as tiles below raw lfp. update scale key
 
 hf=figure; clf
 t = tiledlayout(chans,1); %setup tile for all subplots
@@ -214,8 +219,10 @@ cmap = colormap; %get current colormap
 allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
 for subplotN=1:chans-3
     nexttile
-    %plot and convert to µV (1V = 10^6µV = 1,000,000µV)
-    plot(time,dayN.(trialNames{1})(subplotN,:) .* 1e6,'LineWidth',2,'Color',allColors(subplotN,:)) 
+    x = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
+    y = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
+    y = y(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+    plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
 end
 
 %group the raw plots
@@ -223,7 +230,8 @@ axes = findobj(gcf,'type','axes'); %aggregate all axes from all tiles (not subpl
 linkaxes(axes,'xy') %link all tiles so axes are on same scale
 y1 = get(gca,'ylim'); %get y-axis limits
 %set x-axis scale + turn off box + xtick labels and rename y labels
-set(axes,'Xlim',[time(1);time(end)],'Visible','off'); 
+set(axes,'Xlim',[time(x(1)) time(x(2))]); 
+% ,'Visible','off' (add back to previous line when ready)
 
 nexttile %add key for scale
 line([time(end-201) time(end-201)],[y1(1) y1(1)+500],'LineWidth',2,'Color','k'); %y line
