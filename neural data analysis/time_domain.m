@@ -209,9 +209,8 @@ xlabel('Time (ms)')
 title('Vertical eye movements')
 % export_fig eye_movements_trial_302.png -transparent % no background
 
-%next: work on subplots. define y-axis limits according to Charlie's
-%recommendations (.100-.200mv), see what it looks like. add eye movements 
-%as tiles below raw lfp. update scale key
+%next: work on subplots. figure out why lines are going behind three bottom
+%plots. add eye movements as tiles below raw lfp. 
 
 hf=figure; clf
 t = tiledlayout(chans,1); %setup tile for all subplots
@@ -225,48 +224,54 @@ for subplotN=1:chans-3
     plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
 end
 
+ylimit = [-100,100]; %set y-limit for scaling
+
 %group the raw plots
 axes = findobj(gcf,'type','axes'); %aggregate all axes from all tiles (not subplots)
 linkaxes(axes,'xy') %link all tiles so axes are on same scale
-y1 = get(gca,'ylim'); %get y-axis limits
+ylim(axes,ylimit)
+% y1 = get(gca,'ylim'); %get y-axis limits
 %set x-axis scale + turn off box + xtick labels and rename y labels
-set(axes,'Xlim',[time(x(1)) time(x(2))]); 
+set(axes,'Xlim',[time(x(1)) time(x(2))],'Visible','off'); 
 % ,'Visible','off' (add back to previous line when ready)
-
-nexttile %add key for scale
-line([time(end-201) time(end-201)],[y1(1) y1(1)+500],'LineWidth',2,'Color','k'); %y line
-line([time(end-201) time(end-201)+200],[y1(1) y1(1)],'LineWidth',2,'Color','k'); %x line
-set(gca,'ylim',y1,'xlim',[time(1);time(end)],'Visible','off');
-text(time(end-201)+50,y1(1)-175,'200 ms','FontSize',12,'HorizontalAlignment','left')
-text(time(end-201)-10,y1(1)+75,'0 mV','FontSize',12,'HorizontalAlignment','right')
-text(time(end-201)-10,y1(1)+550,'0.5 mV','FontSize',12,'HorizontalAlignment','right')
-
 %minimize the spacing around the perimeter of the layout & around each tile
 t.Padding = 'compact'; t.TileSpacing = 'none';
 
+nexttile %add key for scale
+line([time(x(2)-201) time(x(2)-201)],[ylimit(1) ylimit(1)+200],'LineWidth',2,'Color','k'); %y line
+line([time(x(2)-201) time(x(2)-201)+200],[ylimit(1) ylimit(1)],'LineWidth',2,'Color','k'); %x line
+set(gca,'ylim',ylimit,'xlim',[time(x(1));time(x(2))],'Visible','off');
+text(time(x(2)-201)+50,ylimit(1)-75,'200 ms','FontSize',12,'HorizontalAlignment','left')
+text(time(x(2)-201)-10,ylimit(1)+25,'0 mV','FontSize',12,'HorizontalAlignment','right')
+text(time(x(2)-201)-10,ylimit(1)+175,'0.2 mV','FontSize',12,'HorizontalAlignment','right')
+
+%use external function located here:
+% https://github.com/michellehirsch/MATLAB-Dataspace-to-Figure-Units
+
+
+%add epoch lines across multiple subplots, bottom to top and top to bottom
+set(axes,'Clipping','Off'),  %turn off clipping in top & bottom plots
+h1 = line([triggers(1) triggers(1)],[ylimit(1) (ylimit(2)-ylimit(1))*(chans+3)]); %primitive line, bottom up 
+h12 = line(axes(end),[triggers(1) triggers(1)],[ylimit(2) -(ylimit(2)-ylimit(1))*(chans)]); %primitive line, top down
+h2 = line([triggers(2) triggers(2)],[ylimit(1) (ylimit(2)-ylimit(1))*(chans+3)]); %primitive line, bottom up 
+h22 = line(axes(end),[triggers(2) triggers(2)],[ylimit(2) -(ylimit(2)-ylimit(1))*(chans)]); %primitive line, top down
+h3 = line([triggers(3) triggers(3)],[ylimit(1) (ylimit(2)-ylimit(1))*(chans+3)]); %primitive line, bottom up 
+h32 = line(axes(end),[triggers(3) triggers(3)],[ylimit(2) -(ylimit(2)-ylimit(1))*(chans)]); %primitive line, top down
+%reset ylim so plot doesn't resize to accommodate line
+ylim([ylimit(1) ylimit(2)]); ylim(axes(end),[ylimit(1) ylimit(2)])
+set(h1,'LineWidth',2,'Color','k'); set(h12,'LineWidth',2,'Color','k')
+set(h2,'LineWidth',2,'Color','k'); set(h22,'LineWidth',2,'Color','k')
+set(h3,'LineWidth',2,'Color','k'); set(h32,'LineWidth',2,'Color','k')
+
 %add channel label to each tile
-for axN=1:chans
-    text(axes(axN),time(1)-25,(y1(1)+y1(2))/2,areasN{14-axN},'FontSize',14,'HorizontalAlignment','right')
+for axN=1:(chans-3)
+    text(axes(axN),time(x(1))-10,(ylimit(1)+ylimit(2))/2,areasN{length(areasN)+1-axN},'FontSize',14,'HorizontalAlignment','right')
 end
 %add epoch labels
 text(axes(end),triggers(1)-300,y1(2)+150,'Baseline','FontSize',16,'HorizontalAlignment','right')
 text(axes(end),triggers(2)-200,y1(2)+150,'Sample','FontSize',16,'HorizontalAlignment','right')
 text(axes(end),triggers(2)+500,y1(2)+150,'Delay','FontSize',16,'HorizontalAlignment','right')
 text(axes(end),triggers(3)+100,y1(2)+150,'Match','FontSize',16,'HorizontalAlignment','left')
-
-%add epoch lines across multiple subplots, bottom to top and top to bottom
-set(gca,'Clipping','Off'), set(axes(end),'Clipping','Off'),  %turn off clipping in top & bottom plots
-h1 = line([triggers(1) triggers(1)],[y1(1) (y1(2)-y1(1))*(chans+3)]); %primitive line, bottom up 
-h12 = line(axes(end),[triggers(1) triggers(1)],[y1(2)+150 -(y1(2)-y1(1))*(chans+3)]); %primitive line, top down
-h2 = line([triggers(2) triggers(2)],[y1(1) (y1(2)-y1(1))*(chans+3)]); %primitive line, bottom up 
-h22 = line(axes(end),[triggers(2) triggers(2)],[y1(2)+150 -(y1(2)-y1(1))*(chans+3)]); %primitive line, top down
-h3 = line([triggers(3) triggers(3)],[y1(1) (y1(2)-y1(1))*(chans+3)]); %primitive line, bottom up 
-h32 = line(axes(end),[triggers(3) triggers(3)],[y1(2)+150 -(y1(2)-y1(1))*(chans+3)]); %primitive line, top down
-%reset ylim so plot doesn't resize to accommodate line
-ylim([y1(1) y1(2)]); ylim(axes(end),[y1(1) y1(2)])
-set(h1,'LineWidth',2,'Color','k'); set(h12,'LineWidth',2,'Color','k')
-set(h2,'LineWidth',2,'Color','k'); set(h22,'LineWidth',2,'Color','k')
-set(h3,'LineWidth',2,'Color','k'); set(h32,'LineWidth',2,'Color','k')
 
 % title('Monkey 2, Day 17, Good, Correct, Rule 1, Trial 302')
 
