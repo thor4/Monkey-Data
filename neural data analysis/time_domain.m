@@ -209,31 +209,39 @@ xlabel('Time (ms)')
 title('Vertical eye movements')
 % export_fig eye_movements_trial_302.png -transparent % no background
 
-%next: work on subplots. work on updating the line using new function. 
-%add eye movements as tiles below raw lfp. 
+%next: work on subplots. need to change this entire thing to subplots.
+%adding plot of eye movements screws up tiled chart scale of lfp traces.
 
 hf=figure; clf
 t = tiledlayout(chans,1); %setup tile for all subplots
 cmap = colormap; %get current colormap
 allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
+ylimit = [-100,100]; %set y-limit for scaling
 for subplotN=1:chans-3
     nexttile
     x = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
     y = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
     y = y(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
     plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
+%     ylim(ylimit)
 end
-
-ylimit = [-100,100]; %set y-limit for scaling
 
 %group the raw plots
 allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all tiles (not subplots)
 linkaxes(allaxes,'xy') %link all tiles so axes are on same scale
-ylim(allaxes,ylimit)
-% y1 = get(gca,'ylim'); %get y-axis limits
+
+nexttile %add eye movements
+vem_y = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+plot(time(x(1):x(2)),vem_y,'LineWidth',2,'color','b') %vertical eye movements
+text(time(x(1))-10,(ylimit(1)+ylimit(2))/2,'V','FontSize',14,'HorizontalAlignment','right')
+ylim(gca,[min(vem_y) max(vem_y)])
+nexttile 
+hem_y = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+plot(time(x(1):x(2)),hem_y,'LineWidth',2,'color','r') %horizontal eye movements
+text(time(x(1))-10,(ylimit(1)+ylimit(2))/2,'H','FontSize',14,'HorizontalAlignment','right')
+
 %set x-axis scale + turn off box + xtick labels and rename y labels
 set(allaxes,'Xlim',[time(x(1)) time(x(2))],'Visible','off'); 
-% ,'Visible','off' (add back to previous line when ready)
 %minimize the spacing around the perimeter of the layout & around each tile
 t.Padding = 'compact'; t.TileSpacing = 'none';
 
@@ -245,47 +253,27 @@ text(time(x(2)-201)+50,ylimit(1)-75,'200 ms','FontSize',12,'HorizontalAlignment'
 text(time(x(2)-201)-10,ylimit(1)+25,'0 mV','FontSize',12,'HorizontalAlignment','right')
 text(time(x(2)-201)-10,ylimit(1)+175,'0.2 mV','FontSize',12,'HorizontalAlignment','right')
 
-%x & y-coordinates for line for each trigger: baseline, sample, match
-%set current axis to top trace
-set(hf, 'currentaxes', allaxes(13));  %# for axes with handle axs on figure f
-[xa1 ya1] = ds2nfu(triggers(1),ylimit(2)); %get fig-level plot points
-%set current axis to bottom trace
-set(hf, 'currentaxes', allaxes(1));  %# for axes with handle axs on figure f
-[xa2 ya2] = ds2nfu(triggers(1),ylimit(1)); %get fig-level plot points
-annotation('line',[xa1 xa2],[ya1 ya2],'color','r');
-
-line([0 0],[-100 100])
-
-triggerX = [triggers(1) triggers(1); triggers(2) triggers(2); triggers(3) triggers(3)];
-triggerY = [triggers(1) triggers(1); triggers(2) triggers(2); triggers(3) triggers(3)];
-
+%draw lines delineating epochs
 %use external function located here:
 % https://github.com/michellehirsch/MATLAB-Dataspace-to-Figure-Units
-
-
-%add epoch lines across multiple subplots, bottom to top and top to bottom
-set(allaxes,'Clipping','Off'),  %turn off clipping in top & bottom plots
-h1 = line([triggers(1) triggers(1)],[ylimit(1) (ylimit(2)-ylimit(1))*(chans+3)]); %primitive line, bottom up 
-h12 = line(allaxes(end),[triggers(1) triggers(1)],[ylimit(2) -(ylimit(2)-ylimit(1))*(chans)]); %primitive line, top down
-h2 = line([triggers(2) triggers(2)],[ylimit(1) (ylimit(2)-ylimit(1))*(chans+3)]); %primitive line, bottom up 
-h22 = line(allaxes(end),[triggers(2) triggers(2)],[ylimit(2) -(ylimit(2)-ylimit(1))*(chans)]); %primitive line, top down
-h3 = line([triggers(3) triggers(3)],[ylimit(1) (ylimit(2)-ylimit(1))*(chans+3)]); %primitive line, bottom up 
-h32 = line(allaxes(end),[triggers(3) triggers(3)],[ylimit(2) -(ylimit(2)-ylimit(1))*(chans)]); %primitive line, top down
-%reset ylim so plot doesn't resize to accommodate line
-ylim([ylimit(1) ylimit(2)]); ylim(allaxes(end),[ylimit(1) ylimit(2)])
-set(h1,'LineWidth',2,'Color','k'); set(h12,'LineWidth',2,'Color','k')
-set(h2,'LineWidth',2,'Color','k'); set(h22,'LineWidth',2,'Color','k')
-set(h3,'LineWidth',2,'Color','k'); set(h32,'LineWidth',2,'Color','k')
+set(hf, 'currentaxes', allaxes(13));  %set current axis to top trace
+[xa1 ya1] = ds2nfu(triggers,repmat(ylimit(2),1,3)); %get fig-level plot points
+set(hf, 'currentaxes', allaxes(1));  %set current axis to bottom trace
+[xa2 ya2] = ds2nfu(triggers,repmat(ylimit(1),1,3)); %get fig-level plot points
+%draw lines: baseline/stimulus, stimulus/delay, delay/math
+annotation('line',[xa1(1) xa2(1)],[ya1(1) ya2(1)],'LineWidth',2,'color','k'); %draw lines
+annotation('line',[xa1(2) xa2(2)],[ya1(2) ya2(2)],'LineWidth',2,'color','k'); %draw lines
+annotation('line',[xa1(3) xa2(3)],[ya1(3) ya2(3)],'LineWidth',2,'color','k'); %draw lines
 
 %add channel label to each tile
 for axN=1:(chans-3)
     text(allaxes(axN),time(x(1))-10,(ylimit(1)+ylimit(2))/2,areasN{length(areasN)+1-axN},'FontSize',14,'HorizontalAlignment','right')
 end
 %add epoch labels
-text(allaxes(end),triggers(1)-300,y1(2)+150,'Baseline','FontSize',16,'HorizontalAlignment','right')
-text(allaxes(end),triggers(2)-200,y1(2)+150,'Sample','FontSize',16,'HorizontalAlignment','right')
-text(allaxes(end),triggers(2)+500,y1(2)+150,'Delay','FontSize',16,'HorizontalAlignment','right')
-text(allaxes(end),triggers(3)+100,y1(2)+150,'Match','FontSize',16,'HorizontalAlignment','left')
+text(allaxes(end),triggers(1)-200,ya1(1)+150,'Baseline','FontSize',16,'HorizontalAlignment','right')
+text(allaxes(end),triggers(2)-200,ya1(1)+150,'Sample','FontSize',16,'HorizontalAlignment','right')
+text(allaxes(end),triggers(2)+500,ya1(1)+150,'Delay','FontSize',16,'HorizontalAlignment','right')
+text(allaxes(end),triggers(3)+75,ya1(1)+150,'Match','FontSize',16,'HorizontalAlignment','left')
 
 % title('Monkey 2, Day 17, Good, Correct, Rule 1, Trial 302')
 
