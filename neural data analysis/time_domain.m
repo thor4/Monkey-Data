@@ -209,11 +209,13 @@ xlabel('Time (ms)')
 title('Vertical eye movements')
 % export_fig eye_movements_trial_302.png -transparent % no background
 
-%next: work on subplots. need to change this entire thing to subplots.
-%adding plot of eye movements screws up tiled chart scale of lfp traces.
+%next: tried subplots but spacing is all off. trying tiledlayout again. 
+%asked mathworks how to add eye movements without screwing up scale. used
+%temp.m and .pngs in download folder
 
 hf=figure; clf
 t = tiledlayout(chans,1); %setup tile for all subplots
+chans = 16;
 cmap = colormap; %get current colormap
 allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
 ylimit = [-100,100]; %set y-limit for scaling
@@ -225,6 +227,38 @@ for subplotN=1:chans-3
     plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
 %     ylim(ylimit)
 end
+
+%legacy subplot version
+% for subplotN=1:chans
+% %     nexttile
+%     if subplotN<chans-2 %plot raw lfp traces
+%         subplot(chans,1,subplotN)
+%         x = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
+%         y = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
+%         y = y(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+%         plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
+%         ylim(ylimit)
+%     elseif subplotN==chans-2 %plot vertical eye movements
+%         subplot(chans,1,subplotN)
+%         vem_y = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+%         plot(time(x(1):x(2)),vem_y,'LineWidth',2,'color','b') %vertical eye movements
+%         text(time(x(1))-10,(ylimit(1)+ylimit(2))/2,'V','FontSize',14,'HorizontalAlignment','right')
+% %         ylim(gca,[min(vem_y) max(vem_y)])
+%     elseif subplotN==chans-1 %plot horizontal eye movements
+%         subplot(chans,1,subplotN)
+%         hem_y = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+%         plot(time(x(1):x(2)),hem_y,'LineWidth',2,'color','r') %horizontal eye movements
+%         text(time(x(1))-10,(ylimit(1)+ylimit(2))/2,'H','FontSize',14,'HorizontalAlignment','right')
+%     else %draw key
+%         subplot(chans,1,subplotN)
+%         line([time(x(2)-201) time(x(2)-201)],[ylimit(1) ylimit(1)+200],'LineWidth',2,'Color','k'); %y line
+%         line([time(x(2)-201) time(x(2)-201)+200],[ylimit(1) ylimit(1)],'LineWidth',2,'Color','k'); %x line
+%         text(time(x(2)-201)+50,ylimit(1)-75,'200 ms','FontSize',12,'HorizontalAlignment','left')
+%         text(time(x(2)-201)-10,ylimit(1)+25,'0 mV','FontSize',12,'HorizontalAlignment','right')
+%         text(time(x(2)-201)-10,ylimit(1)+175,'0.2 mV','FontSize',12,'HorizontalAlignment','right')
+%         set(gca,'ylim',ylimit,'xlim',[time(x(1));time(x(2))],'Visible','off');      
+%     end
+% end
 
 %group the raw plots
 allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all tiles (not subplots)
