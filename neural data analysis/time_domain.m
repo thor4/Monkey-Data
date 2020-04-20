@@ -213,26 +213,45 @@ title('Vertical eye movements')
 %asked mathworks how to add eye movements without screwing up scale. used
 %temp.m and .pngs in download folder
 
-%stackedplot attempt
-% hf=figure; clf
-% cmap = colormap; %get current colormap
-% allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
-% ylimit = [-100,100]; %set y-limit for scaling
-% y = zeros(length([find(time==-500):find(time==triggers(3)+200)]),chans); %init
-% xmarks = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
-% x = time(xmarks(1):xmarks(2));
-% for subplotN=1:chans-3 %plot first set of time-series
-%     temp = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
-%     y(:,subplotN) = temp(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
-% end
-%add eye movement plots: vert then horiz
-% y(:,subplotN+1) = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
-% y(:,subplotN+2) = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
-%add key
+% stackedplot attempt
+hf=figure; clf
+cmap = colormap; %get current colormap
+allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
+ylimit = [-100,100]; %set y-limit for scaling
+y = zeros(length([find(time==-500):find(time==triggers(3)+200)]),chans-1); %init
+xmarks = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
+x = time(xmarks(1):xmarks(2));
+for subplotN=1:chans-3 %plot first set of time-series
+    temp = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
+    y(:,subplotN) = temp(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+end
+% add eye movement plots: vert then horiz
+y(:,subplotN+1) = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+y(:,subplotN+2) = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+% add key
 % line([time(x(2)-201) time(x(2)-201)],[ylimit(1) ylimit(1)+200],'LineWidth',2,'Color','k'); %y line
 % line([time(x(2)-201) time(x(2)-201)+200],[ylimit(1) ylimit(1)],'LineWidth',2,'Color','k'); %x line
 % y(time(xmarks(2)-201):time(xmarks(2)-201)+200,subplotN+2) = repmat(ylimit(1),1,length(time(xmarks(2)-201):time(xmarks(2)-201)+200)); 
-% stackedplot(x,y)
+% y(:,subplotN+3)=[];
+y(time(xmarks(2)-201):time(xmarks(2)-201)+200,subplotN+3) = ones(1,length(time(xmarks(2)-201):time(xmarks(2)-201)+200)); 
+key=y(:,subplotN+3); key(key==0)=nan; y(:,subplotN+3)=key; %replace 0's with NaN
+sp = stackedplot(x,y);
+
+sp.DisplayLabels = [areasN{:} {'V'} {'H'} {''}]; %add labels
+
+export_fig temp_disp.png
+
+allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
+
+set(hf, 'currentaxes', sp.AxesProperties(2).);  %set current axis to top trace
+[xa1 ya1] = ds2nfu(triggers,repmat(ylimit(2),1,3)); %get fig-level plot points
+set(hf, 'currentaxes', allaxes(2));  %set current axis to bottom trace
+temp_ylim = ylim;
+[xa2 ya2] = ds2nfu(triggers,repmat(temp_ylim(1)-1,1,3)); %get fig-level plot points
+%draw lines: baseline/stimulus, stimulus/delay, delay/math
+annotation('line',[xa1(1) xa2(1)],[ya1(1) ya2(1)],'LineWidth',2,'color','k'); %draw lines
+annotation('line',[xa1(2) xa2(2)],[ya1(2) ya2(2)],'LineWidth',2,'color','k'); %draw lines
+annotation('line',[xa1(3) xa2(3)],[ya1(3) ya2(3)],'LineWidth',2,'color','k'); %draw lines
 
 %legacy tiledplot version
 % hf=figure; clf
@@ -249,49 +268,50 @@ title('Vertical eye movements')
 % %     ylim(ylimit)
 % end
 
-hf=figure; clf
-cmap = colormap; %get current colormap
-allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
-ylimit = [-100,100]; %set y-limit for scaling
-%legacy subplot version
-for subplotN=1:chans
-%     nexttile
-    if subplotN<chans-2 %plot raw lfp traces
-        subplot(chans,1,subplotN)
-        x = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
-        y = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
-        y = y(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
-        plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
-        ylim(ylimit)
-    elseif subplotN==chans-2 %plot vertical eye movements
-        subplot(chans,1,subplotN)
-        vem_y = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
-        % find exponent automatically and divide by it when plotting
-        vem_y_scaled = floor(log10(max(vem_y)));
-        plot(time(x(1):x(2)),vem_y/10^vem_y_scaled,'LineWidth',2,'color','b') %vertical eye movements
-        temp_ylim = ylim;
-        text(time(x(1))-10,(temp_ylim(1)+temp_ylim(2))/2,'V','FontSize',14,'HorizontalAlignment','right')
-    elseif subplotN==chans-1 %plot horizontal eye movements
-        subplot(chans,1,subplotN)
-        hem_y = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
-        % find exponent automatically and divide by it when plotting
-        hem_y_scaled = floor(log10(max(hem_y)));
-        plot(time(x(1):x(2)),hem_y/10^hem_y_scaled,'LineWidth',2,'color','r') %horizontal eye movements
-        temp_ylim = ylim;
-        text(time(x(1))-10,(temp_ylim(1)+temp_ylim(2))/2,'H','FontSize',14,'HorizontalAlignment','right')
-    else %draw key
-        subplot(chans,1,subplotN)
-        line([time(x(2)-201) time(x(2)-201)],[ylimit(1) ylimit(1)+200],'LineWidth',2,'Color','k'); %y line
-        line([time(x(2)-201) time(x(2)-201)+200],[ylimit(1) ylimit(1)],'LineWidth',2,'Color','k'); %x line
-        text(time(x(2)-201)+50,ylimit(1)-75,'200 ms','FontSize',12,'HorizontalAlignment','left')
-        text(time(x(2)-201)-10,ylimit(1)+25,'0 mV','FontSize',12,'HorizontalAlignment','right')
-        text(time(x(2)-201)-10,ylimit(1)+175,'0.2 mV','FontSize',12,'HorizontalAlignment','right')
-        set(gca,'ylim',ylimit,'xlim',[time(x(1));time(x(2))],'Visible','off');      
-    end
-end
+% %legacy subplot version
+% hf=figure; clf
+% cmap = colormap; %get current colormap
+% allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
+% ylimit = [-100,100]; %set y-limit for scaling
+% %legacy subplot version
+% for subplotN=1:chans
+% %     nexttile
+%     if subplotN<chans-2 %plot raw lfp traces
+%         subplot(chans,1,subplotN)
+%         x = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
+%         y = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
+%         y = y(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+%         plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
+%         ylim(ylimit)
+%     elseif subplotN==chans-2 %plot vertical eye movements
+%         subplot(chans,1,subplotN)
+%         vem_y = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+%         % find exponent automatically and divide by it when plotting
+%         vem_y_scaled = floor(log10(max(vem_y)));
+%         plot(time(x(1):x(2)),vem_y/10^vem_y_scaled,'LineWidth',2,'color','b') %vertical eye movements
+%         temp_ylim = ylim;
+%         text(time(x(1))-10,(temp_ylim(1)+temp_ylim(2))/2,'V','FontSize',14,'HorizontalAlignment','right')
+%     elseif subplotN==chans-1 %plot horizontal eye movements
+%         subplot(chans,1,subplotN)
+%         hem_y = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
+%         % find exponent automatically and divide by it when plotting
+%         hem_y_scaled = floor(log10(max(hem_y)));
+%         plot(time(x(1):x(2)),hem_y/10^hem_y_scaled,'LineWidth',2,'color','r') %horizontal eye movements
+%         temp_ylim = ylim;
+%         text(time(x(1))-10,(temp_ylim(1)+temp_ylim(2))/2,'H','FontSize',14,'HorizontalAlignment','right')
+%     else %draw key
+%         subplot(chans,1,subplotN)
+%         line([time(x(2)-201) time(x(2)-201)],[ylimit(1) ylimit(1)+200],'LineWidth',2,'Color','k'); %y line
+%         line([time(x(2)-201) time(x(2)-201)+200],[ylimit(1) ylimit(1)],'LineWidth',2,'Color','k'); %x line
+%         text(time(x(2)-201)+50,ylimit(1)-75,'200 ms','FontSize',12,'HorizontalAlignment','left')
+%         text(time(x(2)-201)-10,ylimit(1)+25,'0 mV','FontSize',12,'HorizontalAlignment','right')
+%         text(time(x(2)-201)-10,ylimit(1)+175,'0.2 mV','FontSize',12,'HorizontalAlignment','right')
+%         set(gca,'ylim',ylimit,'xlim',[time(x(1));time(x(2))],'Visible','off');      
+%     end
+% end
 
 % %group the raw plots 
-allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
+% allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
 % linkaxes(allaxes,'xy') %link all tiles so axes are on same scale
 
 % nexttile %add eye movements
