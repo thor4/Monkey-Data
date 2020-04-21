@@ -235,9 +235,29 @@ y(:,subplotN+2) = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset
 % y(:,subplotN+3)=[];
 y(time(xmarks(2)-201):time(xmarks(2)-201)+200,subplotN+3) = ones(1,length(time(xmarks(2)-201):time(xmarks(2)-201)+200)); 
 key=y(:,subplotN+3); key(key==0)=nan; y(:,subplotN+3)=key; %replace 0's with NaN
-sp = stackedplot(x,y);
+sp = stackedplot(x,y,'LineWidth',2,'FontSize',12); %plot them all
+
+%not sure about removing the white background, tickmarks and alter the tick
+%labels. also need to add epoch text
+sp.LineProperties(1:16) %for changing colors
+
 
 sp.DisplayLabels = [areasN{:} {'V'} {'H'} {''}]; %add labels
+
+%draw epoch lines
+pos = sp.Position; %get total figure
+xlims = sp.xlim; %get limits of x-axis
+%express cumsum of x-coords from pos as a function of x-axis limits, then
+%identify where the lines should be drawn on this scale
+line_locations_norm = interp1(xlims, cumsum(pos([1 3])), triggers);
+axis_height = (pos(4)-pos(2))/chans; %vertical height of each plot
+for i=1:numel(line_locations_norm) %draw the lines
+    annotation('line', ...
+        [line_locations_norm(i) line_locations_norm(i)], ...
+        [pos(2)+axis_height pos(2)+pos(4)], ...
+        'Color', 'k', ...
+        'LineWidth', 2);
+end
 
 export_fig temp_disp.png
 
