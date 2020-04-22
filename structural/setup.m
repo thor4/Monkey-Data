@@ -638,4 +638,13 @@ N = 30; %number of nodes in network
 K = 399; %number of directed edges in network
 s = 1; %std of toeplitz
 
+%test
+N = 30; %number of nodes in network
+K = 200; %number of directed edges in network
+s = 1; %std of toeplitz
+
+%K=100 was 0.024881 seconds, K=200 was untenable
+
+tic
 CIJ = maketoeplitzCIJ(N,K,s);
+toc
