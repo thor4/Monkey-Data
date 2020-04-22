@@ -167,6 +167,7 @@ path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity
 monkey='betty'; %only betty
 days_betty = { '090615', '090616', '090617', '090618', '090622', '090625', '090626', '090629', '090701', '090702', '090706', '090708', '090709', '090901', '090903', '090916', '090917', '090921', '090923', '090924', '090928', '090929', '090930', '091001' };
 day = 17; %look at 17-24
+epochs = {'Baseline','Sample','Delay','Match'};
 trial = 450; %look at second trial for test
 trial_info_path = strcat(path,'%s\\%s\\%s\\trial_info.mat'); %build trial_info path
 trial_infoN = sprintf(trial_info_path,monkey,days_betty{day},"session01"); %create full path to trial_info.mat
@@ -209,8 +210,7 @@ xlabel('Time (ms)')
 title('Vertical eye movements')
 % export_fig eye_movements_trial_302.png -transparent % no background
 
-%next: fix lines based on subplot attempt using matlab answer. figure out
-%pos math used
+%next: see if Charlie wants to keep the y-axis key on the right
 
 % % legacy stackedplot attempt
 % hf=figure; clf
@@ -279,6 +279,7 @@ for subplotN=1:chans
         text(time(x(2)+10),(max(y)-min(y))/2,scale,'FontSize',12,'HorizontalAlignment','left')
 %         set(gca,'ylim',ylimit,'xlim',[time(x(1));time(x(2))],'Visible','off');      
         set(gca,'xlim',[time(x(1));time(x(2)+5)],'Visible','off');      
+        text(time(x(1))-10,(max(y)-min(y))/2,areasN{subplotN},'FontSize',14,'HorizontalAlignment','right')
     elseif subplotN==chans-2 %plot vertical eye movements
         subplot(chans,1,subplotN)
         vem_y = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
@@ -339,21 +340,47 @@ allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
 % text(time(x(2)-201)-10,ylimit(1)+25,'0 mV','FontSize',12,'HorizontalAlignment','right')
 % text(time(x(2)-201)-10,ylimit(1)+175,'0.2 mV','FontSize',12,'HorizontalAlignment','right')
 
+% ax.position = [left bottom width height]
+% The left and bottom elements define the distance from the lower left corner
+% of the container to the lower left corner of the position boundary
+% The width and height elements are the position boundary dimensions.
+
 %draw epoch lines 
-pos(1:3) = allaxes(end).Position(1:3);
-pos(4) = sum(allaxes(2).Position([2 4])) - allaxes(end).Position(2);
+pos(1:3) = allaxes(1).Position(1:3); %get left/bottom/width of bottom axis
+%top of top axis - bottom of bottom axis
+% pos(4) = sum(allaxes(end).Position([2 4])) - allaxes(1).Position(2);
+pos(4) = sum(allaxes(end).Position([2 4])); %top of top axis
 xlims = allaxes(2).XLim; %get limits of x-axis
 %express cumsum of x-coords from pos as a function of x-axis limits, then
 %identify where the lines should be drawn on this scale
 line_locations_norm = interp1(xlims, cumsum(pos([1 3])), triggers);
-axis_height = (pos(4)-pos(2))/chans; %vertical height of each plot
 for i=1:numel(line_locations_norm) %draw the lines
     annotation('line', ...
         [line_locations_norm(i) line_locations_norm(i)], ...
-        [pos(2) pos(2)+pos(4)], ...
+        [pos(2)+allaxes(1).Position(4) pos(4)], ... %start from top of bottom plot
         'Color', 'k', ...
         'LineWidth', 2);
 end
+
+%add epoch labels
+text(allaxes(end),triggers(1)-200,allaxes(end).YLim(2)*1.5,epochs{1},...
+    'FontSize',16,'HorizontalAlignment','right','color',[0.5 0.5 0.5])
+text(allaxes(end),triggers(2)-200,allaxes(end).YLim(2)*1.5,epochs{2},...
+    'FontSize',16,'HorizontalAlignment','right','color',[0.5 0.5 0.5])
+text(allaxes(end),triggers(2)+500,allaxes(end).YLim(2)*1.5,epochs{3},...
+    'FontSize',16,'HorizontalAlignment','right','color',[0.5 0.5 0.5])
+text(allaxes(end),triggers(3)+75,allaxes(end).YLim(2)*1.5,epochs{4},...
+    'FontSize',16,'HorizontalAlignment','left','color',[0.5 0.5 0.5])
+
+trial_title = sprintf('Monkey 2 Day %d Good Correct Rule 1 Trial %d / %d',...
+                day,trial,length(trials));
+sgtitle(trial_title,'FontSize',18);  
+
+% %add epoch labels
+% text(allaxes(end),triggers(1)-200,ya1(1)+150,'Baseline','FontSize',16,'HorizontalAlignment','right')
+% text(allaxes(end),triggers(2)-200,ya1(1)+150,'Sample','FontSize',16,'HorizontalAlignment','right')
+% text(allaxes(end),triggers(2)+500,ya1(1)+150,'Delay','FontSize',16,'HorizontalAlignment','right')
+% text(allaxes(end),triggers(3)+75,ya1(1)+150,'Match','FontSize',16,'HorizontalAlignment','left')
 
 % 
 % %draw lines delineating epochs
@@ -369,15 +396,11 @@ end
 % annotation('line',[xa1(2) xa2(2)],[ya1(2) ya2(2)],'LineWidth',2,'color','k'); %draw lines
 % annotation('line',[xa1(3) xa2(3)],[ya1(3) ya2(3)],'LineWidth',2,'color','k'); %draw lines
 
-%add channel label to each tile
-for axN=1:(chans-3)
-    text(allaxes(axN+3),time(x(1))-10,(ylimit(1)+ylimit(2))/2,areasN{length(areasN)+1-axN},'FontSize',14,'HorizontalAlignment','right')
-end
-%add epoch labels
-text(allaxes(end),triggers(1)-200,ya1(1)+150,'Baseline','FontSize',16,'HorizontalAlignment','right')
-text(allaxes(end),triggers(2)-200,ya1(1)+150,'Sample','FontSize',16,'HorizontalAlignment','right')
-text(allaxes(end),triggers(2)+500,ya1(1)+150,'Delay','FontSize',16,'HorizontalAlignment','right')
-text(allaxes(end),triggers(3)+75,ya1(1)+150,'Match','FontSize',16,'HorizontalAlignment','left')
+% %add channel label to each tile
+% for axN=1:(chans-3)
+%     text(allaxes(axN+3),time(x(1))-10,(ylimit(1)+ylimit(2))/2,areasN{length(areasN)+1-axN},'FontSize',14,'HorizontalAlignment','right')
+% end
+
 
 % title('Monkey 2, Day 17, Good, Correct, Rule 1, Trial 302')
 hf.Color='w'; %Set background color of figure window
