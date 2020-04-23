@@ -176,7 +176,7 @@ load(trial_infoN,'trial_info'); %load trial_info for day's trials
 %extract entire trial lfp for good/correct/rule1
 [dayN,areasN] = extractDay(path,monkey,days_betty{day},1,2,1,1,'entire'); 
 chans = length(areasN)+3; %total number of channels + key + 2 eye chans
-length(fieldnames(dayN)) %total number of good/correct/rule1 trials
+% length(fieldnames(dayN)) %total number of good/correct/rule1 trials
 trialNames = fieldnames(dayN);
 trials = str2double(strip(trialNames,'left','t')); %identify trials used
 currTrial = trials(trial); %identify current trial
@@ -213,10 +213,10 @@ title('Vertical eye movements')
 %next: see if Charlie wants to keep the y-axis key on the right
 
 % % legacy stackedplot attempt
-% hf=figure; clf
-% cmap = colormap; %get current colormap
-% allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
-% ylimit = [-100,100]; %set y-limit for scaling
+% % hf=figure; clf
+% % cmap = colormap; %get current colormap
+% % allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors per chan
+% % ylimit = [-100,100]; %set y-limit for scaling
 % y = zeros(length([find(time==-500):find(time==triggers(3)+200)]),chans-1); %init
 % xmarks = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
 % x = time(xmarks(1):xmarks(2));
@@ -228,14 +228,11 @@ title('Vertical eye movements')
 % y(:,subplotN+1) = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
 % y(:,subplotN+2) = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
 % % add key
-% % line([time(x(2)-201) time(x(2)-201)],[ylimit(1) ylimit(1)+200],'LineWidth',2,'Color','k'); %y line
-% % line([time(x(2)-201) time(x(2)-201)+200],[ylimit(1) ylimit(1)],'LineWidth',2,'Color','k'); %x line
-% % y(time(xmarks(2)-201):time(xmarks(2)-201)+200,subplotN+2) = repmat(ylimit(1),1,length(time(xmarks(2)-201):time(xmarks(2)-201)+200)); 
-% % y(:,subplotN+3)=[];
 % y(time(xmarks(2)-201):time(xmarks(2)-201)+200,subplotN+3) = ones(1,length(time(xmarks(2)-201):time(xmarks(2)-201)+200)); 
 % key=y(:,subplotN+3); key(key==0)=nan; y(:,subplotN+3)=key; %replace 0's with NaN
 % sp = stackedplot(x,y,'LineWidth',2,'FontSize',12); %plot them all
-% 
+% spPos = sp.Position; %get positions to create subplot version
+
 % %not sure about removing the white background, tickmarks and alter the tick
 % %labels. also need to add epoch text
 % sp.LineProperties(1:16) %for changing colors
@@ -269,19 +266,19 @@ allColors = cmap(chans:chans:chans*chans,:); %split colormap into diff colors pe
 for subplotN=1:chans
 %     nexttile
     if subplotN<chans-2 %plot raw lfp traces
-        subplot(chans,1,subplotN)
+        hSub(subplotN) = subplot(chans,1,subplotN);
         x = [find(time==-500),find(time==triggers(3)+200)]; %set cutoff 500ms before sample & 200ms after match
         y = dayN.(trialNames{trial})(subplotN,:).* 1e6; %convert to µV (1V = 10^6µV = 1,000,000µV)
         y = y(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
         plot(time(x(1):x(2)),y,'LineWidth',2,'Color',allColors(subplotN,:)) 
         line([time(x(2)+5) time(x(2)+5)],[min(y) max(y)],'LineWidth',2,'Color','k'); %y line
         scale = sprintf('%0.2f mV',(max(y)-min(y))/1000); %scale of y-axis
-        text(time(x(2)+10),(max(y)-min(y))/2,scale,'FontSize',12,'HorizontalAlignment','left')
+        text(time(x(2)+10),(max(y)-min(y))/2*0.5,scale,'FontSize',12,'HorizontalAlignment','left')
 %         set(gca,'ylim',ylimit,'xlim',[time(x(1));time(x(2))],'Visible','off');      
-        set(gca,'xlim',[time(x(1));time(x(2)+5)],'Visible','off');      
-        text(time(x(1))-10,(max(y)-min(y))/2,areasN{subplotN},'FontSize',14,'HorizontalAlignment','right')
+        set(gca,'xlim',[time(x(1));time(x(2)+5)],'ylim',[min(y) max(y)],'Visible','off');
+        text(time(x(1))-10,(max(y)-min(y))/2*0.5,areasN{subplotN},'FontSize',14,'HorizontalAlignment','right')
     elseif subplotN==chans-2 %plot vertical eye movements
-        subplot(chans,1,subplotN)
+        hSub(subplotN) = subplot(chans,1,subplotN);
         vem_y = v_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
         % find exponent automatically and divide by it when plotting
         vem_y_scaled = floor(log10(max(vem_y)));
@@ -290,7 +287,7 @@ for subplotN=1:chans
         text(time(x(1))-10,(temp_ylim(1)+temp_ylim(2))/2,'V','FontSize',14,'HorizontalAlignment','right')
         set(gca,'xlim',[time(x(1));time(x(2))],'Visible','off');      
     elseif subplotN==chans-1 %plot horizontal eye movements
-        subplot(chans,1,subplotN)
+        hSub(subplotN) = subplot(chans,1,subplotN);
         hem_y = h_eye(trial_info.CueOnset(currTrial)-500:trial_info.MatchOnset(currTrial)+200); %match to time
         % find exponent automatically and divide by it when plotting
         hem_y_scaled = floor(log10(max(hem_y)));
@@ -299,21 +296,35 @@ for subplotN=1:chans
         text(time(x(1))-10,(temp_ylim(1)+temp_ylim(2))/2,'H','FontSize',14,'HorizontalAlignment','right')
         set(gca,'xlim',[time(x(1));time(x(2))],'Visible','off');      
     else %draw key
-        subplot(chans,1,subplotN)
+        hSub(subplotN) = subplot(chans,1,subplotN);
 %         line([time(x(2)-201) time(x(2)-201)],[ylimit(1) ylimit(1)+200],'LineWidth',2,'Color','k'); %y line
 %         line([time(x(2)-201) time(x(2)-201)+200],[ylimit(1) ylimit(1)],'LineWidth',2,'Color','k'); %x line
         line([time(x(2)-201) time(x(2)-201)+200],[1 1],'LineWidth',2,'Color','k'); %x line
-%         text(time(x(2)-201)+50,ylimit(1)-75,'200 ms','FontSize',12,'HorizontalAlignment','left')
-        text(time(x(2)-201)+50,0,'200 ms','FontSize',12,'HorizontalAlignment','left')
+        text(time(x(2)-201)+50,0.5,'200 ms','FontSize',12,'HorizontalAlignment','left')
 %         text(time(x(2)-201)-10,ylimit(1)+25,'0 mV','FontSize',12,'HorizontalAlignment','right')
 %         text(time(x(2)-201)-10,ylimit(1)+175,'0.2 mV','FontSize',12,'HorizontalAlignment','right')
-%         set(gca,'ylim',ylimit,'xlim',[time(x(1));time(x(2))],'Visible','off');      
         set(gca,'xlim',[time(x(1));time(x(2))],'Visible','off');      
     end
 end
 
+allsubPos=reshape([hSub.Position],4,[])'; %positions for each subplot allsubPos(1:end)=top:bottom
+% dHt=spPos(4)-sum(allsubPos(:,4)); %height of stackedplot - height of subplots
+allsubPos(:,4)=repmat(1/(numel(hSub)+1),numel(hSub),1); %*height* assign based on total plots
+for i=1:numel(hSub)
+    allsubPos(i,2)=allsubPos(i,4)*(numel(hSub)-i);
+%     allsubPos(end-i+1,2)=allsubPos(i,4)*(i-1);
+    if (allsubPos(i,2) < 0)
+        disp('subplot ',i,' is messed up');
+    end
+end
+% AXposn(:,4)=AXposn(:,4)+dHt/numel(hSub); %allocate difference to grow each subplot
+% AXposn(:,2)=AXposn(:,2)-dHt/numel(hSub); %lower the bottom of each subplot to make up for added height
+for subPos=1:numel(hSub) %set each subplot to new position... 
+    hSub(subPos).Position=allsubPos(subPos,:); %top grows down, bottom grows up
+end
+
 %group the raw plots 
-allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
+% allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
 % allaxes(end) is top plot. allaxes(1) is bottom plot
 % linkaxes(allaxes,'xy') %link all tiles so axes are on same scale
 
@@ -346,33 +357,33 @@ allaxes = findobj(gcf,'type','axes'); %aggregate all axes from all subplots
 % The width and height elements are the position boundary dimensions.
 
 %draw epoch lines 
-pos(1:3) = allaxes(1).Position(1:3); %get left/bottom/width of bottom axis
+pos(1:3) = hSub(1).Position(1:3); %get left/bottom/width of bottom axis
 %top of top axis - bottom of bottom axis
 % pos(4) = sum(allaxes(end).Position([2 4])) - allaxes(1).Position(2);
-pos(4) = sum(allaxes(end).Position([2 4])); %top of top axis
-xlims = allaxes(2).XLim; %get limits of x-axis
+pos(4) = sum(hSub(end).Position([2 4])); %top of top axis
+xlims = hSub(2).XLim; %get limits of x-axis
 %express cumsum of x-coords from pos as a function of x-axis limits, then
 %identify where the lines should be drawn on this scale
 line_locations_norm = interp1(xlims, cumsum(pos([1 3])), triggers);
 for i=1:numel(line_locations_norm) %draw the lines
     annotation('line', ...
         [line_locations_norm(i) line_locations_norm(i)], ...
-        [pos(2)+allaxes(1).Position(4) pos(4)], ... %start from top of bottom plot
+        [pos(2)+hSub(1).Position(4) pos(4)], ... %start from top of bottom plot
         'Color', 'k', ...
         'LineWidth', 2);
 end
 
 %add epoch labels
-text(allaxes(end),triggers(1)-200,allaxes(end).YLim(2)*1.5,epochs{1},...
+text(hSub(1),triggers(1)-200,hSub(1).YLim(2)*1.2,epochs{1},...
     'FontSize',16,'HorizontalAlignment','right','color',[0.5 0.5 0.5])
-text(allaxes(end),triggers(2)-200,allaxes(end).YLim(2)*1.5,epochs{2},...
+text(hSub(1),triggers(1)+200,hSub(1).YLim(2)*1.2,epochs{2},...
     'FontSize',16,'HorizontalAlignment','right','color',[0.5 0.5 0.5])
-text(allaxes(end),triggers(2)+500,allaxes(end).YLim(2)*1.5,epochs{3},...
+text(hSub(1),triggers(3)-500,hSub(1).YLim(2)*1.2,epochs{3},...
     'FontSize',16,'HorizontalAlignment','right','color',[0.5 0.5 0.5])
-text(allaxes(end),triggers(3)+75,allaxes(end).YLim(2)*1.5,epochs{4},...
+text(hSub(1),triggers(3)+75,hSub(1).YLim(2)*1.2,epochs{4},...
     'FontSize',16,'HorizontalAlignment','left','color',[0.5 0.5 0.5])
 
-trial_title = sprintf('Monkey 2 Day %d Good Correct Rule 1 Trial %d / %d',...
+trial_title = sprintf('Monk2 D%d Good Cor Rule1 Trial %d / %d',...
                 day,trial,length(trials));
 sgtitle(trial_title,'FontSize',18);  
 
