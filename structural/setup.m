@@ -47,9 +47,12 @@ D = distance_bin(AM);
 [char_path_length,efficiency] = charpath(D); 
 
 %% visualize association matrix
+
+CM = CIJ; %define connectivity matrix
+
 figure(1), clf
 % AMv = imagesc(AM);
-AMv = imagesc((1:size(AM,2))-0.5, (1:size(AM,1))-0.5, AM);
+CMv = imagesc((1:size(CM,2))-0.5, (1:size(CM,1))-0.5, CM);
 % G = digraph(AM)
 % plot(G)
 colormap([1 1 1; 0.75 0.75 0.75; 0.25 0.25 0.25;]) % black 1, white 0
@@ -253,7 +256,7 @@ export_fig od_ccdf_matlab.png -transparent % no background
 % exponent, 'xmin' is the estimate of the lower bound of the power-law
 % behavior, and L is the log-likelihood of the data x>=xmin under the
 % fitted power law.
-[p, gof] = plpva(id',xmin,'reps',5000); %p=0.0158, reject power law hypo for id deg, not drawn from a power-law dist
+[p, gof] = plpva(id',xmin,'reps',1000); %p=0.0158, reject power law hypo for id deg, not drawn from a power-law dist
 
 [alpha, xmin, L] = plfit(od','finite');
 [p, gof] = plpva(od',xmin,'reps',5000); %p=0.1716, >0.1 so power law is plausible hypo for data
@@ -268,8 +271,12 @@ export_fig od_ccdf_matlab.png -transparent % no background
 
 %% visualize id+od dist along with fitted power-law dist on log-log axes
 % 99% of this taken directly from plplot
+% 1.update x with id/od
+% 2.comment/uncomment xi/xo & yi/yo accordingly
+% 3.if not FPN AM, comment out exp fit fig elements: xi/xo & yi/yo, if
+% doing this, don't need fig anyway
 % reshape input vector
-x = reshape(od,numel(od),1); %state whether looking at in/out/total deg
+x = reshape(id,numel(id),1); %state whether looking at in/out/total deg
 % initialize storage for output handles
 h = zeros(2,1);
 
@@ -294,15 +301,15 @@ switch f_dattype,
 %         xi= c(9:end,1); %start from xmin (12)
 %         yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
 %             0.192623 0.120321]; %exp fit from python from xmin (12) to 21
-        xo= c(9:end,1); %start from xmin (10)
-        yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
-            0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
+%         xo= c(9:end,1); %start from xmin (10)
+%         yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
+%             0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
 %         h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
-        h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
+%         h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -326,16 +333,16 @@ switch f_dattype,
 %         yi= [1 0.790343 0.624642 0.493681 0.390177 0.308374 0.243721 ...
 %             0.192623 0.120321]; %exp fit from python from xmin (12) to 21
         %exp fit from python from xmin (10) to 23
-        xo= c(6:end,1); %start from xmin (10) 
-        yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
-            0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
+%         xo= c(6:end,1); %start from xmin (10) 
+%         yo= [1 0.821421 0.674732 0.554239 0.455264 0.373963 0.307181 ...
+%             0.252325 0.207265 0.170252 0.139848 0.114874 0.0775095]; 
 
 
         figure;
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',4); %power law fit
 %         h(3) = loglog(xi,yi,'b:','LineWidth',4); hold off; %exp fit
-        h(3) = loglog(xo,yo,'b:','LineWidth',4); hold off; %exp fit
+%         h(3) = loglog(xo,yo,'b:','LineWidth',4); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -402,6 +409,10 @@ export_fig out_deg_hist.eps -transparent % no background
 
 %% surrogate networks
 
+%init variables
+CM = CIJ; %define connectivity matrix
+[f,F]=motif3struct_bin(CM); % real data
+
 % %be sure not to include the diagonal in the mean distance calculation
 % rowMean = sum(D,2) ./ sum(D~=0,2); %avg shortest path length
 % char_path_length = mean(rowMean); %characteristic path length
@@ -413,8 +424,9 @@ export_fig out_deg_hist.eps -transparent % no background
 % 10 appears "adequate" according to its fig 1)
 % iter = 100*sum(id); % # of iterations
 iter = 10*sum(id); % # of iterations
-networks = 100000; % # of surrogate networks 100 for small world, 1000 for p-val stats
-ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
+% networks = 100000; % # of surrogate networks 100 for small world, 1000 for p-val stats
+networks = 100; % # of surrogate networks 100 for small world, 1000 for p-val stats
+ensemble = zeros(size(CM,1),size(CM,2),networks); %init ensemble
 C_ensemble = zeros(networks,1); %init clust coef ensemble
 L_ensemble = zeros(networks,1); %init char path length ensemble
 f_ensemble = zeros(13,networks); %init network motif freq fingerprint ensemble
@@ -425,7 +437,7 @@ p_vals_rand_F = zeros(13,30); %init p-value
 tic
 parfor i=1:networks
     % R: randomized network, eff: number of actual rewirings carried out
-    [R,eff] = randmio_dir(AM, iter); 
+    [R,eff] = randmio_dir(CM, iter); 
     ensemble(:,:,i) = R; %build ensemble of surrogate networks
     C_ensemble(i) = mean(clustering_coef_bd(R)); 
     D_rand = distance_bin(R); %shortest path length for each node
@@ -437,7 +449,7 @@ end
 toc
 % change from total times freq count in null networks > empirical to 
 % fraction, making it a p-val
-p_vals_rand = p_vals_rand ./ networks; 
+p_vals_rand_f = p_vals_rand_f ./ networks; 
 
 % 5991.728168 seconds = 100 surrogate networks (office pc) 39,990 iter
 % 600.054129 seconds = 100 surrogate networks (office pc) 3,9990 iter
@@ -457,7 +469,7 @@ p_vals_rand = p_vals_rand ./ networks;
 %Rrp, latticized network in node ordering used for latticization
 %ind_rp, node ordering used for latticization
 %eff, number of actual rewirings carried out
-latt_ensemble = zeros(size(AM,1),size(AM,2),networks); %init ensemble
+latt_ensemble = zeros(size(CM,1),size(CM,2),networks); %init ensemble
 C_latt_ensemble = zeros(networks,1); %init clust coef ensemble
 f_latt_ensemble = zeros(13,networks); %init network motif freq fingerprint ensemble
 F_latt_ensemble = zeros(13,30,networks); %init node motif freq fingerprint ensemble
@@ -467,7 +479,7 @@ tic
 parfor i=1:networks
     % R: randomized network, eff: number of actual rewirings carried out
 %     [Rlatt,Rrp,ind_rp,eff] = latmio_dir_connected(AM, iter); 
-    [Rlatt,Rrp,ind_rp,eff] = latmio_dir(AM, iter); %not fully connected
+    [Rlatt,Rrp,ind_rp,eff] = latmio_dir(CM, iter); %not fully connected
     latt_ensemble(:,:,i) = Rrp; %build ensemble of surrogate networks
     C_latt_ensemble(i) = mean(clustering_coef_bd(Rrp)); 
     D_latt = distance_bin(Rrp); %shortest path length for each node
@@ -483,7 +495,7 @@ toc
 % 12008.572344 seconds = 1000 surr networks, 3,990 iter (koko)
 % change from total times freq count in null networks > empirical to 
 % fraction, making it a p-val, 3, 5, 9 & 13 sig
-p_vals_latt = p_vals_latt ./ networks; 
+p_vals_latt_f = p_vals_latt_f ./ networks; 
 
 %% visualize motif frequency spectra
 load('null_networks-motif_and_small_world.mat') %fully connected lattice
@@ -614,10 +626,12 @@ nchoosek(4,3) %4 combinations:
 %% Small-world analysis
 %run surrogate networks first to generate ensembles
 
+CM = CIJ; %define connectivity matrix
+
 %Humphries et al. (2006& 2008) method of calculating sigma:
 %only uses random networks
-C = mean(clustering_coef_bd(AM)); % avg clustering coef for empirical network
-D = distance_bin(AM); [L,efficiency] = charpath(D); %L = char path length
+C = mean(clustering_coef_bd(CM)); % avg clustering coef for empirical network
+D = distance_bin(CM); [L,efficiency] = charpath(D); %L = char path length
 gamma = C / mean(C_ensemble); %Gamma > 1 suggests greater clustering than random
 lambda = L / mean(L_ensemble); %Lambda ~ 1 suggests a comparable avg path length to randomized network
 sigma = gamma / lambda; %sigma > 1 indicates small-worldness (1.1429)
@@ -627,9 +641,9 @@ sigma = gamma / lambda; %sigma > 1 indicates small-worldness (1.1429)
 %spectrum
 omega = (mean(L_ensemble) / L) - (C / mean(C_latt_ensemble));
 %omega = 0.0275 (1,000 networks), 0.0297 (100,000 networks)
-%omega index ranges between -1 and 1. Values close to 0 are indicative of 
+%omega index ranges between -1 and 1. Values bet [-0.5,0.5] indicate 
 %small-worldness. Positive values suggest more random characteristics and 
-%negative values indicate a lattice-like structure
+%negative values indicate a lattice-like structure. 
 
 %% Modeling analysis to see if Gaussian deg dist leads to a particular kind of motif overrepresentation
 
@@ -640,7 +654,7 @@ s = 1; %std of toeplitz
 
 %test
 N = 30; %number of nodes in network
-K = 200; %number of directed edges in network
+K = 100; %number of directed edges in network
 s = 1; %std of toeplitz
 
 %K=100 was 0.024881 seconds, K=200 was untenable
@@ -648,3 +662,20 @@ s = 1; %std of toeplitz
 tic
 CIJ = maketoeplitzCIJ(N,K,s);
 toc
+
+%identify in-degree, out-degree and in+out=total degree per node
+[id,od,deg] = degrees_dir(CIJ);
+
+%step 1: run section %% test for power law distribution
+%step 2: run section %% visualize id+od dist along with fitted power-law dist on log-log axes
+%step 3: run section %% testing best cCDF plot
+%step 4: run section %% surrogate networks
+%step 5: run section %% Small-world analysis
+%this toeplitz matrix is not small-world: sigma=2.697 & omega=-0.7774
+%indeed visualization shows lattice network
+%however it is indeed best approximated by a Gaussian
+
+%Re-run this analysis and re-create the association matrix image of toeplitz
+%Need to re-write e-mail to Will asking his opinion.
+%next, try to figure out how to generate a small-world network with a
+%gaussian in & out degree distribution.
