@@ -163,7 +163,7 @@ close(erpVid)
 % [1:30:30001] % subsample the 30Khz signal to get it down to 1Khz
 
 %init variables
-path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\';
+path = 'H:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\';
 monkey='betty'; %only betty
 days_betty = { '090615', '090616', '090617', '090618', '090622', '090625', '090626', '090629', '090701', '090702', '090706', '090708', '090709', '090901', '090903', '090916', '090917', '090921', '090923', '090924', '090928', '090929', '090930', '091001' };
 day = 17; %look at 17-24
@@ -299,40 +299,33 @@ end
 close(lfpVid) %done making video
 toc
 
-%next up: debug loop then figure out how to save figures as images one at 
-%a time, save as variable name. 
-
 %load day 17 relevant ERPs
 
-load('time_domain-m1.mat')
-load('time_domain-m2.mat')
-
-%package into data variable 1: correct & 2: incorrect
-data.M1goodR1(1) = dataM1goodCorR1; data.M1goodR1(2) = dataM1goodIncR1; 
-data.M2goodR1(1) = dataM2goodCorR1; data.M2goodR1(2) = dataM2goodIncR1; 
-
-figure(1), clf %open fig and maximize to prepare for viewing
+%pull out all epochs for day
+[day_allN,areas_allN] = extractDay(path,monkey,days_betty{day},1,2,1,1,'all'); 
+[inc_day_allN,inc_areas_allN] = extractDay(path,monkey,days_betty{day},1,2,0,1,'all'); 
+% avg over trials & convert to µV (1V = 10^6µV = 1,000,000µV) for ERP
+chan_erps = mean(day_allN,3) .* 1e6; %all cor chan erps for the day
+day_erp = mean(chan_erps,1); %cor day erp across all chans
+inc_chan_erps = mean(inc_day_allN,3) .* 1e6; %all inc chan erps for the day
+inc_day_erp = mean(inc_chan_erps,1); %inc day erp across all chans
 
 %init variables
-time  = -504:size(dataM2goodCorR1.d090709.erp(2,:),2)-505; % time, from -504ms baseline
+time  = -504:size(chan_erps(2,:),2)-505; % time, from -504ms baseline
 triggers = [0 505 1316]; %epoch switches base/sample, sample/delay, delay/match
-monkeys = fieldnames(data)'; %extract both monkeys (2)
-erpday = sprintf('d%s',(days_betty{day}));
-allchans = size(data.M2goodR1(1).(erpday).erp,1);
-for chan=1:allchans
+for chan=1:length(areasN)
     erptitle = sprintf('%d %s & %d %s Trial-averaged Monkey %d Day %d / %d Area %s Chan %d / %d',...
-        size(data.M2goodR1(1).(erpday).lfp,3),"Correct",...
-        size(data.M2goodR1(2).(erpday).lfp,3),"Incorrect",...
-        find(strcmp(monkeys,monkey{:})),...
-        day,...
-        size(fieldnames(data.M2goodR1(1)),1),...
-        data.M2goodR1(1).(erpday).areasN{chan},chan,...
-        size(data.M2goodR1(1).(erpday).erp,1));
-%                 fprintf(fileID,'%s\n',erptitle); %record erp title
-    correct = data.M2goodR1(1).(erpday).erp(chan,:) + (-data.M2goodR1(1).(erpday).erp(chan,1));
-    incorrect = data.M2goodR1(2).(erpday).erp(chan,:) + (-data.M2goodR1(2).(erpday).erp(chan,1));
-    figure(1), clf
-    erp = plot(time,correct,time,incorrect,':', 'LineWidth', 2);
+            size(inc_day_allN,3),"Incorrect",size(day_allN,3),"Correct",...
+            2,day,length(days_betty),areasN{chan},chan,length(areasN));
+    correct = chan_erps(chan,:) + (-chan_erps(chan,1));
+    incorrect = inc_chan_erps(chan,:) + (-inc_chan_erps(chan,1));
+    day_erp_adj = day_erp + (-day_erp(1)); %start at 0
+    inc_day_erp_adj = inc_day_erp + (-inc_day_erp(1)); %start at 0
+    figure(1), clf, hold on
+    erp_day1 = plot(time,inc_day_erp,'r:','LineWidth',2); erp_day1.Color(4)=0.5;
+    erp_day2 = plot(time,day_erp_adj,'b:','LineWidth',2); erp_day2.Color(4)=0.5;
+    erp_chan1 = plot(time,incorrect,'r-','LineWidth',2);
+    erp_chan2 = plot(time,correct,'b-','LineWidth',2);
     set(gca,'box','off','Xlim',[time(1);time(end)]);
     y1 = get(gca,'ylim'); hold on
     epochs = plot([triggers(1) triggers(1)],y1,'--', ...
@@ -342,26 +335,11 @@ for chan=1:allchans
     title(erptitle); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
     text(time(1)+100,y1(2)-1,'baseline'); text(triggers(1)+100,y1(2)-1,'sample');
     text(triggers(2)+100,y1(2)-1,'delay'); text(triggers(3)+100,y1(2)-1,'match');
-%             pause(1) %pause 1 second
-    export_fig AM.png % no background
+    leg_area_cor = sprintf('%s cor erp',areasN{chan});
+    leg_area_inc = sprintf('%s inc erp',areasN{chan});
+    legend('day inc erp','day cor erp',leg_area_inc,leg_area_cor,'location','southwest'); legend('boxoff')
+    pngFileName = sprintf('chan_%d_area_%s_erp.png',chan,areasN{chan});
+    fullFileName = fullfile(pwd, pngFileName); %create png filename in pwd
+    export_fig(fullFileName); %save png
 end
-%make day-level erp
-correct = mean(data.(monkey{:})(1).(dday{:}).erp,1) + (-mean(data.(monkey{:})(1).(dday{:}).erp(:,1)));
-incorrect = mean(data.(monkey{:})(2).(dday{:}).erp,1) + (-mean(data.(monkey{:})(2).(dday{:}).erp(:,1)));
-erptitle = sprintf('%d %s & %d %s Trial-averaged Monkey %d Day %d / %d All Areas & Chans',...
-        size(data.(monkey{:})(1).(dday{:}).lfp,3),"Correct",...
-        size(data.(monkey{:})(2).(dday{:}).lfp,3),"Incorrect",...
-        find(strcmp(monkeys,monkey{:})),...
-        find(strcmp(alldays,dday{:})),...
-        size(fieldnames(data.(monkey{:})(1)),1));
-figure(1), clf
-erpD = plot(time,correct,time,incorrect,':', 'LineWidth', 2);
-set(gca,'box','off','Xlim',[time(1);time(end)]);
-y1 = get(gca,'ylim'); hold on
-epochs = plot([triggers(1) triggers(1)],y1,'--', ...
-[triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
-epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
-epochs(3).Color = [0.5 0.5 0.5];
-title(erptitle); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
-text(time(1)+100,y1(2)-1,'baseline'); text(triggers(1)+100,y1(2)-1,'sample');
-text(triggers(2)+100,y1(2)-1,'delay'); text(triggers(3)+100,y1(2)-1,'match');
+

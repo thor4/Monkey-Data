@@ -22,7 +22,7 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all', 'entire' ]
 
 %   homepc:
-%   path = 'D:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
+%   path = 'H:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
 %   labpc:
 %   path = 'C:\\Users\\bryan\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
 
