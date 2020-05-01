@@ -78,6 +78,7 @@ text(ytk(18:30)-0.85,repmat(xpos,size(ytk(18:30))),nodes(18:30),'FontSize',16,'C
 % cbar.Label.Position=[pos(1)-2.5 pos(2)];
 export_fig AM.png -transparent % no background
 export_fig AM.eps -transparent % no background
+export_fig toeplitz.png % no background
 %%in powerpoint make axis labels "from" and "to"
 
 %%change colors of different regional areas to match frontal and parietal
