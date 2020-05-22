@@ -411,7 +411,7 @@ export_fig out_deg_hist.eps -transparent % no background
 %% surrogate networks
 
 %init variables
-CM = CIJ; %define connectivity matrix
+CM = AM; %define connectivity matrix
 [f,F]=motif3struct_bin(CM); % real data
 
 % %be sure not to include the diagonal in the mean distance calculation
@@ -425,8 +425,9 @@ CM = CIJ; %define connectivity matrix
 % 10 appears "adequate" according to its fig 1)
 % iter = 100*sum(id); % # of iterations
 iter = 10*sum(id); % # of iterations
-% networks = 100000; % # of surrogate networks 100 for small world, 1000 for p-val stats
-networks = 100; % # of surrogate networks 100 for small world, 1000 for p-val stats
+% networks = 100000; % # of surrogate networks 100 for small world, 1000
+% for p-val stats, 100000 for saved null_networks-motifs.mat file
+networks = 1000; % # of surrogate networks 100 for small world, 1000 for p-val stats
 ensemble = zeros(size(CM,1),size(CM,2),networks); %init ensemble
 C_ensemble = zeros(networks,1); %init clust coef ensemble
 L_ensemble = zeros(networks,1); %init char path length ensemble
