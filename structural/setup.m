@@ -189,11 +189,24 @@ yo_gauss = fpnresult{4}(xo_deg); %Gaussian best fit of cCDF out-deg fpn
 
 
 %% Make id + od dist cCDF subplots
-idodFig = figure(2); clf
+%load data and prep for plotting
+load('tail_fits.mat') %load the tail fits (exp & pow) for id+od dist
+
+load('fitted_models.mat') %load the full fit models and calc y's
+% yi_poly = fpnresult{1}(xi_deg); %Polynomial best fit of cCDF in-deg fpn
+yi_pow = fpnresult{2}(id_emp(:,1)); %Power best fit of cCDF in-deg fpn
+yi_exp = fpnresult{3}(id_emp(:,1)); %Exponential best fit of cCDF in-deg fpn
+yi_gauss = fpnresult{4}(id_emp(:,1)); %Gaussian best fit of cCDF in-deg fpn
+% yo_poly = fpnresult{1}(xo_deg); %Polynomial best fit of cCDF out-deg fpn
+yo_pow = fpnresult{2}(od_emp(:,1)); %Power best fit of cCDF out-deg fpn
+yo_exp = fpnresult{3}(od_emp(:,1)); %Exponential best fit of cCDF out-deg fpn
+yo_gauss = fpnresult{4}(od_emp(:,1)); %Gaussian best fit of cCDF out-deg fpn
+
+idodFig = figure(2); clf %setup parent fig
 idTailfit = subplot(2,2,1); %id dist cCDF tail fit
 loglog(id_emp(:,1),id_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
-loglog(id_pow_fit(:,1),id_pow_fit(:,2),'r:','LineWidth',4); %power law fit
-loglog(id_exp_fit(:,1),id_exp_fit(:,2),'b:','LineWidth',4); hold off; %exp fit
+loglog(id_pow_tfit(:,1),id_pow_tfit(:,2),'r:','LineWidth',4); %power law fit
+loglog(id_exp_tfit(:,1),id_exp_tfit(:,2),'b:','LineWidth',4); hold off; %exp fit
 set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'XLim',[1,30],'FontSize',20,...
     'xticklabel',{[]}); 
 ylabel('P(degree \geq x)','FontSize',22); 
@@ -201,43 +214,30 @@ title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accord
 
 idTailfit = subplot(2,2,2); %od dist cCDF tail fit
 loglog(od_emp(:,1),od_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
-loglog(od_pow_fit(:,1),od_pow_fit(:,2),'r:','LineWidth',4); %power law fit
-loglog(od_exp_fit(:,1),od_exp_fit(:,2),'b:','LineWidth',4); hold off; %exp fit
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'XLim',[1,30],'FontSize',20,...
+loglog(od_pow_tfit(:,1),od_pow_tfit(:,2),'r:','LineWidth',4); %power law fit
+loglog(od_exp_tfit(:,1),od_exp_tfit(:,2),'b:','LineWidth',4); hold off; %exp fit
+set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'XLim',[2,30],'FontSize',20,...
     'xticklabel',{[]},'yticklabel',{[]}); 
 title('Out-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 
-
-
-xlabel('x','FontSize',22)
-
-figure(9), clf %cCDF in-deg fits
-loglog(xi_deg,yi_pdk,'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); %in
-hold on
-loglog(xi_deg,yi_exp,'b:','LineWidth',4); %exp fit
-loglog(xi_deg,yi_pow,'r--','LineWidth',4); %power law fit
-loglog(xi_deg,yi_gauss,'m-.','LineWidth',4); %gaussian fit
-hold off; 
-set(gca,'XLim',[1,30],'XTick',10.^xrt);
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',20);
+idFullfit = subplot(2,2,3); %id dist cCDF full fit
+loglog(id_emp(:,1),id_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
+loglog(id_emp(:,1),yi_exp,'b:','LineWidth',4); %exp fit
+loglog(id_emp(:,1),yi_pow,'r:','LineWidth',4); %power law fit
+loglog(id_emp(:,1),yi_gauss,'m:','LineWidth',4); hold off; %gaussian fit
+set(gca,'XLim',[1,30],'XTick',10.^xrt,'YLim',[0.03,1.25],'YTick',10.^yrt,...
+    'FontSize',20);
 ylabel('P(degree \geq x)','FontSize',22); xlabel('x','FontSize',22)
-title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
-export_fig id_ccdf_matlab.eps -transparent % no background
-export_fig id_ccdf_matlab.png -transparent % no background
 
-figure(10), clf %cCDF out-deg fits
-loglog(xo_deg,yo_pdk,'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); %out
-hold on
-loglog(xo_deg,yo_exp,'b:','LineWidth',4); %exp fit
-loglog(xo_deg,yo_pow,'r--','LineWidth',4); %power law fit
-loglog(xo_deg,yo_gauss,'m-.','LineWidth',4); %gaussian fit
-hold off; 
-set(gca,'XLim',[2,30],'XTick',10.^xrt);
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'FontSize',20);
-ylabel('P(degree \geq x)','FontSize',22); xlabel('x','FontSize',22)
-title('Out-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
-export_fig od_ccdf_matlab.eps -transparent % no background
-export_fig od_ccdf_matlab.png -transparent % no background
+odFullfit = subplot(2,2,4); %od dist cCDF full fit
+loglog(od_emp(:,1),od_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
+loglog(od_emp(:,1),yo_exp,'b:','LineWidth',4); %exp fit
+loglog(od_emp(:,1),yo_pow,'r:','LineWidth',4); %power law fit
+loglog(od_emp(:,1),yo_gauss,'m:','LineWidth',4); hold off; %gaussian fit
+set(gca,'XLim',[2,30],'XTick',10.^xrt,'YLim',[0.03,1.25],'YTick',10.^yrt,...
+    'FontSize',20); xlabel('x','FontSize',22)
+
+%figure out how to decrease space between plots, tight?
 
 
 % %use this if you want to find degrees where its like a power law dist,
@@ -270,8 +270,6 @@ export_fig od_ccdf_matlab.png -transparent % no background
 % hold on
 % loglog(fxi_deg,yif,'k-'); %in-deg frontal Gaussian best-fit
 
-%see about other metrics to explore
-%make structural figures and write up methods + discussion surrounding it
 
 %% test for power law distribution
 % files located here: http://tuvalu.santafe.edu/~aaronc/powerlaws/
@@ -333,7 +331,7 @@ switch f_dattype,
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',8,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',2); %power law fit
 %         h(3) = loglog(xi,yi,'b:','LineWidth',2); hold off; %exp fit
-        h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
+%         h(3) = loglog(xo,yo,'b:','LineWidth',2); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -366,7 +364,7 @@ switch f_dattype,
         h(1) = loglog(c(:,1),c(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
         h(2) = loglog(cf(:,1),cf(:,2),'r--','LineWidth',4); %power law fit
 %         h(3) = loglog(xi,yi,'b:','LineWidth',4); hold off; %exp fit
-        h(3) = loglog(xo,yo,'b:','LineWidth',4); hold off; %exp fit
+%         h(3) = loglog(xo,yo,'b:','LineWidth',4); hold off; %exp fit
         xr  = [10.^floor(log10(min(x))) 10.^ceil(log10(max(x)))];
         xrt = (round(log10(xr(1))):2:round(log10(xr(2))));
         if length(xrt)<4, xrt = (round(log10(xr(1))):1:round(log10(xr(2)))); end;
@@ -392,8 +390,10 @@ title('Out-degree Distribution cCDF','FontSize',20); %update for id/od/deg accor
 % legend('empirical data','power-law fit','exponential fit')
 % export_fig id_ccdf.eps -transparent % no background
 % export_fig id_ccdf.png -transparent % no background
-id_emp=c; id_pow_fit=cf; id_exp_fit=[xi,yi']; %save id fits, then redo for od
-od_emp=c; od_pow_fit=cf; od_exp_fit=[xo,yo']; %save od fits
+id_emp=c; id_pow_tfit=cf; id_exp_tfit=[xi,yi']; %save id tail fits, then redo for od
+od_emp=c; od_pow_tfit=cf; od_exp_tfit=[xo,yo']; %save od tail fits
+save('tail_fits.mat','id_emp','od_emp','id_pow_tfit','od_pow_tfit',...
+    'id_exp_tfit','od_exp_tfit') %save all the tail fits
 
 
 %% out degree distribution visualization v2
