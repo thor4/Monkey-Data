@@ -202,22 +202,34 @@ yo_pow = fpnresult{2}(od_emp(:,1)); %Power best fit of cCDF out-deg fpn
 yo_exp = fpnresult{3}(od_emp(:,1)); %Exponential best fit of cCDF out-deg fpn
 yo_gauss = fpnresult{4}(od_emp(:,1)); %Gaussian best fit of cCDF out-deg fpn
 
+% get subtightplot function from:
+% https://www.mathworks.com/matlabcentral/fileexchange/39664-subtightplot
+
+%setup the subtightplot function parameters to minimize spacing
+make_it_tight = true; %used to turn on/off subplot functionality
+%set ([vert horiz](axes gap),[lower uppper](margins),[left right](margins))
+subplot = @(m,n,p) subtightplot (m, n, p, [0.035 0.01], [0.075 0.05], [0.05 0.01]);
+if ~make_it_tight,  clear subplot;  end
+
+xlimsi=[1.5,25]; xlimso=[2,25]; ylims=[0.03,1.25];
+
 idodFig = figure(2); clf %setup parent fig
 idTailfit = subplot(2,2,1); %id dist cCDF tail fit
 loglog(id_emp(:,1),id_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
 loglog(id_pow_tfit(:,1),id_pow_tfit(:,2),'r:','LineWidth',4); %power law fit
 loglog(id_exp_tfit(:,1),id_exp_tfit(:,2),'b:','LineWidth',4); hold off; %exp fit
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'XLim',[1,30],'FontSize',20,...
-    'xticklabel',{[]}); 
-ylabel('P(degree \geq x)','FontSize',22); 
+set(gca,'YLim',ylims,'XLim',xlimsi,'FontSize',20,'xticklabel',{[]}); 
+text(xlimsi(1),ylims(2)+0.25,'A','FontSize',24,'FontWeight','bold')
+ylabel('P(degree \geq x)','FontSize',20); 
 title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 
 idTailfit = subplot(2,2,2); %od dist cCDF tail fit
 loglog(od_emp(:,1),od_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
 loglog(od_pow_tfit(:,1),od_pow_tfit(:,2),'r:','LineWidth',4); %power law fit
 loglog(od_exp_tfit(:,1),od_exp_tfit(:,2),'b:','LineWidth',4); hold off; %exp fit
-set(gca,'YLim',[0.03,1.25],'YTick',10.^yrt,'XLim',[2,30],'FontSize',20,...
-    'xticklabel',{[]},'yticklabel',{[]}); 
+set(gca,'YLim',ylims,'XLim',xlimso,'FontSize',20,'xticklabel',{[]},...
+    'yticklabel',{[]}); 
+text(xlimso(1),ylims(2)+0.25,'B','FontSize',24,'FontWeight','bold')
 title('Out-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 
 idFullfit = subplot(2,2,3); %id dist cCDF full fit
@@ -225,19 +237,23 @@ loglog(id_emp(:,1),id_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); 
 loglog(id_emp(:,1),yi_exp,'b:','LineWidth',4); %exp fit
 loglog(id_emp(:,1),yi_pow,'r:','LineWidth',4); %power law fit
 loglog(id_emp(:,1),yi_gauss,'m:','LineWidth',4); hold off; %gaussian fit
-set(gca,'XLim',[1,30],'XTick',10.^xrt,'YLim',[0.03,1.25],'YTick',10.^yrt,...
-    'FontSize',20);
-ylabel('P(degree \geq x)','FontSize',22); xlabel('x','FontSize',22)
+xticks([min(id_emp(:,1)) 10 max(id_emp(:,1))])
+set(gca,'XLim',xlimsi,'YLim',ylims,'FontSize',20);
+text(xlimsi(1),ylims(2)+0.25,'C','FontSize',24,'FontWeight','bold')
+ylabel('P(degree \geq x)','FontSize',20); xlabel('x','FontSize',20)
 
 odFullfit = subplot(2,2,4); %od dist cCDF full fit
 loglog(od_emp(:,1),od_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); hold on;
 loglog(od_emp(:,1),yo_exp,'b:','LineWidth',4); %exp fit
 loglog(od_emp(:,1),yo_pow,'r:','LineWidth',4); %power law fit
 loglog(od_emp(:,1),yo_gauss,'m:','LineWidth',4); hold off; %gaussian fit
-set(gca,'XLim',[2,30],'XTick',10.^xrt,'YLim',[0.03,1.25],'YTick',10.^yrt,...
-    'FontSize',20); xlabel('x','FontSize',22)
+xticks([min(od_emp(:,1)) 10 max(od_emp(:,1))])
+set(gca,'XLim',xlimso,'YLim',ylims,'FontSize',20,'yticklabel',{[]}); 
+text(xlimso(1),ylims(2)+0.25,'D','FontSize',24,'FontWeight','bold')
+xlabel('x','FontSize',20)
 
-%figure out how to decrease space between plots, tight?
+export_fig conn_subplots.eps -transparent % no background
+export_fig conn_subplots.png -transparent % no background
 
 
 % %use this if you want to find degrees where its like a power law dist,
