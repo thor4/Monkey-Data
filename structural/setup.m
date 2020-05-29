@@ -208,7 +208,7 @@ yo_gauss = fpnresult{4}(od_emp(:,1)); %Gaussian best fit of cCDF out-deg fpn
 %setup the subtightplot function parameters to minimize spacing
 make_it_tight = true; %used to turn on/off subplot functionality
 %set ([vert horiz](axes gap),[lower uppper](margins),[left right](margins))
-subplot = @(m,n,p) subtightplot (m, n, p, [0.035 0.01], [0.075 0.05], [0.05 0.01]);
+subplot = @(m,n,p) subtightplot (m, n, p, [0.04 0.02], [0.075 0.05], [0.05 0.01]);
 if ~make_it_tight,  clear subplot;  end
 
 xlimsi=[1.5,25]; xlimso=[2,25]; ylims=[0.03,1.25];
@@ -219,7 +219,7 @@ loglog(id_emp(:,1),id_emp(:,2),'ko','MarkerSize',15,'MarkerFaceColor',[1 1 1]); 
 loglog(id_pow_tfit(:,1),id_pow_tfit(:,2),'r:','LineWidth',4); %power law fit
 loglog(id_exp_tfit(:,1),id_exp_tfit(:,2),'b:','LineWidth',4); hold off; %exp fit
 set(gca,'YLim',ylims,'XLim',xlimsi,'FontSize',20,'xticklabel',{[]}); 
-text(xlimsi(1),ylims(2)+0.25,'A','FontSize',24,'FontWeight','bold')
+text(xlimsi(1)-0.175,ylims(2)+0.25,'A','FontSize',34,'FontWeight','bold')
 ylabel('P(degree \geq x)','FontSize',20); 
 title('In-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 
@@ -229,7 +229,7 @@ loglog(od_pow_tfit(:,1),od_pow_tfit(:,2),'r:','LineWidth',4); %power law fit
 loglog(od_exp_tfit(:,1),od_exp_tfit(:,2),'b:','LineWidth',4); hold off; %exp fit
 set(gca,'YLim',ylims,'XLim',xlimso,'FontSize',20,'xticklabel',{[]},...
     'yticklabel',{[]}); 
-text(xlimso(1),ylims(2)+0.25,'B','FontSize',24,'FontWeight','bold')
+text(xlimso(1)-0.175,ylims(2)+0.25,'B','FontSize',34,'FontWeight','bold')
 title('Out-degree Distribution cCDF','FontSize',20); %update for id/od/deg accordingly
 
 idFullfit = subplot(2,2,3); %id dist cCDF full fit
@@ -239,7 +239,7 @@ loglog(id_emp(:,1),yi_pow,'r:','LineWidth',4); %power law fit
 loglog(id_emp(:,1),yi_gauss,'m:','LineWidth',4); hold off; %gaussian fit
 xticks([min(id_emp(:,1)) 10 max(id_emp(:,1))])
 set(gca,'XLim',xlimsi,'YLim',ylims,'FontSize',20);
-text(xlimsi(1),ylims(2)+0.25,'C','FontSize',24,'FontWeight','bold')
+text(xlimsi(1)-0.175,ylims(2)+0.25,'C','FontSize',34,'FontWeight','bold')
 ylabel('P(degree \geq x)','FontSize',20); xlabel('x','FontSize',20)
 
 odFullfit = subplot(2,2,4); %od dist cCDF full fit
@@ -249,7 +249,7 @@ loglog(od_emp(:,1),yo_pow,'r:','LineWidth',4); %power law fit
 loglog(od_emp(:,1),yo_gauss,'m:','LineWidth',4); hold off; %gaussian fit
 xticks([min(od_emp(:,1)) 10 max(od_emp(:,1))])
 set(gca,'XLim',xlimso,'YLim',ylims,'FontSize',20,'yticklabel',{[]}); 
-text(xlimso(1),ylims(2)+0.25,'D','FontSize',24,'FontWeight','bold')
+text(xlimso(1)-0.175,ylims(2)+0.25,'D','FontSize',34,'FontWeight','bold')
 xlabel('x','FontSize',20)
 
 export_fig conn_subplots.eps -transparent % no background
