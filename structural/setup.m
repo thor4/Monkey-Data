@@ -592,8 +592,9 @@ sig_latt = [xBar(9,2) sigIDs_y(3)+5; xBar(13,2) sigIDs_y(7)+5]; %* p<=.05
 plot(sig_rand(1:3,1),sig_rand(1:3,2), '*k') %*** p<.001
 plot(sig_latt(1,1),sig_latt(1,2), '*k') %* p<=.05
 ylabel('structural motif count','FontSize',21); xlabel('motif ID (M=3)','FontSize',21)
+mlgnd=legend('Empirical','Random','Lattice'); legend('boxoff')
 % legend('Real','Random','Lattice'); title('Motif Frequency Spectra','FontSize',20)
-h=gca; h.Color = 'none'; % turn off background color
+h=gca; h.Color='none'; mlgnd.Color='none'; % turn off background color
 box off; %take out top and right lines
 
 export_fig motif_spectra.eps -transparent % no background
