@@ -81,7 +81,7 @@ figure(1), clf %open fig and maximize to prepare for viewing
 time  = -504:size(dataM2goodCorR1.d090709.erp(2,:),2)-505; % time, from -504ms baseline
 triggers = [0 505 1316]; %epoch switches base/sample, sample/delay, delay/match
 monkeys = fieldnames(data)'; %extract both monkeys (2)
-%init video
+%init video (making a movie of all figs)
 erpVid = VideoWriter('erpVid'); %open video file
 erpVid.FrameRate = 5;  %can adjust this, 5 - 10 seems to work
 open(erpVid)
