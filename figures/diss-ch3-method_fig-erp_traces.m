@@ -77,7 +77,6 @@ for monkey=monkeys
     else monk="B"; end
     erptitle = sprintf('%d %s & %d %s Trial-averaged Monkey %s All Days All Areas & Chans',...
             alltrialCounts(1),"Correct",alltrialCounts(2),"Incorrect",monk);
-%     erptitle = sprintf('Monkey %s All Days All Areas & Chans',monk);
     figure(1), clf
     %add in the (1:end-73) to ensure only 200ms of match period shows
     erpD = plot(time_x(1:end-73),correct(1:end-73),time_x(1:end-73),incorrect(1:end-73),':', 'LineWidth', 2);
@@ -96,6 +95,8 @@ for monkey=monkeys
     fileName = sprintf('m%s_all_%d_days_erp',monk,size(fieldnames(data.(monkey{:})(1)),1));
     export_fig(fileName,'-pdf','-transparent'); %save transparent pdf in pwd
 end
+
+%% 
 
 %Next up: scan to see which days to take out of the Monkey B all-days ERP
 %then create a Monkey B ERP without those days, likely 4-5 near the end
