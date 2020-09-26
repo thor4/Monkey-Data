@@ -96,7 +96,51 @@ for monkey=monkeys
     export_fig(fileName,'-pdf','-transparent'); %save transparent pdf in pwd
 end
 
-%% 
+%% Overall ERPS across unsuspicious days across chans for Monkey B by behResp
 
-%Next up: scan to see which days to take out of the Monkey B all-days ERP
-%then create a Monkey B ERP without those days, likely 4-5 near the end
+susp_days = [17,18,19,20,21,22,24]; %identify suspicious days
+
+clf
+monkey=monkeys{2}
+alldays = fieldnames(data.(monkey)(1))'; %extract all days
+alldays(susp_days)=[]; %remove suspicious days
+i=0; %reset day counter
+for dday=alldays
+    i=i+1; %iterate day count
+    allchans = size(data.(monkey)(1).(dday{:}).erp,1);
+    %make day-level erp across chans
+    daysERP(1,:,i) = mean(data.(monkey)(1).(dday{:}).erp,1); %correct
+    daysERP(2,:,i) = mean(data.(monkey)(2).(dday{:}).erp,1); %inc
+    trialCounts(1,i) = size(data.(monkey)(1).(dday{:}).lfp,3);
+    trialCounts(2,i) = size(data.(monkey)(2).(dday{:}).lfp,3);
+end
+alldaysERP = mean(daysERP,3); %overall mean across days
+correct = alldaysERP(1,:)-alldaysERP(1,1); %start at 0
+incorrect = alldaysERP(2,:)-alldaysERP(2,1); %start at 0
+alltrialCounts = sum(trialCounts,2); %overall counts for trials
+erptitle = sprintf('%d %s & %d %s Trial-averaged Monkey B %d Unsuspicious Days All Areas & Chans',...
+        alltrialCounts(1),"Correct",alltrialCounts(2),"Incorrect",size(alldays,2));
+figure(1), clf
+%add in the (1:end-73) to ensure only 200ms of match period shows
+erpD = plot(time_x(1:end-73),correct(1:end-73),time_x(1:end-73),incorrect(1:end-73),':', 'LineWidth', 2);
+set(gca,'box','off','Xlim',[time_x(1);time_x(end-73)]);
+y1 = get(gca,'ylim'); hold on
+epochs = plot([triggers(1) triggers(1)],y1,'--', ...
+[triggers(2) triggers(2)],y1,'--',[triggers(3) triggers(3)],y1,'--'); 
+epochs(1).Color = [0.5 0.5 0.5]; epochs(2).Color = [0.5 0.5 0.5];
+epochs(3).Color = [0.5 0.5 0.5];
+title(erptitle); xlabel('Time (ms)'); ylabel('Voltage (µV)'); 
+text(time_x(1)+100,y1(2)-1,'baseline','FontSize',14); 
+text(triggers(1)+100,y1(2)-1,'sample','FontSize',14);
+text(triggers(2)+100,y1(2)-1,'delay','FontSize',14); 
+text(triggers(3)+75,y1(2)-1,'match','FontSize',14);  
+ax=gca; ax.FontSize = 18;
+fileName = sprintf('mB_all_%d_unsuspicious_days_erp',size(alldays,2));
+export_fig(fileName,'-pdf','-transparent'); %save transparent pdf in pwd
+
+% Suspicious days: 17, 18, 19, 20, 21, 22, 24
+% monkey A 11,730 correct 3,003 incorrect (all days)
+% monkey B 14,284 correct 4,115 incorrect (all days)
+% monkey B  4,845 correct 1,558 incorrect (suspicious days)
+% monkey B  9,439 correct 2,557 incorrect (all non-suspicious days)
+
