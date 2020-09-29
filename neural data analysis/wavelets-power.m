@@ -10,10 +10,11 @@ num_frex = 50;
 min_fwhm = .350; % in seconds (350ms)
 max_fwhm = .050; % in seconds (50ms)
 wavpts = length(wavet);
+%there are N/2+1 frequencies between 0 and srate/2:
 hz = linspace(0,srate/2,floor(wavpts/2)+1); % pos frequencies (not neg) up to Nyquist
 frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
 % s    = logspace(log10(3),log10(12),num_frex)./(2*pi*frex); %width of gaussian
-%fwhm of gaussian windows used to create wavelets:
+%fwhm of gaussian windows used to create wavelets logarithmically spaced:
 fwhm = logspace(log10(min_fwhm),log10(max_fwhm),length(frex)); % in seconds
 
 
@@ -74,14 +75,18 @@ title('Frequency domain')
 
 % plot FWHM in time domain to show how much temporal smoothing occurs
 figure(2), clf
-subplot(211), plot(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
+subplot(211)
+plot(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
+% semilogx(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
 set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmT)*1000*1.05])
 xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (ms)')
 title('Time domain')
 % plot FWHM in frequency domain to show how much spectral smoothing occurs
 subplot(212)
 plot(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
+% semilogx(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
 set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05])
 xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (Hz)')
 title('Frequency domain')
 
+% PREP THESE FIGUERS FOR PAPER
