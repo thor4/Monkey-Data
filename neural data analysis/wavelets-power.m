@@ -3,11 +3,11 @@
 %initialize variables
 srate = 1000; % 1,000Hz
 % -500:0 baseline, 1:500 sample, 501:1310 delay (all in ms)
-wavet = -.5:1/srate:.5; % in seconds 
+wavet = -0.6:1/srate:0.6; % in seconds (how long can this be in relation to the signal?)-impact min fwhm and freq
 min_freq = 3; %in Hz
 max_freq = 200;
 num_frex = 50;
-min_fwhm = .350; % in seconds (350ms)
+min_fwhm = .400; % in seconds (350ms)
 max_fwhm = .050; % in seconds (50ms)
 wavpts = length(wavet);
 %there are N/2+1 frequencies between 0 and srate/2:
@@ -76,17 +76,25 @@ title('Frequency domain')
 % plot FWHM in time domain to show how much temporal smoothing occurs
 figure(2), clf
 subplot(211)
-plot(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
-% semilogx(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
-set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmT)*1000*1.05])
+% plot(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
+semilogx(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
+% set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmT)*1000*1.05])
+set(gca,'ylim',[0 max(empfwhmT)*1000*1.05])
+xticks(round(frex(1:2:end),1))
 xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (ms)')
 title('Time domain')
+
 % plot FWHM in frequency domain to show how much spectral smoothing occurs
 subplot(212)
-plot(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
-% semilogx(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
-set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05])
+% plot(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
+semilogx(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
+set(gca,'ylim',[0 max(empfwhmF)*1.05],'xminortick','off')
+xticks(round(frex(1:2:end),1))
+box off
+% set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05],'xtick',frex)
 xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (Hz)')
 title('Frequency domain')
 
-% PREP THESE FIGUERS FOR PAPER
+% PREP THESE FIGUERS FOR PAPER- wait until after the T/F analysis, may need
+% to change parameters of wavelets to extract analytic signal in diff ways
+
