@@ -59,42 +59,46 @@ end
 % plot wavelets in time domain- ensure all taper to 0 (or very close)
 figure(1), clf
 subplot(211)
-plot(wavet,real(wavelets))
-axis off
-% export_fig test2.png -transparent % no background
-% plot(time,signal,'k','linew',2)
+plot(wavet,real(wavelets),'linew',2)
 xlabel('Time (s)'), ylabel('Amplitude (gain)')
-title('Time domain')
+text(-0.72,1.2,'A','fontsize',35); box off
+title('Time domain'); ax=gca; ax.FontSize = 25;
 % plot wavelets in frequency domain- ensure all are symmetric about their
 % peak frequency and they taper to 0 on the ends
 subplot(212)
-plot(hz,abs(wavelets_fft(:,1:length(hz))).^2)
-set(gca,'xlim',[0 225])
+plot(hz,abs(wavelets_fft(:,1:length(hz))).^2,'linew',2)
+set(gca,'xlim',[0 225]); text(-23,1.08,'B','fontsize',35);
 xlabel('Frequency (Hz)'), ylabel('Normalized Power')
-title('Frequency domain')
+title('Frequency domain'); ax=gca; ax.FontSize = 25; box off
+export_fig('wavelets','-png','-transparent'); %save transparent pdf in pwd
 
 % plot FWHM in time domain to show how much temporal smoothing occurs
 figure(2), clf
 subplot(211)
 % plot(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
-semilogx(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
+% semilogx(frex,empfwhmT*1000,'o:','markersize',8,'markerfacecolor','w','linew',2)
+semilogx(frex,empfwhmT*1000,'.','markersize',25,'markerfacecolor','b')
 % set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmT)*1000*1.05])
-set(gca,'ylim',[0 max(empfwhmT)*1000*1.05])
-xticks(round(frex(1:2:end),1))
-xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (ms)')
-title('Time domain')
+set(gca,'ylim',[0 max(empfwhmT)*1000*1.05],'xminortick','off'); 
+xticks(round(frex(1:3:end),1)); ylabel('FWHM (ms)')
+text(2.2,max(empfwhmT)*1000*1.05+35,'A','fontsize',35);
+title('Temporal Resolution log-lin'); ax=gca; ax.FontSize = 25;
+ax.XTickLabel=[]; box off
 
 % plot FWHM in frequency domain to show how much spectral smoothing occurs
 subplot(212)
 % plot(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
-semilogx(frex,empfwhmF,'s:','markersize',10,'markerfacecolor','w','linew',2)
+% semilogx(frex,empfwhmF,'s:','markersize',8,'markerfacecolor','w','linew',2)
+semilogx(frex,empfwhmF,'.','markersize',25,'markerfacecolor','b')
 set(gca,'ylim',[0 max(empfwhmF)*1.05],'xminortick','off')
-xticks(round(frex(1:2:end),1))
-box off
+text(2.2,max(empfwhmF)*1.05+1,'B','fontsize',35);
+xticks(round(frex(1:3:end),1)); box off
 % set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05],'xtick',frex)
-xlabel('Wavelet frequency (Hz)'), ylabel('Empirical FWHM (Hz)')
-title('Frequency domain')
+xlabel('Wavelet frequency (Hz)'), ylabel('FWHM (Hz)')
+title('Spectral Resolution log-lin'); ax=gca; ax.FontSize = 25;
+export_fig('fwhm smoothing','-png','-transparent'); %save transparent pdf in pwd
 
-% PREP THESE FIGUERS FOR PAPER- wait until after the T/F analysis, may need
+% Prepped figs for paper- check after the T/F analysis, may need
 % to change parameters of wavelets to extract analytic signal in diff ways
 
+% now move onto TF analysis
