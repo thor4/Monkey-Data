@@ -3,10 +3,10 @@
 %initialize variables
 srate = 1000; % 1,000Hz
 % -500:0 baseline, 1:500 sample, 501:1310 delay (all in ms)
-wavet = -0.6:1/srate:0.6; % in seconds (how long can this be in relation to the signal?)-impact min fwhm and freq
-min_freq = 3; %in Hz
-max_freq = 200;
-num_frex = 50;
+wavet = -1:1/srate:1; % in seconds (length doesn't matter since multiplying by zeroes won't affect convolution)
+min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
+max_freq = 200; %may be no reason to go this high, try 100 after
+num_frex = 50; %try 25-35 when only going to 100Hz, better for statistics mult comp corr, less smooth spectrogram
 min_fwhm = .400; % in seconds (350ms)
 max_fwhm = .050; % in seconds (50ms)
 wavpts = length(wavet);
@@ -70,7 +70,7 @@ plot(hz,abs(wavelets_fft(:,1:length(hz))).^2,'linew',2)
 set(gca,'xlim',[0 225]); text(-23,1.08,'B','fontsize',35);
 xlabel('Frequency (Hz)'), ylabel('Normalized Power')
 title('Frequency domain'); ax=gca; ax.FontSize = 25; box off
-export_fig('wavelets','-png','-transparent'); %save transparent pdf in pwd
+% export_fig('wavelets','-png','-transparent'); %save transparent pdf in pwd
 
 % plot FWHM in time domain to show how much temporal smoothing occurs
 figure(2), clf
@@ -96,9 +96,48 @@ xticks(round(frex(1:3:end),1)); box off
 % set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05],'xtick',frex)
 xlabel('Wavelet frequency (Hz)'), ylabel('FWHM (Hz)')
 title('Spectral Resolution log-lin'); ax=gca; ax.FontSize = 25;
-export_fig('fwhm smoothing','-png','-transparent'); %save transparent pdf in pwd
+% export_fig('fwhm smoothing','-png','-transparent'); %save transparent pdf in pwd
 
 % Prepped figs for paper- check after the T/F analysis, may need
 % to change parameters of wavelets to extract analytic signal in diff ways
 
-% now move onto TF analysis
+%% Create analytic signal using the complex morlet wavelet family for both 
+% monkeys, both conditions, all days, all channels and all trials
+
+% load lfp's from:
+% \OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data
+
+load('time_domain-m1.mat') %dataM1goodCorR1 & dataM1goodIncR1
+load('time_domain-m2.mat') %dataM2goodCorR1 & dataM2goodIncR1
+
+%504 samples in baseline
+%505 samples in cue
+%811 samples in delay
+%274 samples in match (check this)
+%2094 total samples across all chans
+
+% begin definining convolution parameters
+n_wavelet = length(wavet);
+half_of_wavelet_size = floor(n_wavelet/2)+1;
+monkeyN = 2; % which monkey (1 or 2)
+mAchans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
+mAareas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
+mBchans = {'6DR', '8AD', '8B', 'dPFC', 'LIP', 'PE', 'PEC', 'PG'};
+mBareas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'};
+
+% define trial timeline
+signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
+signalt = -.5:1/srate:1.31; % in seconds
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1489; % in ms
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+% define baseline time
+baset = [-.4 -.1]; % in seconds
+baseidx = dsearchn(signalt',baset');
+
+% setup response structs
+monkey(monkeyN).correct=[];
+monkey(monkeyN).incorrect=[];
+
+
