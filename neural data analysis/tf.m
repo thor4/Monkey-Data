@@ -115,7 +115,7 @@ title('Frequency domain')
 %% Create analytic signal using the complex morlet wavelet family for both 
 % monkeys, both conditions, all days, all channels and all trials
 
-% load monkey data
+% load monkey data (F:\Archive\research\monkey memory)
 load('mGoodStableRule1PingRej-split_by_Day_BehResp_and_Chan.mat')
 
 % begin definining convolution parameters

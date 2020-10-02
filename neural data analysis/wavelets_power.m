@@ -110,6 +110,11 @@ title('Spectral Resolution log-lin'); ax=gca; ax.FontSize = 25;
 load('time_domain-m1.mat') %dataM1goodCorR1 & dataM1goodIncR1
 load('time_domain-m2.mat') %dataM2goodCorR1 & dataM2goodIncR1
 
+%package into data variable 1: correct & 2: incorrect, then remove
+data.mAgoodR1(1) = dataM1goodCorR1; data.mAgoodR1(2) = dataM1goodIncR1; 
+data.mBgoodR1(1) = dataM2goodCorR1; data.mBgoodR1(2) = dataM2goodIncR1; 
+clear dataM1goodCorR1 dataM2goodCorR1 dataM1goodIncR1 dataM2goodIncR1
+
 %504 samples in baseline
 %505 samples in cue
 %811 samples in delay
@@ -129,15 +134,96 @@ mBareas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'};
 signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
 signalt = -.5:1/srate:1.31; % in seconds
 % vector of time points to save in post-analysis downsampling
-times2save = -400:10:1489; % in ms
+times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
 % time vector converted to indices
 times2saveidx = dsearchn((signalt.*1000)',times2save');
 % define baseline time
 baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
-% setup response structs
-monkey(monkeyN).correct=[];
-monkey(monkeyN).incorrect=[];
 
-
+tic
+%correct + incorrect
+for monkey=fieldnames(data)' %loop thru monkeys
+    for i=1:2 %1 is correct, 2 is incorrect
+        alldays = fieldnames(data.(monkey{:})(i))'; %extract all days
+        for dday=alldays %loop thru days
+            allchans = size(data.(monkey{:})(i).(dday{:}).lfp,1);
+            for chan=allchans %loop thru chans
+                %rem single chan dim, convert to µV (1V = 10^6µV =1,000,000µV)
+                %and confirm time x trials leftover
+                signal = squeeze(data.(monkey{:})(i).(dday{:}).lfp(chan,:,:)).* 1e6;
+                reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
+                % reflect all trials
+                for signalN=1:size(signal,2) %loop through trials
+                    reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
+                    reflectsig_all(:,signalN) = reflectsig;
+                end
+                % concatenate into a super-trial
+                reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
+        %         % plot original signal (example from mB chan 23 trial 848
+        %         figure(1), clf
+        %         subplot(211)
+        %         plot(signal(:,848)','LineWidth',2,'color','b')
+        %         set(gca,'xlim',[0 numel(reflectsig)]-n_wavelet)
+        %         ylabel('Voltage (\muV)'); title('Original Signal')
+        %         ax=gca; ax.FontSize = 25; x1=xticklabels; 
+        %         set(gca, 'XTickLabel', []); box off
+        %         % plot reflected signal
+        %         subplot(212)
+        %         p21=plot(n_wavelet+1:length(signal(:,848))+n_wavelet,signal(:,848),...
+        %             'LineWidth',3,'color','b');
+        %         hold on
+        %         p22=plot(reflectsig,'-','LineWidth',2,'color','k');
+        %         p22.Color(4) = 0.35; %change transparency
+        %         set(gca,'xlim',[0 numel(reflectsig)])
+        %         title('Reflected Signal'); xlabel('Time step (ms)')
+        %         ylabel('Voltage (\muV)')
+        %         ax=gca; ax.FontSize = 25; xticklabels(x1); box off
+        %         legend({'original';'reflected'},'FontSize',25,'Location','best','box','off')
+        %         export_fig('reflected signal','-png','-transparent'); %save transparent pdf in pwd
+                % step 1: finish defining convolution parameters
+                n_data = length(reflectsig_supertri); % time*trials
+                n_convolution = n_wavelet+n_data-1;
+                % step 2: take FFTs
+                fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
+                % which area is this chan
+                area = char(data.(monkey{:})(i).(dday{:}).areas(chan));
+                for fi=1:length(frex)
+                    % FFT of wavelet
+                    fft_wavelet = fft(wavelets(fi,:),n_convolution);
+                    % step 3: normalize kernel by scaling amplitudes to one in the 
+                    % frequency domain. prevents amplitude from decreasing with 
+                    % increasing frequency. diff from 1/f scaling
+                    fft_wavelet = fft_wavelet ./ max(fft_wavelet);
+                    % step 4: point-wise multiply and take iFFT
+                    as = ifft( fft_data.*fft_wavelet ); % analytic signal
+                    % step 5: trim wings
+                    as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
+                    % step 6: reshape back to reflected time-by-trials
+                    as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
+                    % step 7: chop off the reflections
+                    as = as(n_wavelet+1:end-n_wavelet,:);
+                    % as is now a time x trial complex matrix
+        %             % compute baseline power averaged over trials then timepoints
+        %             basePow = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
+                    % store dB-norm'd down-sampled power for each frequency in freq
+                    % x time x trials
+        %             dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
+                    % save raw power for ea. freq x down-sampled time x trials 
+                    pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
+                    % mean( abs( as_ ).^2, 2);
+                    clear fft_wavelet as % start anew with these var's ea. loop
+                end
+                %remove erp to free up space
+                data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'erp')
+                %save downsampled power as chan x freqidx x time x trials
+                data.(monkey{:})(i).(dday{:}).pow(chan,:,:,:) = pow;                
+                clear pow % start anew with this var ea. loop
+            end
+            %remove lfp to free up space in data var since we're done w/ it
+            data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'lfp');
+        end
+    end
+end
+toc
