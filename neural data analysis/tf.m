@@ -479,6 +479,9 @@ zval = abs(norminv(pval));
 % number of permutations
 n_permutes = 1000;
 
+% mike x cohen convo about meta perm testing: 
+% https://groups.google.com/g/analyzingneuraltimeseriesdata/c/5j-ej09p1DI/m/boVUBFaHAwAJ
+
 tic
 % meta-permutation test
 for permN = 1:20

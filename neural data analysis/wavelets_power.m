@@ -124,12 +124,6 @@ clear dataM1goodCorR1 dataM2goodCorR1 dataM1goodIncR1 dataM2goodIncR1
 % begin definining convolution parameters
 n_wavelet = length(wavet);
 half_of_wavelet_size = floor(n_wavelet/2)+1;
-monkeyN = 2; % which monkey (1 or 2)
-mAchans = {'8B', '9L', 'dPFC', 'vPFC', 'LIP', 'MIP', 'PEC', 'PG'};
-mAareas = {'a8B', 'a9L', 'adPFC', 'avPFC', 'aLIP', 'aMIP', 'aPEC', 'aPG'};
-mBchans = {'6DR', '8AD', '8B', 'dPFC', 'LIP', 'PE', 'PEC', 'PG'};
-mBareas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'};
-
 % define trial timeline
 signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
 signalt = -.5:1/srate:1.31; % in seconds
@@ -149,7 +143,9 @@ for monkey=fieldnames(data)' %loop thru monkeys
         alldays = fieldnames(data.(monkey{:})(i))'; %extract all days
         for dday=alldays %loop thru days
             allchans = size(data.(monkey{:})(i).(dday{:}).lfp,1);
-            for chan=allchans %loop thru chans
+            %remove erp to free up space
+            data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'erp');
+            for chan=1:length(allchans) %loop thru chans
                 %rem single chan dim, convert to µV (1V = 10^6µV =1,000,000µV)
                 %and confirm time x trials leftover
                 signal = squeeze(data.(monkey{:})(i).(dday{:}).lfp(chan,:,:)).* 1e6;
@@ -189,6 +185,8 @@ for monkey=fieldnames(data)' %loop thru monkeys
                 fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
                 % which area is this chan
                 area = char(data.(monkey{:})(i).(dday{:}).areas(chan));
+                %init power mat: freqidx x time x trials:
+                pow = zeros(length(frex),length(times2save),size(signal,2)); 
                 for fi=1:length(frex)
                     % FFT of wavelet
                     fft_wavelet = fft(wavelets(fi,:),n_convolution);
@@ -210,15 +208,14 @@ for monkey=fieldnames(data)' %loop thru monkeys
                     % store dB-norm'd down-sampled power for each frequency in freq
                     % x time x trials
         %             dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
-                    % save raw power for ea. freq x down-sampled time x trials 
+                    % save raw power for ea. freqidx x down-sampled time x
+                    % trial
                     pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
                     % mean( abs( as_ ).^2, 2);
                     clear fft_wavelet as % start anew with these var's ea. loop
                 end
-                %remove erp to free up space
-                data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'erp')
                 %save downsampled power as chan x freqidx x time x trials
-                data.(monkey{:})(i).(dday{:}).pow(chan,:,:,:) = pow;                
+                data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow;                
                 clear pow % start anew with this var ea. loop
             end
             %remove lfp to free up space in data var since we're done w/ it
@@ -227,3 +224,12 @@ for monkey=fieldnames(data)' %loop thru monkeys
     end
 end
 toc
+
+%759.832210 seconds. (lab pc) saved average power
+% save avg power in var ie: data.mAgoodR1(1).d060406.pow (chan x freqidx x time) in :
+% OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data
+% also has ie: data.mAgoodR1(1).d060406.areas (areas for each chan)
+
+%only the last channel is showing up 
+%find(squeeze(data.mBgoodR1(2).d090625.pow(10,:,:,:))~=0); %testing
+% find(squeeze(pow(12,:,:))~=0)%testing
