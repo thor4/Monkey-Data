@@ -135,6 +135,11 @@ times2saveidx = dsearchn((signalt.*1000)',times2save');
 baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
+% monkeys=fieldnames(data');
+monkey=monkeys(end)
+dday=alldays(end)
+chan=allchans(end);
+
 
 tic
 %correct + incorrect
@@ -145,7 +150,8 @@ for monkey=fieldnames(data)' %loop thru monkeys
             allchans = size(data.(monkey{:})(i).(dday{:}).lfp,1);
             %remove erp to free up space
             data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'erp');
-            for chan=1:length(allchans) %loop thru chans
+            tic
+            for chan=1:allchans %loop thru chans
                 %rem single chan dim, convert to µV (1V = 10^6µV =1,000,000µV)
                 %and confirm time x trials leftover
                 signal = squeeze(data.(monkey{:})(i).(dday{:}).lfp(chan,:,:)).* 1e6;
@@ -187,7 +193,7 @@ for monkey=fieldnames(data)' %loop thru monkeys
                 area = char(data.(monkey{:})(i).(dday{:}).areas(chan));
                 %init power mat: freqidx x time x trials:
                 pow = zeros(length(frex),length(times2save),size(signal,2)); 
-                for fi=1:length(frex)
+                parfor fi=1:length(frex)
                     % FFT of wavelet
                     fft_wavelet = fft(wavelets(fi,:),n_convolution);
                     % step 3: normalize kernel by scaling amplitudes to one in the 
@@ -212,12 +218,14 @@ for monkey=fieldnames(data)' %loop thru monkeys
                     % trial
                     pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
                     % mean( abs( as_ ).^2, 2);
-                    clear fft_wavelet as % start anew with these var's ea. loop
+%                     clear fft_wavelet as % start anew with these var's ea. loop
                 end
                 %save downsampled power as chan x freqidx x time x trials
                 data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow;                
                 clear pow % start anew with this var ea. loop
             end
+            toc
+%             find(squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:))~=0); %testing
             %remove lfp to free up space in data var since we're done w/ it
             data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'lfp');
         end
@@ -232,4 +240,6 @@ toc
 
 %only the last channel is showing up 
 %find(squeeze(data.mBgoodR1(2).d090625.pow(10,:,:,:))~=0); %testing
-% find(squeeze(pow(12,:,:))~=0)%testing
+% find(squeeze(pow(19,:,:))~=0); %testing
+
+
