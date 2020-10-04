@@ -151,7 +151,6 @@ for i=1:2 %1 is correct, 2 is incorrect
         allchans = size(data.(monkey{:})(i).(dday{:}).lfp,1);
         %remove erp to free up space
 %         data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'erp');
-        tic
         for chan=1:allchans %loop thru chans
             %rem single chan dim, convert to µV (1V = 10^6µV =1,000,000µV)
             %and confirm time x trials leftover
@@ -225,7 +224,6 @@ for i=1:2 %1 is correct, 2 is incorrect
             data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow;                
             clear pow % start anew with this var ea. loop
         end
-        toc
 %             find(squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:))~=0); %testing
         %remove lfp to free up space in data var since we're done w/ it
 %         data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'lfp');
@@ -264,56 +262,52 @@ areas = string(data.(monkey{:})(i).(dday{:}).areas); %all areas
 
 %% plotting the raw difference data
 
-chan = 23; %plot which chan?
-clim = [0 90];
-triggers = [0 0.505 .505+.811];
-
-%pull out correct & incorrect power avg over trials (frex x time/samples)
-cor = mean( squeeze( data.(monkey{:})(1).(dday{:}).power(chan,:,:,:) ),3 ); 
-% inc = mean( squeeze( data.(monkey{:})(2).(dday{:}).power(chan,:,:,:) ),3 ); 
-% compute the difference in power between the two conditions
-% diffmap = cor - inc;
-
 % contourf plot template:
 % x = 1 x samples
 % y = 1 x frequencies
 % z = frequencies x samples
 % contourf(x,y,z,...)
 
-figure(8), clf
-contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
-yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
-    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
-set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
-text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
-text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
-text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
-text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
-lim = get(cbar,'Limits'); cbar.Ticks=lim;
-cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-2.5 pos(2)];
-title(sprintf('TF Map %s Chan %d Area %s Correct',monkey{:},chan,areas{chan}));
-ax=gca; ax.FontSize = 25;
+triggers = [0 0.505 .505+.811]; %cueonset, cueoffset, matchonset
 
-contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
-hold on
-contour(signalt(times2saveidx),frex,logical(zmap_pixel),1,'linecolor','w','linewidth',3);
-yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
-set(gca,'clim',[0 25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
-xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
-lim = get(cbar,'Limits'); cbar.Ticks=lim;
-cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-2.5 pos(2)]; 
+figure(1), clf %open fig and maximize to prepare for viewing
 
-subplot(223)
-imagesc(times2save,[], diffmap)
-hold on %vertical line
-yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
-set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','n')
-set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
-xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
-lim = get(cbar,'Limits'); cbar.Ticks=lim;
-cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-1 pos(2)];
-title(sprintf('Monkey %d, Area %s, Correct - Incorrect',monkeyN,areas{areaN}(2:end)));
+powmBvid = VideoWriter('powmBvid'); %open video file
+powmBvid.FrameRate = 5;  %can adjust this, 5 - 10 seems to work
+open(powmBvid)
+
+for chanN=1:allchans %loop thru chans
+    %pull out correct & incorrect power avg over trials (frex x time/samples)
+    cor = mean( squeeze( data.(monkey{:})(1).(dday{:}).power(chanN,:,:,:) ),3 ); 
+    % inc = mean( squeeze( data.(monkey{:})(2).(dday{:}).power(chan,:,:,:) ),3 ); 
+    % compute the difference in power between the two conditions
+    % diffmap = cor - inc;
+    figure(1), clf
+    contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+    yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+        yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+    set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+    xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+    text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+    text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+    text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+    text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
+    lim = get(cbar,'Limits'); cbar.Ticks=lim;
+    cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+    cbar.Label.Position=[pos(1)-2.5 pos(2)];
+    title(sprintf('%s Day %d / %d Chan %d / %d Area %s Correct',monkey{:},...
+        find(ismember(alldays,dday{:})),length(alldays),chanN,allchans,areas{chanN}));
+    ax=gca; ax.FontSize = 25;
+    pause(0.01) %pause to grab frame
+    frame = getframe(gcf); %get frame
+    writeVideo(powmBvid, frame); %add frame to vid
+end
+
+close(powmBvid) %finish with vid
+%final video is saved here: 
+% OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data
+
+%see about averaging over channels to get a day-level power spectrogram and
+%adding that frame to vid
+%build out the day loop
+
