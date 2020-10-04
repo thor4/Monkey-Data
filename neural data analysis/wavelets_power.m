@@ -136,6 +136,8 @@ times2saveidx = dsearchn((signalt.*1000)',times2save');
 baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
+monkey=fieldnames(data)';
+
 monkey=monkeys(end) %testing
 dday=alldays(end) %testing
 chan=allchans(end) %testing
