@@ -5,10 +5,10 @@ srate = 1000; % 1,000Hz
 % -500:0 baseline, 1:500 sample, 501:1310 delay (all in ms)
 wavet = -1:1/srate:1; % in seconds (length doesn't matter since multiplying by zeroes won't affect convolution)
 min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
-max_freq = 200; %may be no reason to go this high, try 100 after
-num_frex = 50; %try 25-35 when only going to 100Hz, better for statistics mult comp corr, less smooth spectrogram
+max_freq = 100; %nothing above 100
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
 min_fwhm = .400; % in seconds (350ms)
-max_fwhm = .050; % in seconds (50ms)
+max_fwhm = .100; % in seconds (75ms)
 wavpts = length(wavet);
 %there are N/2+1 frequencies between 0 and srate/2:
 hz = linspace(0,srate/2,floor(wavpts/2)+1); % pos frequencies (not neg) up to Nyquist
@@ -16,6 +16,7 @@ frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
 % s    = logspace(log10(3),log10(12),num_frex)./(2*pi*frex); %width of gaussian
 %fwhm of gaussian windows used to create wavelets logarithmically spaced:
 fwhm = logspace(log10(min_fwhm),log10(max_fwhm),length(frex)); % in seconds
+empcycles = 2.667 * (fwhm.*frex); %est # of cycles captured for ea frex (Cohen 2018)
 
 
 %% Step 2: Make wavelets, ensure they taper to 0 at either end in time domain and
@@ -61,13 +62,13 @@ figure(1), clf
 subplot(211)
 plot(wavet,real(wavelets),'linew',2)
 xlabel('Time (s)'), ylabel('Amplitude (gain)')
-text(-0.72,1.2,'A','fontsize',35); box off
+text(wavet(1)*1.19,1.2,'A','fontsize',35); box off
 title('Time domain'); ax=gca; ax.FontSize = 25;
 % plot wavelets in frequency domain- ensure all are symmetric about their
 % peak frequency and they taper to 0 on the ends
 subplot(212)
 plot(hz,abs(wavelets_fft(:,1:length(hz))).^2,'linew',2)
-set(gca,'xlim',[0 225]); text(-23,1.08,'B','fontsize',35);
+set(gca,'xlim',[0 120]); text(-hz(2)*24,1.08,'B','fontsize',35);
 xlabel('Frequency (Hz)'), ylabel('Normalized Power')
 title('Frequency domain'); ax=gca; ax.FontSize = 25; box off
 % export_fig('wavelets','-png','-transparent'); %save transparent pdf in pwd
@@ -81,7 +82,7 @@ semilogx(frex,empfwhmT*1000,'.','markersize',25,'markerfacecolor','b')
 % set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmT)*1000*1.05])
 set(gca,'ylim',[0 max(empfwhmT)*1000*1.05],'xminortick','off'); 
 xticks(round(frex(1:3:end),1)); ylabel('FWHM (ms)')
-text(2.2,max(empfwhmT)*1000*1.05+35,'A','fontsize',35);
+text(3,max(empfwhmT)*1000*1.05+35,'A','fontsize',35);
 title('Temporal Resolution log-lin'); ax=gca; ax.FontSize = 25;
 ax.XTickLabel=[]; box off
 
@@ -91,8 +92,8 @@ subplot(212)
 % semilogx(frex,empfwhmF,'s:','markersize',8,'markerfacecolor','w','linew',2)
 semilogx(frex,empfwhmF,'.','markersize',25,'markerfacecolor','b')
 set(gca,'ylim',[0 max(empfwhmF)*1.05],'xminortick','off')
-text(2.2,max(empfwhmF)*1.05+1,'B','fontsize',35);
-xticks(round(frex(1:3:end),1)); box off
+text(3,max(empfwhmF)*1.05+1,'B','fontsize',35);
+xticks(round(frex(1:2:end),1)); box off
 % set(gca,'xlim',[0 max(frex)*1.05],'ylim',[0 max(empfwhmF)*1.05],'xtick',frex)
 xlabel('Wavelet frequency (Hz)'), ylabel('FWHM (Hz)')
 title('Spectral Resolution log-lin'); ax=gca; ax.FontSize = 25;
@@ -135,7 +136,6 @@ times2saveidx = dsearchn((signalt.*1000)',times2save');
 baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
-monkeys=fieldnames(data');
 monkey=monkeys(end) %testing
 dday=alldays(end) %testing
 chan=allchans(end) %testing
@@ -232,15 +232,15 @@ end
 toc
 
 %759.832210 seconds. (lab pc) saved average power
-% save avg power in var ie: data.mAgoodR1(1).d060406.pow (chan x freqidx x time) in :
+%~1.25 hours for correct+incorrect for monkey 2 on lab pc
+% save all power trials in var ie: mAgoodR1.d060406.power (chan x freqidx x time x trials) in :
 % OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data
-% also has ie: data.mAgoodR1(1).d060406.areas (areas for each chan)
+% also has ie: mAgoodR1.d060406.areas (areas for each chan)
 
-%only the last channel is showing up 
 %find(squeeze(data.mBgoodR1(2).d090625.pow(10,:,:,:))~=0); %testing
 % find(squeeze(pow(19,:,:))~=0); %testing
 
-squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:)); %testing 
+% squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:)); %testing 
 %freqidx x downsampled time points x trials (monkey B correct day d091001)
 
 %% initialize variables
@@ -255,10 +255,6 @@ times2saveidx = dsearchn((signalt.*1000)',times2save');
 baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
-% which areas depends on monkeyN
-allchans = size(data.(monkey{:})(i).(dday{:}).power,1); %total # of chans
-areas = string(data.(monkey{:})(i).(dday{:}).areas); %all areas
-
 
 %% plotting the raw difference data
 
@@ -268,20 +264,58 @@ areas = string(data.(monkey{:})(i).(dday{:}).areas); %all areas
 % z = frequencies x samples
 % contourf(x,y,z,...)
 
+load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data
+load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data
+
+monkeys={'mAgoodR1(1)','mBgoodR1(1)','mAgoodR1(2)','mBgoodR1(2)'};
+
+i=1; vidname=sprintf('powm%svid','A'); %mA correct trials only
+i=2; vidname=sprintf('powm%svid','B'); %mB correct trials only
+i=3; vidname=sprintf('powm%svid','A'); %mA incorrect trials only
+i=4; vidname=sprintf('powm%svid','B'); %mB incorrect trials only
+
+alldays = fieldnames(eval(monkeys{i}))'; %extract all days
 triggers = [0 0.505 .505+.811]; %cueonset, cueoffset, matchonset
 
 figure(1), clf %open fig and maximize to prepare for viewing
 
-powmBvid = VideoWriter('powmBvid'); %open video file
-powmBvid.FrameRate = 5;  %can adjust this, 5 - 10 seems to work
-open(powmBvid)
+powvid = VideoWriter(vidname); %open video file
+powvid.FrameRate = 5;  %can adjust this, 5 - 10 seems to work
+open(powvid)
 
-for chanN=1:allchans %loop thru chans
-    %pull out correct & incorrect power avg over trials (frex x time/samples)
-    cor = mean( squeeze( data.(monkey{:})(1).(dday{:}).power(chanN,:,:,:) ),3 ); 
-    % inc = mean( squeeze( data.(monkey{:})(2).(dday{:}).power(chan,:,:,:) ),3 ); 
-    % compute the difference in power between the two conditions
-    % diffmap = cor - inc;
+for dayN=fieldnames(eval(monkeys{i}))'
+    % which areas depends on monkeyN
+    allchans = size(eval(monkeys{i}).(dayN{:}).power,1); %total # of chans
+    areas = string(eval(monkeys{i}).(dayN{:}).areas); %all areas
+    for chanN=1:allchans %loop thru chans
+        %pull out correct & incorrect power avg over trials (frex x time/samples)
+        cor = mean( squeeze( eval(monkeys{i}).(dayN{:}).power(chanN,:,:,:) ),3 ); 
+        % inc = mean( squeeze( data.(monkey{:})(2).(dday{:}).power(chan,:,:,:) ),3 ); 
+        % compute the difference in power between the two conditions
+        % diffmap = cor - inc;
+        figure(1), clf
+        contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+        yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+            yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+        set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+        xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+        text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+        text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+        text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+        text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
+        lim = get(cbar,'Limits'); cbar.Ticks=lim;
+        cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+        cbar.Label.Position=[pos(1)-2.5 pos(2)];
+        title(sprintf('%8s Day %d / %d Chan %d / %d Area %s Correct',monkeys{i}(1:8),...
+            find(ismember(alldays,dayN{:})),length(alldays),chanN,allchans,areas{chanN}));
+        ax=gca; ax.FontSize = 25;
+        pause(0.01) %pause to grab frame
+        frame = getframe(gcf); %get frame
+        writeVideo(powvid, frame); %add frame to vid
+    end
+    %now calc day power spectrogram avg over all chans
+    %pull out correct power avg over trials then chans (frex x time/samples)
+    cor = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) ); 
     figure(1), clf
     contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
     yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
@@ -295,15 +329,15 @@ for chanN=1:allchans %loop thru chans
     lim = get(cbar,'Limits'); cbar.Ticks=lim;
     cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
     cbar.Label.Position=[pos(1)-2.5 pos(2)];
-    title(sprintf('%s Day %d / %d Chan %d / %d Area %s Correct',monkey{:},...
-        find(ismember(alldays,dday{:})),length(alldays),chanN,allchans,areas{chanN}));
+    title(sprintf('%s Day %d / %d All %d Chans Across %d Areas Correct',monkeys{i}(1:8),...
+        find(ismember(alldays,dayN{:})),length(alldays),allchans,length(unique(areas))));
     ax=gca; ax.FontSize = 25;
     pause(0.01) %pause to grab frame
     frame = getframe(gcf); %get frame
-    writeVideo(powmBvid, frame); %add frame to vid
+    writeVideo(powvid, frame); %add frame to vid
 end
 
-close(powmBvid) %finish with vid
+close(powvid) %finish with vid
 %final video is saved here: 
 % OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data
 
