@@ -126,7 +126,7 @@ n_wavelet = length(wavet);
 half_of_wavelet_size = floor(n_wavelet/2)+1;
 % define trial timeline
 signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
-signalt = -.5:1/srate:1.31; % in seconds
+% signalt = -.5:1/srate:1.31; % in seconds
 % vector of time points to save in post-analysis downsampling
 times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
 % time vector converted to indices
@@ -135,100 +135,100 @@ times2saveidx = dsearchn((signalt.*1000)',times2save');
 baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
-% monkeys=fieldnames(data');
-monkey=monkeys(end)
-dday=alldays(end)
-chan=allchans(end);
+monkeys=fieldnames(data');
+monkey=monkeys(end) %testing
+dday=alldays(end) %testing
+chan=allchans(end) %testing
 
+%one loop for each monkey
+monkey=monkeys(1) %which monkey: 1 = mA / Clark, 2 = mB / Betty
 
 tic
 %correct + incorrect
-for monkey=fieldnames(data)' %loop thru monkeys
-    for i=1:2 %1 is correct, 2 is incorrect
-        alldays = fieldnames(data.(monkey{:})(i))'; %extract all days
-        for dday=alldays %loop thru days
-            allchans = size(data.(monkey{:})(i).(dday{:}).lfp,1);
-            %remove erp to free up space
-            data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'erp');
-            tic
-            for chan=1:allchans %loop thru chans
-                %rem single chan dim, convert to µV (1V = 10^6µV =1,000,000µV)
-                %and confirm time x trials leftover
-                signal = squeeze(data.(monkey{:})(i).(dday{:}).lfp(chan,:,:)).* 1e6;
-                reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
-                % reflect all trials
-                for signalN=1:size(signal,2) %loop through trials
-                    reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
-                    reflectsig_all(:,signalN) = reflectsig;
-                end
-                % concatenate into a super-trial
-                reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
-        %         % plot original signal (example from mB chan 23 trial 848
-        %         figure(1), clf
-        %         subplot(211)
-        %         plot(signal(:,848)','LineWidth',2,'color','b')
-        %         set(gca,'xlim',[0 numel(reflectsig)]-n_wavelet)
-        %         ylabel('Voltage (\muV)'); title('Original Signal')
-        %         ax=gca; ax.FontSize = 25; x1=xticklabels; 
-        %         set(gca, 'XTickLabel', []); box off
-        %         % plot reflected signal
-        %         subplot(212)
-        %         p21=plot(n_wavelet+1:length(signal(:,848))+n_wavelet,signal(:,848),...
-        %             'LineWidth',3,'color','b');
-        %         hold on
-        %         p22=plot(reflectsig,'-','LineWidth',2,'color','k');
-        %         p22.Color(4) = 0.35; %change transparency
-        %         set(gca,'xlim',[0 numel(reflectsig)])
-        %         title('Reflected Signal'); xlabel('Time step (ms)')
-        %         ylabel('Voltage (\muV)')
-        %         ax=gca; ax.FontSize = 25; xticklabels(x1); box off
-        %         legend({'original';'reflected'},'FontSize',25,'Location','best','box','off')
-        %         export_fig('reflected signal','-png','-transparent'); %save transparent pdf in pwd
-                % step 1: finish defining convolution parameters
-                n_data = length(reflectsig_supertri); % time*trials
-                n_convolution = n_wavelet+n_data-1;
-                % step 2: take FFTs
-                fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
-                % which area is this chan
-                area = char(data.(monkey{:})(i).(dday{:}).areas(chan));
-                %init power mat: freqidx x time x trials:
-                pow = zeros(length(frex),length(times2save),size(signal,2)); 
-                parfor fi=1:length(frex)
-                    % FFT of wavelet
-                    fft_wavelet = fft(wavelets(fi,:),n_convolution);
-                    % step 3: normalize kernel by scaling amplitudes to one in the 
-                    % frequency domain. prevents amplitude from decreasing with 
-                    % increasing frequency. diff from 1/f scaling
-                    fft_wavelet = fft_wavelet ./ max(fft_wavelet);
-                    % step 4: point-wise multiply and take iFFT
-                    as = ifft( fft_data.*fft_wavelet ); % analytic signal
-                    % step 5: trim wings
-                    as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
-                    % step 6: reshape back to reflected time-by-trials
-                    as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
-                    % step 7: chop off the reflections
-                    as = as(n_wavelet+1:end-n_wavelet,:);
-                    % as is now a time x trial complex matrix
-        %             % compute baseline power averaged over trials then timepoints
-        %             basePow = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
-                    % store dB-norm'd down-sampled power for each frequency in freq
-                    % x time x trials
-        %             dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
-                    % save raw power for ea. freqidx x down-sampled time x
-                    % trial
-                    pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
-                    % mean( abs( as_ ).^2, 2);
-%                     clear fft_wavelet as % start anew with these var's ea. loop
-                end
-                %save downsampled power as chan x freqidx x time x trials
-                data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow;                
-                clear pow % start anew with this var ea. loop
+for i=1:2 %1 is correct, 2 is incorrect
+    alldays = fieldnames(data.(monkey{:})(i))'; %extract all days
+    for dday=alldays %loop thru days
+        allchans = size(data.(monkey{:})(i).(dday{:}).lfp,1);
+        %remove erp to free up space
+%         data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'erp');
+        tic
+        for chan=1:allchans %loop thru chans
+            %rem single chan dim, convert to µV (1V = 10^6µV =1,000,000µV)
+            %and confirm time x trials leftover
+            signal = squeeze(data.(monkey{:})(i).(dday{:}).lfp(chan,:,:)).* 1e6;
+            reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
+            % reflect all trials
+            for signalN=1:size(signal,2) %loop through trials
+                reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
+                reflectsig_all(:,signalN) = reflectsig;
             end
-            toc
-%             find(squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:))~=0); %testing
-            %remove lfp to free up space in data var since we're done w/ it
-            data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'lfp');
+            % concatenate into a super-trial
+            reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
+    %         % plot original signal (example from mB chan 23 trial 848
+    %         figure(1), clf
+    %         subplot(211)
+    %         plot(signal(:,848)','LineWidth',2,'color','b')
+    %         set(gca,'xlim',[0 numel(reflectsig)]-n_wavelet)
+    %         ylabel('Voltage (\muV)'); title('Original Signal')
+    %         ax=gca; ax.FontSize = 25; x1=xticklabels; 
+    %         set(gca, 'XTickLabel', []); box off
+    %         % plot reflected signal
+    %         subplot(212)
+    %         p21=plot(n_wavelet+1:length(signal(:,848))+n_wavelet,signal(:,848),...
+    %             'LineWidth',3,'color','b');
+    %         hold on
+    %         p22=plot(reflectsig,'-','LineWidth',2,'color','k');
+    %         p22.Color(4) = 0.35; %change transparency
+    %         set(gca,'xlim',[0 numel(reflectsig)])
+    %         title('Reflected Signal'); xlabel('Time step (ms)')
+    %         ylabel('Voltage (\muV)')
+    %         ax=gca; ax.FontSize = 25; xticklabels(x1); box off
+    %         legend({'original';'reflected'},'FontSize',25,'Location','best','box','off')
+    %         export_fig('reflected signal','-png','-transparent'); %save transparent pdf in pwd
+            % step 1: finish defining convolution parameters
+            n_data = length(reflectsig_supertri); % time*trials
+            n_convolution = n_wavelet+n_data-1;
+            % step 2: take FFTs
+            fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan
+            % which area is this chan
+            area = char(data.(monkey{:})(i).(dday{:}).areas(chan));
+            %init power mat: freqidx x time x trials:
+            pow = zeros(length(frex),length(times2save),size(signal,2)); 
+            parfor fi=1:length(frex)
+                % FFT of wavelet
+                fft_wavelet = fft(wavelets(fi,:),n_convolution);
+                % step 3: normalize kernel by scaling amplitudes to one in the 
+                % frequency domain. prevents amplitude from decreasing with 
+                % increasing frequency. diff from 1/f scaling
+                fft_wavelet = fft_wavelet ./ max(fft_wavelet);
+                % step 4: point-wise multiply and take iFFT
+                as = ifft( fft_data.*fft_wavelet ); % analytic signal
+                % step 5: trim wings
+                as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
+                % step 6: reshape back to reflected time-by-trials
+                as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
+                % step 7: chop off the reflections
+                as = as(n_wavelet+1:end-n_wavelet,:);
+                % as is now a time x trial complex matrix
+    %             % compute baseline power averaged over trials then timepoints
+    %             basePow = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
+                % store dB-norm'd down-sampled power for each frequency in freq
+                % x time x trials
+    %             dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
+                % save raw power for ea. freqidx x down-sampled time x
+                % trial
+                pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
+                % mean( abs( as_ ).^2, 2);
+%                     clear fft_wavelet as % start anew with these var's ea. loop
+            end
+            %save downsampled power as chan x freqidx x time x trials
+            data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow;                
+            clear pow % start anew with this var ea. loop
         end
+        toc
+%             find(squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:))~=0); %testing
+        %remove lfp to free up space in data var since we're done w/ it
+%         data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'lfp');
     end
 end
 toc
@@ -242,4 +242,78 @@ toc
 %find(squeeze(data.mBgoodR1(2).d090625.pow(10,:,:,:))~=0); %testing
 % find(squeeze(pow(19,:,:))~=0); %testing
 
+squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:)); %testing 
+%freqidx x downsampled time points x trials (monkey B correct day d091001)
 
+%% initialize variables
+
+% define trial timeline
+signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+% define baseline time
+baset = [-.4 -.1]; % in seconds
+baseidx = dsearchn(signalt',baset');
+
+% which areas depends on monkeyN
+allchans = size(data.(monkey{:})(i).(dday{:}).power,1); %total # of chans
+areas = string(data.(monkey{:})(i).(dday{:}).areas); %all areas
+
+
+%% plotting the raw difference data
+
+chan = 23; %plot which chan?
+clim = [0 90];
+triggers = [0 0.505 .505+.811];
+
+%pull out correct & incorrect power avg over trials (frex x time/samples)
+cor = mean( squeeze( data.(monkey{:})(1).(dday{:}).power(chan,:,:,:) ),3 ); 
+% inc = mean( squeeze( data.(monkey{:})(2).(dday{:}).power(chan,:,:,:) ),3 ); 
+% compute the difference in power between the two conditions
+% diffmap = cor - inc;
+
+% contourf plot template:
+% x = 1 x samples
+% y = 1 x frequencies
+% z = frequencies x samples
+% contourf(x,y,z,...)
+
+figure(8), clf
+contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.5 pos(2)];
+title(sprintf('TF Map %s Chan %d Area %s Correct',monkey{:},chan,areas{chan}));
+ax=gca; ax.FontSize = 25;
+
+contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+hold on
+contour(signalt(times2saveidx),frex,logical(zmap_pixel),1,'linecolor','w','linewidth',3);
+yL = get(gca,'YLim'); line([0 .5;0 .5],yL,'Color','k','LineWidth',2,'LineStyle',':'); 
+set(gca,'clim',[0 25],'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off','FontSize',30)
+xlabel('Time (s)','FontSize',34), ylabel('Frequency (Hz)','FontSize',34), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.5 pos(2)]; 
+
+subplot(223)
+imagesc(times2save,[], diffmap)
+hold on %vertical line
+yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
+set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','n')
+set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
+xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1 pos(2)];
+title(sprintf('Monkey %d, Area %s, Correct - Incorrect',monkeyN,areas{areaN}(2:end)));
