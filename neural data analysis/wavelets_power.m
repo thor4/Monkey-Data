@@ -351,6 +351,17 @@ close(powvid) %finish with vid
 
 %% statistics via permutation testing
 
+%init vars
+srate = 1000; %1000Hz sampling rate
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+% define trial timeline
+signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+
+
 % p-value, p<0.05 two-tailed is 0.025
 pval = 0.025;
 
@@ -374,7 +385,7 @@ for permN = 1:n_mpermutes
         allchans = size(mAgoodR1(1).(dayN{:}).power,1); %total # of chans
         areas = string(mAgoodR1(1).(dayN{:}).areas); %all areas
         % init H0 perm map for all chans [area x permutation x freqidx x timeidx]
-        chan_permmaps = zeros(length(areas),size(permmaps,1),size(permmaps,2),size(permmaps,3));
+        chan_permmaps = zeros(length(areas),n_permutes,num_frex,length(times2save));
         for chanN = 1:allchans
             % total number of incorrect trials for chan, power: chan x freqidx x time x trials
             nitrials = size( mAgoodR1(2).(dayN{:}).power,4 );
