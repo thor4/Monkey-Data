@@ -359,54 +359,78 @@ zval = abs(norminv(pval));
 
 % number of permutations
 n_permutes = 1000;
+n_mpermutes = 20; %meta-permutations
 
+%this is for mA, update var's below for mB
 alldays = fieldnames( mAgoodR1 )';
+mA_metaperm = []; %init meta permutation struct
 
-day_chan_permmaps = [];
 tic
-for dayN=alldays
-    allchans = size(mAgoodR1(1).(dayN{:}).power,1); %total # of chans
-    areas = string(mAgoodR1(1).(dayN{:}).areas); %all areas
-    % init H0 perm map for all chans [area x permutation x freqidx x timeidx]
-    chan_permmaps = zeros(length(areas),size(permmaps,1),size(permmaps,2),size(permmaps,3));
-    for chanN = 1:numel(allchans)
-        % total number of incorrect trials for chan, power: chan x freqidx x time x trials
-        nitrials = size( mAgoodR1(2).(dayN{:}).power,4 );
-        %initialize null hypothesis permutation-level maps
-        permmaps = zeros(n_permutes,num_frex,length(times2save));
-        for permi = 1:n_permutes
-            % randomly sample from condition 1 trials (decimation) to match
-            % condition 2
-            randcoridx = randperm( size( mAgoodR1(1).(dayN{:}).power,4 ),nitrials );
-            temp_cor = squeeze( mAgoodR1(1).(dayN{:}).power(chanN,:,:,randcoridx) );
-            % concatenate conditions: trials1:nitrials are from correct, 
-            % trials nitrials+1:end are from incorrect
-            tf3d = cat(3,temp_cor,squeeze(mAgoodR1(2).(dayN{:}).power(chanN,:,:,:)));
-            % randomize trials, which also randomly assigns trials to 
-            % conditions, correct vs incorrect
-            randtf3didx = randperm(size(tf3d,3));
-            temp_tf3d = tf3d(:,:,randtf3didx); % [freqidx x time x trials]
-            % compute the "difference" map under the null hypothesis: 
-            % [freqidx x time]
-            permmaps(permi,:,:) = squeeze( mean(temp_tf3d(:,:,1:nitrials),3) - mean(temp_tf3d(:,:,nitrials+1:end),3) );
+% meta-permutation test
+for permN = 1:n_mpermutes
+    mperm = sprintf('p%d',permN); %string for meta permutation label
+    mAchan_diffpermmaps = []; %init allchan across days diff perm map array
+    for dayN=alldays
+        allchans = size(mAgoodR1(1).(dayN{:}).power,1); %total # of chans
+        areas = string(mAgoodR1(1).(dayN{:}).areas); %all areas
+        % init H0 perm map for all chans [area x permutation x freqidx x timeidx]
+        chan_permmaps = zeros(length(areas),size(permmaps,1),size(permmaps,2),size(permmaps,3));
+        for chanN = 1:allchans
+            % total number of incorrect trials for chan, power: chan x freqidx x time x trials
+            nitrials = size( mAgoodR1(2).(dayN{:}).power,4 );
+            %initialize null hypothesis permutation-level maps
+            permmaps = zeros(n_permutes,num_frex,length(times2save));
+            for permi = 1:n_permutes
+                % randomly sample from condition 1 trials (decimation) to match
+                % condition 2
+                randcoridx = randperm( size( mAgoodR1(1).(dayN{:}).power,4 ),nitrials );
+                temp_cor = squeeze( mAgoodR1(1).(dayN{:}).power(chanN,:,:,randcoridx) );
+                % concatenate conditions: trials1:nitrials are from correct, 
+                % trials nitrials+1:end are from incorrect
+                tf3d = cat(3,temp_cor,squeeze(mAgoodR1(2).(dayN{:}).power(chanN,:,:,:)));
+                % randomize trials, which also randomly assigns trials to 
+                % conditions, correct vs incorrect
+                randtf3didx = randperm(size(tf3d,3));
+                temp_tf3d = tf3d(:,:,randtf3didx); % [freqidx x time x trials]
+                % compute the "difference" map under the null hypothesis: 
+                % [freqidx x time]
+                permmaps(permi,:,:) = squeeze( mean(temp_tf3d(:,:,1:nitrials),3) - mean(temp_tf3d(:,:,nitrials+1:end),3) );
+            end
+            chan_permmaps(chanN,:,:,:) = permmaps;
+    %         find(chan_permmaps(chanN,:,:,:)~=0); %testing
+    %         find(permmaps~=0); %testing
+%             size(mAchan_diffpermmaps) %testing
+%             find(mAchan_diffpermmaps(chanN-8,:,:,:)~=0); %testing
         end
-        chan_permmaps(chanN,:,:,:) = permmaps;
-%         find(chan_permmaps(chanN+1,:,:,:)~=0); %testing
-%         find(permmaps~=0); %testing
+        dayy=find(ismember(alldays,dayN{:}));
+        if dayy==1 
+            mAchan_diffpermmaps = chan_permmaps;
+            mA_metaperm.(mperm).area = areas;
+            mA_metaperm.(mperm).day = repmat(dayy,allchans,1)';
+        else
+            mAchan_diffpermmaps = cat(1,mAchan_diffpermmaps,chan_permmaps);
+            mA_metaperm.(mperm).area = cat(2,mA_metaperm.(mperm).area,areas);
+            mA_metaperm.(mperm).day = cat(2,mA_metaperm.(mperm).day,...
+                repmat(dayy,allchans,1)');
+        end
     end
-    dayy=find(ismember(alldays,dayN{:}));
-    if dayy==1 
-        day_chan_permmaps = chan_permmaps;
-    else
-        day_chan_permmaps = cat(1,day_chan_permmaps,chan_permmaps);
-    end
-    %size(day_chan_permmaps) %4        1000          35         187
-%     day_chan_permmaps(dayy,:,:,:,:) = chan_permmaps;
+    mA_metaperm.(mperm).diffmap = mAchan_diffpermmaps;
 end
 toc
 
+find(mAchan_diffpermmaps(5,:,:,:)~=0); %testing
+
+
+%visualize diffmap histogram to see if its a gaussian
+total_chans = size(mAchan_diffpermmaps,1); 
+histogram(mAchan_diffpermmaps(randperm(total_chans,1),:,randperm(length(frex),1),...
+    randperm(length(times2save),1)));
+
+%size(mAchan_diffpermmaps) %[143 1000 35 187] [allchans perm freqidx time]
+
 %fix variables to reflect monkey-resp-chan-perm_diffmaps
 %clean up data folder, tag files with section headers in this code
+%plot test perm diffmap to see if its a gaussian
 
 % mike x cohen convo about meta perm testing: 
 % https://groups.google.com/g/analyzingneuraltimeseriesdata/c/5j-ej09p1DI/m/boVUBFaHAwAJ
