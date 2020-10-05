@@ -431,11 +431,40 @@ toc
 
 find(mAchan_diffpermmaps(5,:,:,:)~=0); %testing
 
+permN=1; mperm = sprintf('p%d',permN); %choose permutation
+%visualize TF point from diffmap over permutations histogram to see if it's a gaussian
+figure(1), clf
+% subplot(211)
+total_chans = size(mA_metaperm.(mperm).diffmap,1); rand_chan = randperm(total_chans,1);
+rand_frex = randperm(length(frex),1); rand_time = randperm(length(times2save),1);
+histogram(mAchan_diffpermmaps(rand_chan,:,rand_frex,rand_time));
+sprintf('Monkey A Day %d Chan %d Freq %fHz %dms Timepoint Cor-Inc Diffmap %d Permutations',...
+    find(ismember(mA_metaperm.(mperm).day,mA_metaperm.(mperm).day(rand_chan))),...
 
-%visualize diffmap histogram to see if its a gaussian
-total_chans = size(mAchan_diffpermmaps,1); 
-histogram(mAchan_diffpermmaps(randperm(total_chans,1),:,randperm(length(frex),1),...
-    randperm(length(times2save),1)));
+%can't easily get the channel # from this structure, think about how to add
+%in the chan# and total chans into permutation structure
+allchans = size(mAgoodR1(1).(dayN{:}).power,1); %total # of chans
+
+figure(1), clf
+% subplot(211)
+total_chans = size(mAchan_diffpermmaps,1); rand_chan = randperm(total_chans,1);
+histogram(mAchan_diffpermmaps(rand_chan,:,randperm(length(frex),1),...
+
+contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.5 pos(2)];
+title(sprintf('%s Day %d / %d All %d Chans Across %d Areas Correct',monkeys{i}(1:8),...
+    find(ismember(alldays,dayN{:})),length(alldays),allchans,length(unique(areas))));
+ax=gca; ax.FontSize = 25;
 
 %size(mAchan_diffpermmaps) %[143 1000 35 187] [allchans perm freqidx time]
 
@@ -446,17 +475,3 @@ histogram(mAchan_diffpermmaps(randperm(total_chans,1),:,randperm(length(frex),1)
 % mike x cohen convo about meta perm testing: 
 % https://groups.google.com/g/analyzingneuraltimeseriesdata/c/5j-ej09p1DI/m/boVUBFaHAwAJ
 
-tic
-% meta-permutation test
-for permN = 1:20
-	monkeyN = 1; % first monkey 1
-    % generate maps under the null hypothesis
-    [m1_permmaps, ~] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
-    % append permutations for monkey in chan x permutation x freq x time diffmap
-    m1_meta_permmaps(:,(permN-1)*n_permutes+1:permN*n_permutes,:,:) = m1_permmaps;
-    monkeyN = 2; % now monkey 2
-    % generate maps under the null hypothesis
-    [m2_permmaps, ~] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
-    m2_meta_permmaps(:,(permN-1)*n_permutes+1:permN*n_permutes,:,:) = m2_permmaps;
-end
-toc
