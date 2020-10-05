@@ -1,15 +1,18 @@
-% function for creating tf condition difference maps to be used in 
-% permutation testing. assumes correct trial count > incorrect
+%% function for creating tf condition difference maps to be used in 
+%  permutation testing. 
+%  assumes correct trial count > incorrect
+% 
 % *input*
 % monkey is data structure containing power for both monkeys, all areas, 
 %   responses and trials across all days/sessions/trials
-% monkeyN should be which monkey. scalar '1' or '2'.
+% monkeyN should be which monkey: '1' for A or '2' for B.
 % n_permutes is the number of permutations to run, ie: 1000
-% num_frex is total number of frequencies from analysis, ie: 50 
+% num_frex is total number of frequencies from analysis, ie: 35 
 % times2save is down-sampled time points vector, ie: <10,20,30,...>
+% 
 % *output*
 % area_permmaps is a 4-d area (length(areas)) x permmap (n_permutes) x 
-%   freq (num_frex) x samples (length(times2save))
+% freq (num_frex) x samples (length(times2save))
 % areas is which monkey's areas correspond to 1st dim of area_permmaps
 % power measured in microvolts in LFP data
 function [area_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save)
@@ -19,9 +22,9 @@ function [area_permmaps, areas] = permmapper(monkey,monkeyN,n_permutes,num_frex,
     else
         areas = {'a6DR', 'a8AD', 'a8B', 'adPFC', 'aLIP', 'aPE', 'aPEC', 'aPG'}; %monkey2
     end
-    % initialize null hypothesis permutation maps
+    % initialize null hypothesis permutation maps [permutation x freqidx x timeidx]
     permmaps = zeros(n_permutes,num_frex,length(times2save));
-    % and for all areas
+    % and for all areas [area x permutation x freqidx x timeidx]
     area_permmaps = zeros(length(areas),size(permmaps,1),size(permmaps,2),size(permmaps,3));
     % total number of incorrect trials for area
     for areaN = 1:numel(areas)

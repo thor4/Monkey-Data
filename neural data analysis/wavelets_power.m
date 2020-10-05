@@ -60,7 +60,7 @@ end
 % plot wavelets in time domain- ensure all taper to 0 (or very close)
 figure(1), clf
 subplot(211)
-plot(wavet,real(wavelets),'linew',2)
+plot(wavet,real(wavelets),'linew',1)
 xlabel('Time (s)'), ylabel('Amplitude (gain)')
 text(wavet(1)*1.19,1.2,'A','fontsize',35); box off
 title('Time domain'); ax=gca; ax.FontSize = 25;
@@ -233,6 +233,8 @@ for i=1:2 %1 is correct, 2 is incorrect
 end
 toc
 
+mAgoodR1 = data.mAgoodR1; %pull out var to save it as file
+
 %759.832210 seconds. (lab pc) saved average power
 %~1.25 hours for correct+incorrect for monkey 2 on lab pc
 % save all power trials in var ie: mAgoodR1.d060406.power (chan x freqidx x time x trials) in :
@@ -258,7 +260,7 @@ baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
 
-%% plotting the raw difference data
+%% plotting the raw data
 
 % contourf plot template:
 % x = 1 x samples
@@ -347,3 +349,79 @@ close(powvid) %finish with vid
 %adding that frame to vid
 %build out the day loop
 
+%% statistics via permutation testing
+
+% p-value, p<0.05 two-tailed is 0.025
+pval = 0.025;
+
+% convert p-value to Z value
+zval = abs(norminv(pval));
+
+% number of permutations
+n_permutes = 1000;
+
+alldays = fieldnames( mAgoodR1 )';
+
+day_chan_permmaps = [];
+tic
+for dayN=alldays
+    allchans = size(mAgoodR1(1).(dayN{:}).power,1); %total # of chans
+    areas = string(mAgoodR1(1).(dayN{:}).areas); %all areas
+    % init H0 perm map for all chans [area x permutation x freqidx x timeidx]
+    chan_permmaps = zeros(length(areas),size(permmaps,1),size(permmaps,2),size(permmaps,3));
+    for chanN = 1:numel(allchans)
+        % total number of incorrect trials for chan, power: chan x freqidx x time x trials
+        nitrials = size( mAgoodR1(2).(dayN{:}).power,4 );
+        %initialize null hypothesis permutation-level maps
+        permmaps = zeros(n_permutes,num_frex,length(times2save));
+        for permi = 1:n_permutes
+            % randomly sample from condition 1 trials (decimation) to match
+            % condition 2
+            randcoridx = randperm( size( mAgoodR1(1).(dayN{:}).power,4 ),nitrials );
+            temp_cor = squeeze( mAgoodR1(1).(dayN{:}).power(chanN,:,:,randcoridx) );
+            % concatenate conditions: trials1:nitrials are from correct, 
+            % trials nitrials+1:end are from incorrect
+            tf3d = cat(3,temp_cor,squeeze(mAgoodR1(2).(dayN{:}).power(chanN,:,:,:)));
+            % randomize trials, which also randomly assigns trials to 
+            % conditions, correct vs incorrect
+            randtf3didx = randperm(size(tf3d,3));
+            temp_tf3d = tf3d(:,:,randtf3didx); % [freqidx x time x trials]
+            % compute the "difference" map under the null hypothesis: 
+            % [freqidx x time]
+            permmaps(permi,:,:) = squeeze( mean(temp_tf3d(:,:,1:nitrials),3) - mean(temp_tf3d(:,:,nitrials+1:end),3) );
+        end
+        chan_permmaps(chanN,:,:,:) = permmaps;
+%         find(chan_permmaps(chanN+1,:,:,:)~=0); %testing
+%         find(permmaps~=0); %testing
+    end
+    dayy=find(ismember(alldays,dayN{:}));
+    if dayy==1 
+        day_chan_permmaps = chan_permmaps;
+    else
+        day_chan_permmaps = cat(1,day_chan_permmaps,chan_permmaps);
+    end
+    %size(day_chan_permmaps) %4        1000          35         187
+%     day_chan_permmaps(dayy,:,:,:,:) = chan_permmaps;
+end
+toc
+
+%fix variables to reflect monkey-resp-chan-perm_diffmaps
+%clean up data folder, tag files with section headers in this code
+
+% mike x cohen convo about meta perm testing: 
+% https://groups.google.com/g/analyzingneuraltimeseriesdata/c/5j-ej09p1DI/m/boVUBFaHAwAJ
+
+tic
+% meta-permutation test
+for permN = 1:20
+	monkeyN = 1; % first monkey 1
+    % generate maps under the null hypothesis
+    [m1_permmaps, ~] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
+    % append permutations for monkey in chan x permutation x freq x time diffmap
+    m1_meta_permmaps(:,(permN-1)*n_permutes+1:permN*n_permutes,:,:) = m1_permmaps;
+    monkeyN = 2; % now monkey 2
+    % generate maps under the null hypothesis
+    [m2_permmaps, ~] = permmapper(monkey,monkeyN,n_permutes,num_frex,times2save);
+    m2_meta_permmaps(:,(permN-1)*n_permutes+1:permN*n_permutes,:,:) = m2_permmaps;
+end
+toc
