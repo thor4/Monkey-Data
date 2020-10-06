@@ -370,22 +370,23 @@ zval = abs(norminv(pval));
 
 % number of permutations
 n_permutes = 1000;
-n_mpermutes = 6; %meta-permutations
+n_mpermutes = 2; %meta-permutations
 monkeys = {'mA','mB'};
 
 mi = 1; %choose which monkey: mA=1, mB=2
 monkey=monkeys{mi}; 
 if monkey=='mA'
     load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data
-    mData = mAgoodR1;
+    mData = mAgoodR1; clear mAgoodR1
 else
     load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data
-    mData = mBgoodR1;
+    mData = mBgoodR1; clear mBgoodR1
 end
     
 alldays = fieldnames( mAgoodR1 )';
 mA_metaperm = []; %init meta permutation struct
 
+ppc = parallel.pool.Constant(mData);
 
 tic
 % meta-permutation test
