@@ -370,7 +370,7 @@ zval = abs(norminv(pval));
 
 % number of permutations
 n_permutes = 1000;
-n_mpermutes = 20; %meta-permutations
+n_mpermutes = 6; %meta-permutations
 monkeys = {'mA','mB'};
 
 mi = 1; %choose which monkey: mA=1, mB=2
