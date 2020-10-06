@@ -370,7 +370,7 @@ zval = abs(norminv(pval));
 
 % number of permutations
 n_permutes = 1000;
-n_mpermutes = 2; %meta-permutations
+n_mpermutes = 4; %meta-permutations
 monkeys = {'mA','mB'};
 
 mi = 1; %choose which monkey: mA=1, mB=2
@@ -387,7 +387,7 @@ ppc = parallel.pool.Constant(mData);
 
 tic
 % meta-permutation test
-parfor permN = 3:n_mpermutes
+parfor permN = 1:n_mpermutes
     mperm = sprintf('%sp%d.mat',monkey,permN);
     metaperm = permmapper(mData,n_permutes,num_frex,times2save);
     parsave(mperm,metaperm)    
