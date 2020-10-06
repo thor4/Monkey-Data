@@ -59,10 +59,12 @@ for dayN=alldays
     dayy=find(ismember(alldays,dayN{:}));
     if dayy==1 
         diffpermmaps = chan_permmaps;
+        metaperm.chan = [1:allchans]; %1 x allchans vector
         metaperm.area = areas;
         metaperm.day = repmat(dayy,allchans,1)';
     else
         diffpermmaps = cat(1,diffpermmaps,chan_permmaps);
+        metaperm.chan = cat(2,metaperm.chan,[1:allchans]);
         metaperm.area = cat(2,metaperm.area,areas);
         metaperm.day = cat(2,metaperm.day,repmat(dayy,allchans,1)');
     end

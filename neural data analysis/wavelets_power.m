@@ -383,17 +383,14 @@ else
     mData = mBgoodR1; clear mBgoodR1
 end
     
-alldays = fieldnames( mAgoodR1 )';
-mA_metaperm = []; %init meta permutation struct
-
 ppc = parallel.pool.Constant(mData);
 
 tic
 % meta-permutation test
-parfor permN = 1:n_mpermutes
+parfor permN = 3:n_mpermutes
     mperm = sprintf('%sp%d.mat',monkey,permN);
     metaperm = permmapper(mData,n_permutes,num_frex,times2save);
-    parsave(mperm,'metaperm')    
+    parsave(mperm,metaperm)    
 end
 toc
 
