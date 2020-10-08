@@ -102,7 +102,7 @@ title('Spectral Resolution log-lin'); ax=gca; ax.FontSize = 25;
 % Prepped figs for paper- check after the T/F analysis, may need
 % to change parameters of wavelets to extract analytic signal in diff ways
 
-%% Create analytic signal using the complex morlet wavelet family for both 
+%% Step 2: Create analytic signal using the complex morlet wavelet family for both (step 1 was ERP)
 % monkeys, both conditions, all days, all channels and all trials
 
 % load lfp's from:
@@ -136,7 +136,7 @@ times2saveidx = dsearchn((signalt.*1000)',times2save');
 baset = [-.4 -.1]; % in seconds
 baseidx = dsearchn(signalt',baset');
 
-monkey=fieldnames(data)';
+monkeys=fieldnames(data)';
 
 monkey=monkeys(end) %testing
 dday=alldays(end) %testing
@@ -194,7 +194,8 @@ for i=1:2 %1 is correct, 2 is incorrect
             % which area is this chan
             area = char(data.(monkey{:})(i).(dday{:}).areas(chan));
             %init power mat: freqidx x time x trials:
-            pow = zeros(length(frex),length(times2save),size(signal,2)); 
+%             pow = zeros(length(frex),length(times2save),size(signal,2)); 
+            basePow = zeros(length(frex),1)'; 
             parfor fi=1:length(frex)
                 % FFT of wavelet
                 fft_wavelet = fft(wavelets(fi,:),n_convolution);
@@ -211,27 +212,33 @@ for i=1:2 %1 is correct, 2 is incorrect
                 % step 7: chop off the reflections
                 as = as(n_wavelet+1:end-n_wavelet,:);
                 % as is now a time x trial complex matrix
-    %             % compute baseline power averaged over trials then timepoints
-    %             basePow = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
+                % compute baseline power averaged over trials then timepoints
+                % & save avg baseline power per freq component
+                basePow(fi) = mean( mean( abs( as(baseidx(1):baseidx(2),:).^2 ),2 ),1 );
                 % store dB-norm'd down-sampled power for each frequency in freq
                 % x time x trials
-    %             dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
+%                 dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
                 % save raw power for ea. freqidx x down-sampled time x
                 % trial
-                pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
+%                 pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
                 % mean( abs( as_ ).^2, 2);
 %                     clear fft_wavelet as % start anew with these var's ea. loop
             end
             %save downsampled power as chan x freqidx x time x trials
-            data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow;                
-            clear pow % start anew with this var ea. loop
+%             data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow; 
+            %save avg baseline power for all frex as chan x freqidx
+            data.(monkey{:})(i).(dday{:}).basepow(chan,:) = basePow; 
+            clear basePow % start anew with this var ea. loop
         end
 %             find(squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:))~=0); %testing
         %remove lfp to free up space in data var since we're done w/ it
-%         data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'lfp');
+        data.(monkey{:})(i).(dday{:}) = rmfield(data.(monkey{:})(i).(dday{:}),'lfp');
     end
 end
 toc
+
+%afterwards, need to average the basePow for correct with incorrect to get
+%a single number across conditions if/when doing the conditon comparison
 
 mAgoodR1 = data.mAgoodR1; %pull out var to save it as file
 
@@ -287,7 +294,7 @@ powvid = VideoWriter(vidname); %open video file
 powvid.FrameRate = 5;  %can adjust this, 5 - 10 seems to work
 open(powvid)
 
-for dayN=fieldnames(eval(monkeys{i}))'
+for dayN=alldays
     % which areas depends on monkeyN
     allchans = size(eval(monkeys{i}).(dayN{:}).power,1); %total # of chans
     areas = string(eval(monkeys{i}).(dayN{:}).areas); %all areas
@@ -345,9 +352,145 @@ close(powvid) %finish with vid
 %final video is saved here: 
 % OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data
 
+%now get full monkey correct ERP (change i val's and plot title + cbar
+%limits for diff monkeys and for diffmap)
+for dayN=alldays
+    % which areas depends on monkeyN
+    allchans = size(eval(monkeys{i}).(dayN{:}).power,1); %total # of chans
+    areas = string(eval(monkeys{i}).(dayN{:}).areas); %all areas
+    %now calc day power spectrogram avg over all chans
+    %pull out correct power avg over trials then chans (frex x time/samples)
+    dayy = find(ismember(alldays,dayN{:})); %day number
+    %build out day avg-over-chans matrix [day freqidx times2saveidx]
+%     cor(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) ); 
+    inc(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) );
+end
+% find(cor(15,:,:)~=0); %testing
+mAvgc = squeeze(mean(cor,1)); mAvgi=squeeze(mean(inc,1));
+%baseline normalization
+figure(1), clf
+% subplot(211)
+contourf(signalt(times2saveidx),frex,mAvgc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %match
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('%s %d Days Correct',monkeys{i}(1:8),length(alldays)));
+ax=gca; ax.FontSize = 25;
+export_fig('mB_raw_power_cor','-png','-transparent'); %save transparent pdf in pwd
+
+%work on pulling out baseline normalized power from analytic signal
+subplot(212)
+contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-2.5 pos(2)];
+title(sprintf('%s Day %d / %d All %d Chans Across %d Areas Correct',monkeys{i}(1:8),...
+    find(ismember(alldays,dayN{:})),length(alldays),allchans,length(unique(areas))));
+ax=gca; ax.FontSize = 25;
+
+
 %see about averaging over channels to get a day-level power spectrogram and
 %adding that frame to vid
 %build out the day loop
+
+%% parametric statistics
+
+
+%init vars
+srate = 1000; %1000Hz sampling rate
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+% define trial timeline
+signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+% define baseline time (for db-normalized to baseline to make it normally
+% distributed so it's appropriate for parametric statistics)
+baset = [-.4 -.1]; % in seconds
+baseidx = dsearchn(signalt',baset');
+
+%set the alpha level
+ntests = 3; %how many t-tests?
+pval = 0.05/ntests; %.05 bonferonni-corrected for multiple comparisons
+
+monkeys = {'mA','mB'}; %setup monkeys array
+mi = 1; %choose which monkey: mA=1, mB=2
+
+monkey=monkeys{mi}; %load data for chosen monkey
+if monkey=='mA'
+    load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data
+    mData = mAgoodR1; clear mAgoodR1
+else
+    load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data
+    mData = mBgoodR1; clear mBgoodR1
+end
+
+alldays = fieldnames( mData )'; %extract all days
+corinc = []; %init allchan across days cor-inc contrast array
+for dayN=alldays
+    allchans = size(mData(1).(dayN{:}).power,1); %total # of chans
+    areas = string(mData(1).(dayN{:}).areas); %all areas
+    % init H0 perm map for all chans [area x permutation x freqidx x timeidx]
+    chan_permmaps = zeros(length(areas),n_permutes,num_frex,length(times2save));
+    for chanN = 1:allchans
+        % total number of incorrect trials for chan, power: chan x freqidx x time x trials
+        nitrials = size( mData(2).(dayN{:}).power,4 );
+        %initialize null hypothesis permutation-level maps
+        permmaps = zeros(n_permutes,num_frex,length(times2save));
+        for permi = 1:n_permutes
+            % randomly sample from condition 1 trials (decimation) to match
+            % condition 2
+            randcoridx = randperm( size( mData(1).(dayN{:}).power,4 ),nitrials );
+            temp_cor = squeeze( mData(1).(dayN{:}).power(chanN,:,:,randcoridx) );
+            % concatenate conditions: trials1:nitrials are from correct, 
+            % trials nitrials+1:end are from incorrect
+            tf3d = cat(3,temp_cor,squeeze(mData(2).(dayN{:}).power(chanN,:,:,:)));
+            % randomize trials, which also randomly assigns trials to 
+            % conditions, correct vs incorrect
+            randtf3didx = randperm(size(tf3d,3));
+            temp_tf3d = tf3d(:,:,randtf3didx); % [freqidx x time x trials]
+            % compute the "difference" map under the null hypothesis: 
+            % [freqidx x time]
+            permmaps(permi,:,:) = squeeze( mean(temp_tf3d(:,:,1:nitrials),3) - mean(temp_tf3d(:,:,nitrials+1:end),3) );
+        end
+        chan_permmaps(chanN,:,:,:) = permmaps;
+%         find(chan_permmaps(chanN,:,:,:)~=0); %testing
+%         find(permmaps~=0); %testing
+%             size(mAchan_diffpermmaps) %testing
+%             find(mAchan_diffpermmaps(chanN-8,:,:,:)~=0); %testing
+    end
+    dayy=find(ismember(alldays,dayN{:}));
+    if dayy==1 
+        diffpermmaps = chan_permmaps;
+        metaperm.chan = [1:allchans]; %1 x allchans vector
+        metaperm.area = areas;
+        metaperm.day = repmat(dayy,allchans,1)';
+    else
+        diffpermmaps = cat(1,diffpermmaps,chan_permmaps);
+        metaperm.chan = cat(2,metaperm.chan,[1:allchans]);
+        metaperm.area = cat(2,metaperm.area,areas);
+        metaperm.day = cat(2,metaperm.day,repmat(dayy,allchans,1)');
+    end
+end
+metaperm.diffmap = diffpermmaps;
 
 %% statistics via permutation testing
 
@@ -387,7 +530,7 @@ ppc = parallel.pool.Constant(mData);
 
 tic
 % meta-permutation test
-parfor permN = 1:n_mpermutes
+parfor permN = 7:n_mpermutes
     mperm = sprintf('%sp%d.mat',monkey,permN);
     metaperm = permmapper(mData,n_permutes,num_frex,times2save);
     parsave(mperm,metaperm)    
