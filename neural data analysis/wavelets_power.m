@@ -254,8 +254,86 @@ mAgoodR1 = data.mAgoodR1; %pull out var to save it as file
 % squeeze(data.(monkey{:})(i).(dday{:}).power(13,:,:,:)); %testing 
 %freqidx x downsampled time points x trials (monkey B correct day d091001)
 
+%% Baseline normalize power
+
+%init vars
+min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
+max_freq = 100; %nothing above 100
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
+
+%load non-normalized power files
+monkeys = {'mA','mB'}; %setup monkeys array
+mi = 2; %choose which monkey: mA=1, mB=2
+
+monkey=monkeys{mi}; %load data for chosen monkey
+if monkey=='mA'
+    load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data
+    mData = mAgoodR1; clear mAgoodR1
+    load('mAgoodR1_basepow_erp.mat'); 
+    data=mAgoodR1; clear mAgoodR1
+else
+    load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data
+    mData = mBgoodR1; clear mBgoodR1
+    load('mBgoodR1_basepow_erp.mat'); 
+    data=mBgoodR1; clear mBgoodR1
+end
+
+alldays = fieldnames( mData )'; %extract all days
+for dayN=alldays
+    allchans = size(mData(1).(dayN{:}).power,1); %total # of chans
+    areas = string(mData(1).(dayN{:}).areas); %all areas
+    %init dB baseline normalized power array [resp x chan x freqidx x
+    %times2saveidx]
+    dbnPow = zeros(2,length(allchans),length(frex),length(times2save));
+    for chanN = 1:allchans
+        for fi = 1:length(frex)
+            %extract baseline-normalized power for chanN x freq component
+            basePow = (data(1).(dayN{:}).basepow(chanN,fi) + ...
+                data(2).(dayN{:}).basepow(chanN,fi))/2; %avg of cor & inc
+            for resp=1:2 %correct then incorrect
+                %average raw power over trials for chanN x freq combo = 187
+                %times2saveidx
+                avgPow = squeeze( mean( mData(resp).(dayN{:}).power(chanN,fi,:,:),4 ) );
+                %dB baseline normalize the power for cor then inc
+                dbnPow(resp,chanN,fi,:) = 10*log10( avgPow ./ basePow );
+            end
+        end
+    end
+%             find(dbnPow(2,chanN-8,:,:)~=0); %testing
+            size(dbnPower) %testing
+%             size(dbnPow) %testing
+            find(dbnPower(2,chanN-3,:,:)~=0); %testing
+    %now package it all up
+    dayy=find(ismember(alldays,dayN{:}));
+    if dayy==1 
+        dbnPower = dbnPow;
+        dbn_pow.chan = [1:allchans]; %1 x allchans vector
+        dbn_pow.chant = repmat(allchans,allchans,1)';
+        dbn_pow.area = areas;
+        dbn_pow.day = repmat(dayy,allchans,1)';
+    else
+        dbnPower = cat(2,dbnPower,dbnPow);
+        dbn_pow.chan = cat(2,dbn_pow.chan,[1:allchans]);
+        dbn_pow.chant = cat(2,dbn_pow.chant,repmat(allchans,allchans,1)');
+        dbn_pow.area = cat(2,dbn_pow.area,areas);
+        dbn_pow.day = cat(2,dbn_pow.day,repmat(dayy,allchans,1)');
+    end
+end
+dbn_pow.dbnPower = dbnPower;
+
+%save dbn_pow as m%goodR1_dBbasenormpow.mat in 
+%\OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data\step 2 TF - power
+
+%143 chans in mA
+%318 chans in mB
+
+
 %% initialize variables
 
+srate=1000;
 % define trial timeline
 signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
 % vector of time points to save in post-analysis downsampling
@@ -362,19 +440,23 @@ for dayN=alldays
     %pull out correct power avg over trials then chans (frex x time/samples)
     dayy = find(ismember(alldays,dayN{:})); %day number
     %build out day avg-over-chans matrix [day freqidx times2saveidx]
-%     cor(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) ); 
+    cor(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) ); 
     inc(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) );
 end
 % find(cor(15,:,:)~=0); %testing
 mAvgc = squeeze(mean(cor,1)); mAvgi=squeeze(mean(inc,1));
-%baseline normalization
+%baseline normalization: avg over chans= [freqidx x times2saveidx]
+mAvgdbnc = squeeze( mean( dbn_pow.dbnPower(1,:,:,:),2 ) );
+mAvgdbni = squeeze( mean( dbn_pow.dbnPower(2,:,:,:),2 ) );
 figure(1), clf
-% subplot(211)
+subplot(211)
 contourf(signalt(times2saveidx),frex,mAvgc,100,'linecolor','none')
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+set(gca,'xticklabel',[])
+% xlabel('Time (s)')
+ylabel('Frequency (Hz)'), cbar = colorbar; 
 text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
 text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
 text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
@@ -383,13 +465,14 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-2.5 pos(2)];
 % cbar.TickLabels = ({'Incorrect','Correct'});
-title(sprintf('%s %d Days Correct',monkeys{i}(1:8),length(alldays)));
-ax=gca; ax.FontSize = 25;
-export_fig('mB_raw_power_cor','-png','-transparent'); %save transparent pdf in pwd
+title(sprintf('%s %d Days %d Channels Correct',monkeys{i}(1:8),...
+    length(alldays),size(dbn_pow.dbnPower,2)));
+ax=gca; ax.FontSize = 20;
+% export_fig('mB_raw_power_cor','-png','-transparent'); %save transparent pdf in pwd
 
 %work on pulling out baseline normalized power from analytic signal
 subplot(212)
-contourf(signalt(times2saveidx),frex,cor,100,'linecolor','none')
+contourf(signalt(times2saveidx),frex,mAvgdbnc,100,'linecolor','none')
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -398,13 +481,16 @@ text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
 text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
 text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
 text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
+caxis([-1.5 1.5]) %set colorbar limits
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
-cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
-cbar.Label.Position=[pos(1)-2.5 pos(2)];
-title(sprintf('%s Day %d / %d All %d Chans Across %d Areas Correct',monkeys{i}(1:8),...
-    find(ismember(alldays,dayN{:})),length(alldays),allchans,length(unique(areas))));
-ax=gca; ax.FontSize = 25;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.65 pos(2)];
+% title(sprintf('%s %d Days %d Channels Correct',monkeys{i}(1:8),...
+%     length(alldays),size(dbn_pow.dbnPower,2)));
+ax=gca; ax.FontSize = 20;
+% export_fig('mB_dbn_power_cor','-png','-transparent'); %save transparent pdf in pwd
 
+export_fig('mB_raw_dbn_power_cor','-png','-transparent'); %save transparent pdf in pwd
 
 %see about averaging over channels to get a day-level power spectrogram and
 %adding that frame to vid
