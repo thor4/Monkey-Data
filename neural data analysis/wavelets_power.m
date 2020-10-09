@@ -452,14 +452,28 @@ mAvgc = squeeze(mean(cor,1)); mAvgi=squeeze(mean(inc,1));
 mAvgdbnc = squeeze( mean( dbn_pow.dbnPower(1,:,:,:),2 ) );
 mAvgdbni = squeeze( mean( dbn_pow.dbnPower(2,:,:,:),2 ) );
 
+%pull out frontal areas only
+frontal = unique(dbn_pow.area); 
+% frontal = [frontal(1:2), frontal(7:end)]; %mA
+frontal = [frontal(1:3), frontal(end)]; %mB
+fchanBool = ismember(dbn_pow.area,frontal);
+sum(ismember(dbn_pow.area,frontal)) %146 total frontal chans for mB & 69 for mA
+%[chans x freqidx x times2saveidx]
+fchans = squeeze( dbn_pow.dbnPower(:,fchanBool,:,:) ); %frontal chans only
+mAvgdbnf = squeeze( mean( fchans,2 ) ); %avg over all frontal chans
+%leaves [resp(2) x freqidx(35) x times2saveidx(187)]
+
+
+
 %set subtightplot function parameters up:
 make_it_tight = true;
 %set ([vert horiz](axes gap),[lower uppper](margins),[left right](margins))
-subplot = @(m,n,p) subtightplot (m, n, p, [0.04 0.05], [0.09 0.05], [0.06 0.04]);
+subplot = @(m,n,p) subtightplot (m, n, p, [0.04 0.05], [0.08 0.04], [0.06 0.035]);
 if ~make_it_tight,  clear subplot;  end
 
-figure(2), clf
+figure(1), clf
 % subplot(2,1,1)
+% contourf(signalt(times2saveidx),frex,mAvgc-mAvgi,100,'linecolor','none')
 contourf(signalt(times2saveidx),frex,mAvgc,100,'linecolor','none')
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
@@ -475,17 +489,17 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'Raw Power (\muV^2)'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-2.5 pos(2)];
 % cbar.TickLabels = ({'Incorrect','Correct'});
-title(sprintf('%s %d Days %d Channels Correct',monkeys{i}(1:8),...
+title(sprintf('%s %d Days %d Frontal & Parietal Channels Correct',monkeys{i}(1:8),...
     length(alldays),size(dbn_pow.dbnPower,2)));
 ax=gca; ax.FontSize = 20;
 % export_fig('mB_raw_power_cor','-png','-transparent'); %save transparent pdf in pwd
 
 %work on pulling out baseline normalized power from analytic signal
 % subplot(2,1,2)
-contourf(signalt(times2saveidx),frex,mAvgdbnc,100,'linecolor','none')
-xo=0.63; yo=7.0592; wdth=1.25-0.63; hght=12.4581-7.0592; %coords of rect
-dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
-annotation('rectangle',dim,'Color','black')
+% contourf(signalt(times2saveidx),frex,squeeze(mAvgdbnf(1,:,:)-mAvgdbnf(2,:,:)),100,'linecolor','none') %diffmap frontal chans
+% contourf(signalt(times2saveidx),frex,mAvgdbnc-mAvgdbni,100,'linecolor','none') %diffmap all chans
+% contourf(signalt(times2saveidx),frex,mAvgdbnc,100,'linecolor','none')
+contourf(signalt(times2saveidx),frex,squeeze(mAvgdbnf(1,:,:)),100,'linecolor','none') %cor frontal chans
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -495,33 +509,42 @@ text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
 text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
 text(triggers(3)*1.02,yL(2)*.85,'match','color','w','fontsize',20); %delay
 caxis([-1.5 1.5]) %set colorbar limits
+% caxis([-0.25 0.25]) %set colorbar limits
+% caxis([-0.4 0.4]) %set colorbar limits
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.65 pos(2)];
-title(sprintf('%s %d Days %d Channels Correct',monkeys{i}(1:8),...
-    length(alldays),size(dbn_pow.dbnPower,2)));
+% cbar.TickLabels = ({'Incorrect','Correct'});
+% title(sprintf('%s %d Days %d Frontal & Parietal Channels Correct',monkeys{i}(1:8),...
+%     length(alldays),size(dbn_pow.dbnPower,2)));
+title(sprintf('%s %d Days %d Frontal Channels Correct',monkeys{i}(1:8),...
+    length(alldays),size(fchans,2)));
 ax=gca; ax.FontSize = 24;
-% export_fig('mB_dbn_power_cor','-png','-transparent'); %save transparent pdf in pwd
 
-export_fig('mB_raw_dbn_power_cor','-png','-transparent'); %save transparent pdf in pwd
+export_fig('mB_dbn_power_cor_f-marks','-png','-transparent'); %save transparent png in pwd
 
-%now time to draw our rectangle on areas of interest based on hypotheses
+% mAcorrect rectangle on areas of interest based on hypotheses
+%hyp1: f & p regions show increased low-band LFP power delay
+xo=0.66; yo=9.37784; wdth=1.25-0.66; hght=18.1934-9.37784; %coords of rect
+%hyp2: f & p regions show decreased mid-band LFP power delay 
+xo=0.55; yo=29.2074; wdth=1.23-0.55; hght=38.8008-29.2074; %coords of rect
+%hyp3: f region high-band LFP power bursts near end of delay
+xo=1.02; yo=38.8008; wdth=1.22-1.06; hght=90.9671-38.8008; %coords of rect
+%cutting out yo=51.5453:68.4757 to eliminate line noise artifact
+
+% mBcorrect rectangle on areas of interest based on hypotheses
 %hyp1: f & p regions show increased low-band LFP power delay
 xo=0.63; yo=7.0592; wdth=1.25-0.63; hght=12.4581-7.0592; %coords of rect
-dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
-annotation('rectangle',dim,'Color','black')
+%hyp2: f & p regions show decreased mid-band LFP power delay 
+xo=0.58; yo=15.0551; wdth=0.75-0.58; hght=32.1077-15.0551; %coords of rect
+%hyp3: f region high-band LFP power bursts near end of delay
+xo=1.02; yo=38.8008; wdth=1.22-1.06; hght=90.9671-38.8008; %coords of rect
+%cutting out yo=51.5453:68.4757 to eliminate line noise artifact
+
+% dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
+% annotation('rectangle',dim,'Color','black')
 
 
-% Add an annotation requiring (x,y) coordinate vectors
-% 		plot(t,s);ylim([-1.2 1.2])
-% 		xa = [1.6 2]*pi;
-% 		ya = [0 0];
-% 		[xaf,yaf] = ds2nfu(xa,ya);
-% 		annotation('arrow',xaf,yaf)
-
-%see about averaging over channels to get a day-level power spectrogram and
-%adding that frame to vid
-%build out the day loop
 
 %% parametric statistics
 
