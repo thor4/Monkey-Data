@@ -334,6 +334,10 @@ dbn_pow.dbnPower = dbnPower;
 %% initialize variables
 
 srate=1000;
+min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
+max_freq = 100; %nothing above 100
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
 % define trial timeline
 signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
 % vector of time points to save in post-analysis downsampling
@@ -353,8 +357,8 @@ baseidx = dsearchn(signalt',baset');
 % z = frequencies x samples
 % contourf(x,y,z,...)
 
-load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data
-load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data
+load('mAgoodR1_pow_erp_lfp.mat'); load('mAgoodR1_dBbasenormpow.mat'); %monkey A data
+load('mBgoodR1_pow_erp_lfp.mat'); load('mBgoodR1_dBbasenormpow.mat'); %monkey B data
 
 monkeys={'mAgoodR1(1)','mBgoodR1(1)','mAgoodR1(2)','mBgoodR1(2)'};
 
@@ -433,23 +437,29 @@ close(powvid) %finish with vid
 %now get full monkey correct ERP (change i val's and plot title + cbar
 %limits for diff monkeys and for diffmap)
 for dayN=alldays
+    dayy = find(ismember(alldays,dayN{:})); %day number
     % which areas depends on monkeyN
-    allchans = size(eval(monkeys{i}).(dayN{:}).power,1); %total # of chans
     areas = string(eval(monkeys{i}).(dayN{:}).areas); %all areas
     %now calc day power spectrogram avg over all chans
     %pull out correct power avg over trials then chans (frex x time/samples)
-    dayy = find(ismember(alldays,dayN{:})); %day number
     %build out day avg-over-chans matrix [day freqidx times2saveidx]
     cor(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) ); 
-    inc(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i}).(dayN{:}).power,4 ),1 ) );
+    inc(dayy,:,:) = squeeze( mean( mean( eval(monkeys{i+2}).(dayN{:}).power,4 ),1 ) );
 end
 % find(cor(15,:,:)~=0); %testing
 mAvgc = squeeze(mean(cor,1)); mAvgi=squeeze(mean(inc,1));
 %baseline normalization: avg over chans= [freqidx x times2saveidx]
 mAvgdbnc = squeeze( mean( dbn_pow.dbnPower(1,:,:,:),2 ) );
 mAvgdbni = squeeze( mean( dbn_pow.dbnPower(2,:,:,:),2 ) );
-figure(1), clf
-subplot(211)
+
+%set subtightplot function parameters up:
+make_it_tight = true;
+%set ([vert horiz](axes gap),[lower uppper](margins),[left right](margins))
+subplot = @(m,n,p) subtightplot (m, n, p, [0.04 0.05], [0.09 0.05], [0.06 0.04]);
+if ~make_it_tight,  clear subplot;  end
+
+figure(2), clf
+% subplot(2,1,1)
 contourf(signalt(times2saveidx),frex,mAvgc,100,'linecolor','none')
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
@@ -471,8 +481,11 @@ ax=gca; ax.FontSize = 20;
 % export_fig('mB_raw_power_cor','-png','-transparent'); %save transparent pdf in pwd
 
 %work on pulling out baseline normalized power from analytic signal
-subplot(212)
+% subplot(2,1,2)
 contourf(signalt(times2saveidx),frex,mAvgdbnc,100,'linecolor','none')
+xo=0.63; yo=7.0592; wdth=1.25-0.63; hght=12.4581-7.0592; %coords of rect
+dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
+annotation('rectangle',dim,'Color','black')
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -485,12 +498,26 @@ caxis([-1.5 1.5]) %set colorbar limits
 lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.65 pos(2)];
-% title(sprintf('%s %d Days %d Channels Correct',monkeys{i}(1:8),...
-%     length(alldays),size(dbn_pow.dbnPower,2)));
-ax=gca; ax.FontSize = 20;
+title(sprintf('%s %d Days %d Channels Correct',monkeys{i}(1:8),...
+    length(alldays),size(dbn_pow.dbnPower,2)));
+ax=gca; ax.FontSize = 24;
 % export_fig('mB_dbn_power_cor','-png','-transparent'); %save transparent pdf in pwd
 
 export_fig('mB_raw_dbn_power_cor','-png','-transparent'); %save transparent pdf in pwd
+
+%now time to draw our rectangle on areas of interest based on hypotheses
+%hyp1: f & p regions show increased low-band LFP power delay
+xo=0.63; yo=7.0592; wdth=1.25-0.63; hght=12.4581-7.0592; %coords of rect
+dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
+annotation('rectangle',dim,'Color','black')
+
+
+% Add an annotation requiring (x,y) coordinate vectors
+% 		plot(t,s);ylim([-1.2 1.2])
+% 		xa = [1.6 2]*pi;
+% 		ya = [0 0];
+% 		[xaf,yaf] = ds2nfu(xa,ya);
+% 		annotation('arrow',xaf,yaf)
 
 %see about averaging over channels to get a day-level power spectrogram and
 %adding that frame to vid
