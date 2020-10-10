@@ -529,7 +529,7 @@ xo=0.66; yo=9.37784; wdth=1.25-0.66; hght=18.1934-9.37784; %coords of rect
 %hyp2: f & p regions show decreased mid-band LFP power delay 
 xo=0.55; yo=29.2074; wdth=1.23-0.55; hght=38.8008-29.2074; %coords of rect
 %hyp3: f region high-band LFP power bursts near end of delay
-xo=1.02; yo=38.8008; wdth=1.22-1.06; hght=90.9671-38.8008; %coords of rect
+xo=1.02; yo=46.8892; wdth=1.22-1.02; hght=90.9671-46.8892; %coords of rect
 %cutting out yo=51.5453:68.4757 to eliminate line noise artifact
 
 % mBcorrect rectangle on areas of interest based on hypotheses
@@ -544,13 +544,14 @@ xo=1.02; yo=38.8008; wdth=1.22-1.06; hght=90.9671-38.8008; %coords of rect
 % dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
 % annotation('rectangle',dim,'Color','black')
 
-
-
-%% parametric statistics
-
+%% extract relevant time windows for t-tests
 
 %init vars
 srate = 1000; %1000Hz sampling rate
+min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
+max_freq = 100; %nothing above 100
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
 num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
 % define trial timeline
 signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
@@ -572,61 +573,45 @@ mi = 1; %choose which monkey: mA=1, mB=2
 
 monkey=monkeys{mi}; %load data for chosen monkey
 if monkey=='mA'
-    load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data
-    mData = mAgoodR1; clear mAgoodR1
+    load('mAgoodR1_dBbasenormpow.mat'); %monkey A data
 else
-    load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data
-    mData = mBgoodR1; clear mBgoodR1
+    load('mBgoodR1_dBbasenormpow.mat'); %monkey B data
 end
 
-alldays = fieldnames( mData )'; %extract all days
-corinc = []; %init allchan across days cor-inc contrast array
-for dayN=alldays
-    allchans = size(mData(1).(dayN{:}).power,1); %total # of chans
-    areas = string(mData(1).(dayN{:}).areas); %all areas
-    % init H0 perm map for all chans [area x permutation x freqidx x timeidx]
-    chan_permmaps = zeros(length(areas),n_permutes,num_frex,length(times2save));
-    for chanN = 1:allchans
-        % total number of incorrect trials for chan, power: chan x freqidx x time x trials
-        nitrials = size( mData(2).(dayN{:}).power,4 );
-        %initialize null hypothesis permutation-level maps
-        permmaps = zeros(n_permutes,num_frex,length(times2save));
-        for permi = 1:n_permutes
-            % randomly sample from condition 1 trials (decimation) to match
-            % condition 2
-            randcoridx = randperm( size( mData(1).(dayN{:}).power,4 ),nitrials );
-            temp_cor = squeeze( mData(1).(dayN{:}).power(chanN,:,:,randcoridx) );
-            % concatenate conditions: trials1:nitrials are from correct, 
-            % trials nitrials+1:end are from incorrect
-            tf3d = cat(3,temp_cor,squeeze(mData(2).(dayN{:}).power(chanN,:,:,:)));
-            % randomize trials, which also randomly assigns trials to 
-            % conditions, correct vs incorrect
-            randtf3didx = randperm(size(tf3d,3));
-            temp_tf3d = tf3d(:,:,randtf3didx); % [freqidx x time x trials]
-            % compute the "difference" map under the null hypothesis: 
-            % [freqidx x time]
-            permmaps(permi,:,:) = squeeze( mean(temp_tf3d(:,:,1:nitrials),3) - mean(temp_tf3d(:,:,nitrials+1:end),3) );
-        end
-        chan_permmaps(chanN,:,:,:) = permmaps;
-%         find(chan_permmaps(chanN,:,:,:)~=0); %testing
-%         find(permmaps~=0); %testing
-%             size(mAchan_diffpermmaps) %testing
-%             find(mAchan_diffpermmaps(chanN-8,:,:,:)~=0); %testing
-    end
-    dayy=find(ismember(alldays,dayN{:}));
-    if dayy==1 
-        diffpermmaps = chan_permmaps;
-        metaperm.chan = [1:allchans]; %1 x allchans vector
-        metaperm.area = areas;
-        metaperm.day = repmat(dayy,allchans,1)';
-    else
-        diffpermmaps = cat(1,diffpermmaps,chan_permmaps);
-        metaperm.chan = cat(2,metaperm.chan,[1:allchans]);
-        metaperm.area = cat(2,metaperm.area,areas);
-        metaperm.day = cat(2,metaperm.day,repmat(dayy,allchans,1)');
-    end
+
+size(dbn_pow.dbnPower) % mA: [resp(2) chant(143) frexidx(35) times2saveidx(187)]
+%hyp1: f & p regions show increased low-band LFP power delay
+x1=660; x2=1250; y1=9.37784; y2=18.1934; %coords of hyp1 rect ROI
+hyp1t = [find(times2save==x1):find(times2save==x2)]; %hyp1 timepoints
+hyp1f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp1 freq components
+x1=550; x2=1230; y1=29.2074; y2=38.8008; %coords of hyp2 rect ROI
+hyp2t = [find(times2save==x1):find(times2save==x2)]; %hyp2 timepoints
+hyp2f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp2 freq components
+x1=1020; x2=1220; y11=46.8892; y12=51.5453; y21=68.4757; y22=90.9671; %coords of hyp3 rect ROIs
+hyp3t = [find(times2save==x1):find(times2save==x2)]; %hyp3 timepoints
+hyp3f1 = [dsearchn(frex',y11):dsearchn(frex',y12)]; %hyp3 box 1 freq components
+hyp3f2 = [dsearchn(frex',y21):dsearchn(frex',y22)]; %hyp3 box 2 freq components
+allchans = size(dbn_pow.dbnPower,2); %total # of chans
+mAhyp1 = zeros(allchans,1)'; mAhyp2 = zeros(allchans,1)'; mAhyp3 = zeros(allchans,1)';
+for chanN=1:allchans
+    %avg over time then frequencies
+    mAhyp1(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp1f,hyp1t ) ),2 ),1 ); %correct
+    mAhyp2(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp2f,hyp2t ) ),2 ),1 ); %correct
+    temp1_mAhyp3=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp3f1,hyp3t ) ),2 ),1 ); %correct
+    temp2_mAhyp3=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp3f2,hyp3t ) ),2 ),1 ); %correct
+    mAhyp3(chanN)=mean([temp1_mAhyp3 temp2_mAhyp3]);
 end
-metaperm.diffmap = diffpermmaps;
+
+squeeze(dbn_pow.dbnPower(1,chanN,hyp2f,hyp2t)); %testing
+test=squeeze(dbn_pow.dbnPower(1,chanN,:,:)); %testing
+mean(mAhyp3)
+
+[h,p,ci,stats] = ttest(mAhyp1',0,'Tail','right','Alpha',pval); %hyp1 is sig
+[h,p,ci,stats] = ttest(mAhyp2',0,'Tail','left','Alpha',pval); %hyp2 is sig
+[h,p,ci,stats] = ttest(mAhyp3',0,'Tail','right','Alpha',pval); %hyp3 is not sig
+
+
+
 
 %% statistics via permutation testing
 
