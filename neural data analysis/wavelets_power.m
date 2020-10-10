@@ -498,8 +498,8 @@ ax=gca; ax.FontSize = 20;
 % subplot(2,1,2)
 % contourf(signalt(times2saveidx),frex,squeeze(mAvgdbnf(1,:,:)-mAvgdbnf(2,:,:)),100,'linecolor','none') %diffmap frontal chans
 % contourf(signalt(times2saveidx),frex,mAvgdbnc-mAvgdbni,100,'linecolor','none') %diffmap all chans
-% contourf(signalt(times2saveidx),frex,mAvgdbnc,100,'linecolor','none')
-contourf(signalt(times2saveidx),frex,squeeze(mAvgdbnf(1,:,:)),100,'linecolor','none') %cor frontal chans
+contourf(signalt(times2saveidx),frex,mAvgdbnc,100,'linecolor','none')
+% contourf(signalt(times2saveidx),frex,squeeze(mAvgdbnf(1,:,:)),100,'linecolor','none') %cor frontal chans
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -515,36 +515,18 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.65 pos(2)];
 % cbar.TickLabels = ({'Incorrect','Correct'});
-% title(sprintf('%s %d Days %d Frontal & Parietal Channels Correct',monkeys{i}(1:8),...
-%     length(alldays),size(dbn_pow.dbnPower,2)));
-title(sprintf('%s %d Days %d Frontal Channels Correct',monkeys{i}(1:8),...
-    length(alldays),size(fchans,2)));
+title(sprintf('%s %d Days %d Frontal & Parietal Channels Correct',monkeys{i}(1:8),...
+    length(alldays),size(dbn_pow.dbnPower,2)));
+% title(sprintf('%s %d Days %d Frontal Channels Correct',monkeys{i}(1:8),...
+%     length(alldays),size(fchans,2)));
 ax=gca; ax.FontSize = 24;
 
-export_fig('mB_dbn_power_cor_f-marks','-png','-transparent'); %save transparent png in pwd
-
-% mAcorrect rectangle on areas of interest based on hypotheses
-%hyp1: f & p regions show increased low-band LFP power delay
-xo=0.66; yo=9.37784; wdth=1.25-0.66; hght=18.1934-9.37784; %coords of rect
-%hyp2: f & p regions show decreased mid-band LFP power delay 
-xo=0.55; yo=29.2074; wdth=1.23-0.55; hght=38.8008-29.2074; %coords of rect
-%hyp3: f region high-band LFP power bursts near end of delay
-xo=1.02; yo=46.8892; wdth=1.22-1.02; hght=90.9671-46.8892; %coords of rect
-%cutting out yo=51.5453:68.4757 to eliminate line noise artifact
-
-% mBcorrect rectangle on areas of interest based on hypotheses
-%hyp1: f & p regions show increased low-band LFP power delay
-xo=0.63; yo=7.0592; wdth=1.25-0.63; hght=12.4581-7.0592; %coords of rect
-%hyp2: f & p regions show decreased mid-band LFP power delay 
-xo=0.58; yo=15.0551; wdth=0.75-0.58; hght=32.1077-15.0551; %coords of rect
-%hyp3: f region high-band LFP power bursts near end of delay
-xo=1.02; yo=38.8008; wdth=1.22-1.06; hght=90.9671-38.8008; %coords of rect
-%cutting out yo=51.5453:68.4757 to eliminate line noise artifact
+export_fig('mB_dbn_power_cor-marks','-png','-transparent'); %save transparent png in pwd
 
 % dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
 % annotation('rectangle',dim,'Color','black')
 
-%% extract relevant time windows for t-tests
+%% test hypotheses using one-sample directional t-tests
 
 %init vars
 srate = 1000; %1000Hz sampling rate
@@ -569,49 +551,64 @@ ntests = 3; %how many t-tests?
 pval = 0.05/ntests; %.05 bonferonni-corrected for multiple comparisons
 
 monkeys = {'mA','mB'}; %setup monkeys array
-mi = 1; %choose which monkey: mA=1, mB=2
+mi = 2; %choose which monkey: mA=1, mB=2
 
 monkey=monkeys{mi}; %load data for chosen monkey
 if monkey=='mA'
     load('mAgoodR1_dBbasenormpow.mat'); %monkey A data
-else
+    %hyp1: f & p regions show increased low-band LFP power delay
+    x1=580; x2=1230; y1=4.3972; y2=18.1934; %coords of hyp1 rect ROI
+    hyp1t = [find(times2save==x1):find(times2save==x2)]; %hyp1 timepoints
+    hyp1f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp1 freq components
+    x1=580; x2=1230; y1=21.986; y2=38.8008; %coords of hyp2 rect ROI
+    hyp2t = [find(times2save==x1):find(times2save==x2)]; %hyp2 timepoints
+    hyp2f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp2 freq components
+    x1=1020; x2=1230; y1=46.8892; y2=90.9671; %coords of hyp3 rect ROIs
+    hyp3t = [find(times2save==x1):find(times2save==x2)]; %hyp3 timepoints
+    hyp3f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp3 freq components
+else %mB
     load('mBgoodR1_dBbasenormpow.mat'); %monkey B data
+    x1=580; x2=1230; y1=4.3972; y2=12.4581; %coords of hyp1 rect ROI
+    hyp1t = [find(times2save==x1):find(times2save==x2)]; %hyp1 timepoints
+    hyp1f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp1 freq components
+    x1=580; x2=1230; y1=15.0551; y2=32.1077; %coords of hyp2 rect ROI
+    hyp2t = [find(times2save==x1):find(times2save==x2)]; %hyp2 timepoints
+    hyp2f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp2 freq components
+    x1=1020; x2=1230; y1=38.8008; y2=90.9671; %coords of hyp3 rect ROIs
+    hyp3t = [find(times2save==x1):find(times2save==x2)]; %hyp3 timepoints
+    hyp3f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp3 freq components
 end
 
-
-size(dbn_pow.dbnPower) % mA: [resp(2) chant(143) frexidx(35) times2saveidx(187)]
 %hyp1: f & p regions show increased low-band LFP power delay
-x1=660; x2=1250; y1=9.37784; y2=18.1934; %coords of hyp1 rect ROI
-hyp1t = [find(times2save==x1):find(times2save==x2)]; %hyp1 timepoints
-hyp1f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp1 freq components
-x1=550; x2=1230; y1=29.2074; y2=38.8008; %coords of hyp2 rect ROI
-hyp2t = [find(times2save==x1):find(times2save==x2)]; %hyp2 timepoints
-hyp2f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp2 freq components
-x1=1020; x2=1220; y11=46.8892; y12=51.5453; y21=68.4757; y22=90.9671; %coords of hyp3 rect ROIs
-hyp3t = [find(times2save==x1):find(times2save==x2)]; %hyp3 timepoints
-hyp3f1 = [dsearchn(frex',y11):dsearchn(frex',y12)]; %hyp3 box 1 freq components
-hyp3f2 = [dsearchn(frex',y21):dsearchn(frex',y22)]; %hyp3 box 2 freq components
+%hyp2: f & p regions show decreased mid-band LFP power delay 
+%hyp3: f region high-band LFP power bursts near end of delay
+
+size(dbn_pow.dbnPower) % [resp(2) chant(143A/318B) frexidx(35) times2saveidx(187)]
+
 allchans = size(dbn_pow.dbnPower,2); %total # of chans
-mAhyp1 = zeros(allchans,1)'; mAhyp2 = zeros(allchans,1)'; mAhyp3 = zeros(allchans,1)';
+mhyp1 = zeros(allchans,1)'; mhyp2 = zeros(allchans,1)'; mhyp3 = zeros(allchans,1)';
 for chanN=1:allchans
     %avg over time then frequencies
-    mAhyp1(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp1f,hyp1t ) ),2 ),1 ); %correct
-    mAhyp2(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp2f,hyp2t ) ),2 ),1 ); %correct
-    temp1_mAhyp3=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp3f1,hyp3t ) ),2 ),1 ); %correct
-    temp2_mAhyp3=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp3f2,hyp3t ) ),2 ),1 ); %correct
-    mAhyp3(chanN)=mean([temp1_mAhyp3 temp2_mAhyp3]);
+    mhyp1(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp1f,hyp1t ) ),2 ),1 ); %correct
+    mhyp2(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp2f,hyp2t ) ),2 ),1 ); %correct
+    mhyp3(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp3f,hyp3t ) ),2 ),1 ); %correct;
 end
 
-squeeze(dbn_pow.dbnPower(1,chanN,hyp2f,hyp2t)); %testing
+squeeze(dbn_pow.dbnPower(1,chanN,hyp3f,hyp3t)); %testing
 test=squeeze(dbn_pow.dbnPower(1,chanN,:,:)); %testing
-mean(mAhyp3)
+mean(mhyp1)
 
-[h,p,ci,stats] = ttest(mAhyp1',0,'Tail','right','Alpha',pval); %hyp1 is sig
-[h,p,ci,stats] = ttest(mAhyp2',0,'Tail','left','Alpha',pval); %hyp2 is sig
-[h,p,ci,stats] = ttest(mAhyp3',0,'Tail','right','Alpha',pval); %hyp3 is not sig
+[h,p,ci,stats] = ttest(mhyp1',0,'Tail','right','Alpha',pval); %hyp1 is sig
+[h,p,ci,stats] = ttest(mhyp2',0,'Tail','left','Alpha',pval); %hyp2 is sig
+[h,p,ci,stats] = ttest(mhyp3',0,'Tail','right','Alpha',pval); %hyp3 is not sig
 
 
-
+%draw the boxes in illustrator, run the stats and save the data files in
+%data folder step 3 parametric stats
+%finish writing up methods for stats and re-check code sections to ensure
+%everything is included (see about adding fig showing correct vs db-norm'd)
+%write up results section and include the figure
+%write up discussion and conclusion
 
 %% statistics via permutation testing
 
