@@ -551,7 +551,7 @@ ntests = 3; %how many t-tests?
 pval = 0.05/ntests; %.05 bonferonni-corrected for multiple comparisons
 
 monkeys = {'mA','mB'}; %setup monkeys array
-mi = 2; %choose which monkey: mA=1, mB=2
+mi = 1; %choose which monkey: mA=1, mB=2
 
 monkey=monkeys{mi}; %load data for chosen monkey
 if monkey=='mA'
@@ -598,13 +598,14 @@ squeeze(dbn_pow.dbnPower(1,chanN,hyp3f,hyp3t)); %testing
 test=squeeze(dbn_pow.dbnPower(1,chanN,:,:)); %testing
 mean(mhyp1)
 
-[h,p,ci,stats] = ttest(mhyp1',0,'Tail','right','Alpha',pval); %hyp1 is sig
-[h,p,ci,stats] = ttest(mhyp2',0,'Tail','left','Alpha',pval); %hyp2 is sig
-[h,p,ci,stats] = ttest(mhyp3',0,'Tail','right','Alpha',pval); %hyp3 is not sig
+[h1,p1,ci1,stats1] = ttest(mhyp1',0,'Tail','right','Alpha',pval); %hyp1 is sig for both monkeys
+[h2,p2,ci2,stats2] = ttest(mhyp2',0,'Tail','left','Alpha',pval); %hyp2 is sig for both monkeys
+[h3,p3,ci3,stats3] = ttest(mhyp3',0,'Tail','right','Alpha',pval); %hyp3 is not sig for both monkeys
+
+%save stats for all 3 hypotheses as m#ttest_hyp1-3.mat in:
+% OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data\step 3 - stats
 
 
-%draw the boxes in illustrator, run the stats and save the data files in
-%data folder step 3 parametric stats
 %finish writing up methods for stats and re-check code sections to ensure
 %everything is included (see about adding fig showing correct vs db-norm'd)
 %write up results section and include the figure
