@@ -526,6 +526,72 @@ export_fig('mB_dbn_power_cor-marks','-png','-transparent'); %save transparent pn
 % dim = ds2nfu([xo yo wdth hght]); %translate to normalized fig units
 % annotation('rectangle',dim,'Color','black')
 
+%% pull out and compute the regional day averages
+% doing this to address the issue of channel correlation since that will
+% effect generalizability according to Mike Cohen:
+% "Your assumption here is that you are randomly sampling from circuits in 
+% one animal, so the appropriate generalization is to neural populations in
+% that monkey (and then for each monkey)."
+% https://discuss.sincxpress.com/t/group-level-strategy-2a-questions/469/2
+
+%init vars
+srate = 1000; %1000Hz sampling rate
+min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
+max_freq = 100; %nothing above 100
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+% define trial timeline
+signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
+% time vector converted to indices
+
+monkeys = {'mA','mB'}; %setup monkeys array
+mi = 1; %choose which monkey: mA=1, mB=2
+
+monkey=monkeys{mi}; %load data for chosen monkey
+if monkey=='mA'
+    load('mAgoodR1_dBbasenormpow.mat'); %monkey A data
+else %mB
+    load('mBgoodR1_dBbasenormpow.mat'); %monkey B data
+end
+
+fAreas = {'9L','8B','dPFC','vPFC','6DR','8AD'}; %frontal areas from both monkeys
+pAreas = {'PEC','MIP','LIP','PG','PE'}; %parietal areas from both monkeys
+mAreas = unique(dbn_pow.area); %all areas in current monkey
+frontal = fAreas(ismember(fAreas,mAreas)); %frontal areas for current monkey
+parietal = pAreas(ismember(pAreas,mAreas)); %parietal areas for current monkey
+
+for day=1:max(dbn_pow.day) %pull out & avg over regions
+    dayReg = zeros(2,2,length(frex),length(times2save)); %init day regional avg mat
+    fchanBool = ismember(dbn_pow.area,frontal) & dbn_pow.day==day;
+    fchans = dbn_pow.dbnPower(:,fchanBool,:,:); %frontal chans only
+    mAvgdbnf = squeeze( mean( fchans,2 ) ); %avg over all frontal chans
+    pchanBool = ismember(dbn_pow.area,parietal) & dbn_pow.day==day;
+    pchans = dbn_pow.dbnPower(:,pchanBool,:,:); %parietal chans only
+    mAvgdbnp = squeeze( mean( pchans,2 ) ); %avg over all parietal chans
+    %leaves [resp(2) x freqidx(35) x times2saveidx(187)]
+    dayReg(1,:,:,:)=mAvgdbnf; dayReg(2,:,:,:)=mAvgdbnp;
+%     find(dayReg(2,:,:,:)~=0); %testing
+    if day==1 %save in dbn_pow struct
+        dbn_pow.dayRegAvg = dayReg;
+        dbn_pow.dayReg = repmat(day,2,1)';
+    else
+        dbn_pow.dayRegAvg = cat(1,dbn_pow.dayRegAvg,dayReg);
+        dbn_pow.dayReg = cat(2,dbn_pow.dayReg,repmat(day,2,1)');
+    end
+end
+
+size(dbn_pow.dayRegAvg) %testing mA size 46 (23 days * 2 regional avg's)
+% find(dbn_pow.dayRegAvg(end,:,:,:)~=0); %testing
+
+%save as new files m%goodR1_dBbasenormpow_dayReg to indicate this struct
+%includes the regional averages by day in: 
+% OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data\step 2 TF - power
+
+%should visualize some of the regional day averages
+
 %% test hypotheses using one-sample directional t-tests
 
 %init vars
@@ -586,13 +652,20 @@ end
 size(dbn_pow.dbnPower) % [resp(2) chant(143A/318B) frexidx(35) times2saveidx(187)]
 
 allchans = size(dbn_pow.dbnPower,2); %total # of chans
+
+
+
+
+
 mhyp1 = zeros(allchans,1)'; mhyp2 = zeros(allchans,1)'; mhyp3 = zeros(allchans,1)';
 for chanN=1:allchans
     %avg over time then frequencies
     mhyp1(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp1f,hyp1t ) ),2 ),1 ); %correct
     mhyp2(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp2f,hyp2t ) ),2 ),1 ); %correct
-    mhyp3(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp3f,hyp3t ) ),2 ),1 ); %correct;
 end
+
+%hypothesis 3 needs to be tested with only frontal channels
+mhyp3(chanN)=mean( mean( squeeze( dbn_pow.dbnPower(1,chanN,hyp3f,hyp3t ) ),2 ),1 ); %correct;
 
 squeeze(dbn_pow.dbnPower(1,chanN,hyp3f,hyp3t)); %testing
 test=squeeze(dbn_pow.dbnPower(1,chanN,:,:)); %testing
