@@ -595,11 +595,34 @@ size(dbn_pow.dayRegAvg) %testing mA size 46 (23 days * 2 regional avg's)
 % OneDrive\Documents\PhD @ FAU\research\High Frequency FP Activity in VWM\data\step 2 TF - power
 
 %% visualize the regional day averages & monkey averages
+
+%init vars
+srate = 1000; %1000Hz sampling rate
+min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
+max_freq = 100; %nothing above 100
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+% define trial timeline
+signalt = -.504:1/srate:1.589; %504 (nonzero sample) + 811 (delay) + 274 (match)=1589ms
+% vector of time points to save in post-analysis downsampling
+times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (match)
+% time vector converted to indices
+times2saveidx = dsearchn((signalt.*1000)',times2save');
+triggers = [0 0.505 .505+.811]; %cueonset, cueoffset, matchonset
+
+
+monkeys = {'mA','mB'}; %setup monkeys array
+mi = 1; %choose which monkey: mA=1, mB=2
+monkey=monkeys{mi}; %load data for chosen monkey
+
 if monkey=='mA'
     load('mAgoodR1_dBbasenormpow_dayReg.mat'); %monkey A dayReg data
 else %mB
     load('mBgoodR1_dBbasenormpow_dayReg.mat'); %monkey B dayReg data
 end
+
+%plot random day
 
 day = randperm(max(dbn_pow.dayReg),1); %choose a random day
 day = ismember(dbn_pow.dayReg,day); %setup bool of where day is
@@ -705,9 +728,6 @@ ax=gca; ax.FontSize = 18;
 
 export_fig('mB_dbn_power_RegAvg_day24','-eps','-transparent'); %save transparent png in pwd
 
-%first, verify this calculation is correct. next, do the average and check 
-%to make sure its the same as the other big average
-
 %check the average across frontal and parietal channels per monkey for
 %correct, then across correct & incorrect
 
@@ -734,7 +754,7 @@ if ~make_it_tight,  clear subplot;  end
 
 figure(2), clf
 subplot(2,2,1)
-contourf(signalt(times2saveidx),frex,regAvgfpi,100,'linecolor','none')
+contourf(signalt(times2saveidx),frex,regAvgfpc,100,'linecolor','none')
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -750,7 +770,7 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
 % cbar.TickLabels = ({'Incorrect','Correct'});
-title(sprintf('%s Frontal & Parietal Channels Across %d Days Incorrect',monkey,...
+title(sprintf('%s Frontal & Parietal Channels Across %d Days Correct',monkey,...
     max(dbn_pow.dayReg)));
 ax=gca; ax.FontSize = 18;
 
@@ -776,7 +796,7 @@ title(sprintf('%s Frontal & Parietal Channels %d Days Across All Responses',...
 ax=gca; ax.FontSize = 18;
 
 subplot(2,2,3)
-contourf(signalt(times2saveidx),frex,regAvgfi,100,'linecolor','none')
+contourf(signalt(times2saveidx),frex,regAvgfc,100,'linecolor','none')
 yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
     yL,'Color','k','LineWidth',4,'LineStyle',':'); 
 set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
@@ -792,7 +812,7 @@ lim = get(cbar,'Limits'); cbar.Ticks=lim;
 cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
 cbar.Label.Position=[pos(1)-1.5 pos(2)];
 % cbar.TickLabels = ({'Incorrect','Correct'});
-title(sprintf('%s Frontal Channels Across %d Days Incorrect',monkey,...
+title(sprintf('%s Frontal Channels Across %d Days Correct',monkey,...
     max(dbn_pow.dayReg)));
 ax=gca; ax.FontSize = 18;
 
@@ -821,9 +841,6 @@ ax=gca; ax.FontSize = 18;
 export_fig('mB_dbn_power_RegAvg_inc_corinc','-png','-transparent'); %save transparent png in pwd
 
 %all looks good. now choose the windows for f&p all resp and f all resp
-%redo this part with new lower boundaries for low band on mA and mB
-%(already chosen for mB, go about 4hz higher from there for mA) then redraw
-%boxes and redo stats
 
 %set subtightplot function parameters up:
 make_it_tight = true;
@@ -874,7 +891,200 @@ ax=gca; ax.FontSize = 22;
 
 %mark out the boundaries of rectangles then save 
 
-export_fig('mA_dbn_power_corinc-marks','-png','-transparent'); %save transparent png in pwd
+export_fig('mb_dbn_power_corinc-marks','-png','-transparent'); %save transparent png in pwd
+
+%now create new plot for mA and mB f&p and f channels across days correct
+%for results section
+
+clear dbn_pow
+load('mAgoodR1_dBbasenormpow_dayReg.mat'); %monkey A dayReg data
+dbn_pow_mA=dbn_pow; clear dbn_pow
+load('mBgoodR1_dBbasenormpow_dayReg.mat'); %monkey B dayReg data
+dbn_pow_mB=dbn_pow; clear dbn_pow
+
+%avg across f & p chans for correct [35 187]:
+mAregAvgfpc = squeeze(mean(dbn_pow_mA.dayRegAvg(:,1,:,:),1)); 
+mBregAvgfpc = squeeze(mean(dbn_pow_mB.dayRegAvg(:,1,:,:),1)); 
+%avg across f & p chans for incorrect [35 187]:
+mAregAvgfpi = squeeze(mean(dbn_pow_mA.dayRegAvg(:,2,:,:),1)); 
+mBregAvgfpi = squeeze(mean(dbn_pow_mB.dayRegAvg(:,2,:,:),1)); 
+%avg across f & p chans then across resp [35 187]:
+mAregAvgfpci = squeeze(mean(mean(dbn_pow_mA.dayRegAvg,1),2));
+mBregAvgfpci = squeeze(mean(mean(dbn_pow_mB.dayRegAvg,1),2));
+%access odd index elements which should be the avg cor frontal chans, then avg over them:
+mAregAvgfc = squeeze(mean(dbn_pow_mA.dayRegAvg(1:2:end,1,:,:),1)); %[35 187]
+mBregAvgfc = squeeze(mean(dbn_pow_mB.dayRegAvg(1:2:end,1,:,:),1)); %[35 187]
+%access odd index elements which should be the avg inc frontal chans, then avg over them:
+mAregAvgfi = squeeze(mean(dbn_pow_mA.dayRegAvg(1:2:end,2,:,:),1)); %[35 187]
+mBregAvgfi = squeeze(mean(dbn_pow_mB.dayRegAvg(1:2:end,2,:,:),1)); %[35 187]
+%access odd index elements which should be the avg cor frontal chans, then avg over them + resp:
+mAregAvgfci = squeeze(mean(mean(dbn_pow_mA.dayRegAvg(1:2:end,:,:,:),1),2)); %[35 187]
+mBregAvgfci = squeeze(mean(mean(dbn_pow_mB.dayRegAvg(1:2:end,:,:,:),1),2)); %[35 187]
+
+%set subtightplot function parameters up:
+make_it_tight = true;
+%set ([vert horiz](axes gap),[lower uppper](margins),[left right](margins))
+subplot = @(m,n,p) subtightplot (m, n, p, [0.04 0.015], [0.08 0.04], [0.055 0.01]);
+if ~make_it_tight,  clear subplot;  end
+
+figure(4), clf
+subplot(2,2,1)
+contourf(signalt(times2saveidx),frex,mAregAvgfpc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+set(gca,'xticklabel',[])
+% xlabel('Time (s)')
+ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',14); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',14); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',14); %delay
+text(triggers(3)*1.01,yL(2)*.85,'match','color','w','fontsize',14); %match
+caxis([-1.5 1.5]) %set colorbar limits
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Monkey A Frontal & Parietal Channels Across %d Days Correct',max(dbn_pow_mA.dayReg)));
+ax=gca; ax.FontSize = 18;
+
+subplot(2,2,2)
+contourf(signalt(times2saveidx),frex,mBregAvgfpc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+set(gca,'yticklabel',[]), set(gca,'xticklabel',[])
+% xlabel('Time (s)') ylabel('Frequency (Hz)'), 
+cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',14); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',14); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',14); %delay
+text(triggers(3)*1.01,yL(2)*.85,'match','color','w','fontsize',14); %match
+caxis([-1.5 1.5]) %set colorbar limits
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Monkey B Frontal & Parietal Channels Across %d Days Correct',max(dbn_pow_mB.dayReg)));
+ax=gca; ax.FontSize = 18;
+
+subplot(2,2,3)
+contourf(signalt(times2saveidx),frex,mAregAvgfc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+% set(gca,'xticklabel',[])
+xlabel('Time (s)') 
+ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',14); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',14); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',14); %delay
+text(triggers(3)*1.01,yL(2)*.85,'match','color','w','fontsize',14); %match
+caxis([-1.5 1.5]) %set colorbar limits
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Monkey A Frontal Channels Across %d Days Correct',max(dbn_pow_mA.dayReg)));
+ax=gca; ax.FontSize = 18;
+
+subplot(2,2,4)
+contourf(signalt(times2saveidx),frex,mBregAvgfc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+set(gca,'yticklabel',[])
+xlabel('Time (s)') 
+%ylabel('Frequency (Hz)'), 
+cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',14); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',14); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',14); %delay
+text(triggers(3)*1.01,yL(2)*.85,'match','color','w','fontsize',14); %match
+caxis([-1.5 1.5]) %set colorbar limits
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Monkey B Frontal Channels Across %d Days Correct',max(dbn_pow_mA.dayReg)));
+ax=gca; ax.FontSize = 18;
+
+%mark out the boundaries of rectangles then save
+export_fig('ma_mb_dbn_power_cor-marks','-eps','-transparent'); %save transparent png in pwd
+
+%and another for each monkey with 2x1 plots for better visualiation
+
+%set subtightplot function parameters up:
+make_it_tight = true;
+%set ([vert horiz](axes gap),[lower uppper](margins),[left right](margins))
+subplot = @(m,n,p) subtightplot (m, n, p, [0.05 0.015], [0.085 0.04], [0.065 0.02]);
+if ~make_it_tight,  clear subplot;  end
+
+figure(5), clf
+subplot(2,1,1)
+contourf(signalt(times2saveidx),frex,mBregAvgfpc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+set(gca,'xticklabel',[])
+% xlabel('Time (s)')
+ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+text(triggers(3)*1.01,yL(2)*.85,'match','color','w','fontsize',20); %match
+caxis([-1.5 1.5]) %set colorbar limits
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Monkey B Frontal & Parietal Channels Across %d Days Correct',max(dbn_pow_mA.dayReg)));
+ax=gca; ax.FontSize = 22;
+
+subplot(2,1,2)
+contourf(signalt(times2saveidx),frex,mBregAvgfc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), 
+cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+text(triggers(3)*1.01,yL(2)*.85,'match','color','w','fontsize',20); %match
+caxis([-1.5 1.5]) %set colorbar limits
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Monkey B Frontal Channels Across %d Days Correct',max(dbn_pow_mB.dayReg)));
+ax=gca; ax.FontSize = 22;
+
+%mark out the boundaries of rectangles then save
+export_fig('mB_dbn_power_cor-marks','-eps','-transparent'); %save transparent png in pwd
+
+%and finally another for each monkey with single plots for better visualiation
+
+figure(6), clf
+contourf(signalt(times2saveidx),frex,mBregAvgfc,100,'linecolor','none')
+yL = get(gca,'YLim'); line([0 triggers(2) triggers(3);0 triggers(2) triggers(3)],...
+    yL,'Color','k','LineWidth',4,'LineStyle',':'); 
+set(gca,'ytick',round(logspace(log10(frex(1)),log10(frex(end)),10)*100)/100,'yscale','log','YMinorTick','off')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+text(signalt(200),yL(2)*.85,'baseline','color','w','fontsize',20); %baseline
+text(triggers(2)*0.35,yL(2)*.85,'cue','color','w','fontsize',20); %cue
+text(triggers(3)*0.65,yL(2)*.85,'delay','color','w','fontsize',20); %delay
+text(triggers(3)*1.01,yL(2)*.85,'match','color','w','fontsize',20); %match
+caxis([-1.5 1.5]) %set colorbar limits
+lim = get(cbar,'Limits'); cbar.Ticks=lim;
+cbar.Label.String = 'dB change from baseline'; pos = cbar.Label.Position; 
+cbar.Label.Position=[pos(1)-1.5 pos(2)];
+% cbar.TickLabels = ({'Incorrect','Correct'});
+title(sprintf('Monkey B Frontal Channels Across %d Days Correct',max(dbn_pow_mB.dayReg)));
+ax=gca; ax.FontSize = 24;
+
+%mark out the boundaries of rectangles then save
+export_fig('mB_dbn_power_cor_f-marks','-eps','-transparent'); %save transparent png in pwd
 
 %% test hypotheses using one-sample directional t-tests
 
@@ -907,7 +1117,7 @@ monkey=monkeys{mi}; %load data for chosen monkey
 if monkey=='mA'
     load('mAgoodR1_dBbasenormpow_dayReg.mat'); %monkey A data
     %hyp1: f & p regions show increased low-band LFP power delay
-    x1=580; x2=1230; y1=4.3972; y2=18.1934; %coords of hyp1 rect ROI
+    x1=580; x2=1230; y1=8.5307; y2=18.1934; %coords of hyp1 rect ROI
     hyp1t = [find(times2save==x1):find(times2save==x2)]; %hyp1 timepoints
     hyp1f = [dsearchn(frex',y1):dsearchn(frex',y2)]; %hyp1 freq components
     x1=580; x2=1230; y1=21.986; y2=38.8008; %coords of hyp2 rect ROI
