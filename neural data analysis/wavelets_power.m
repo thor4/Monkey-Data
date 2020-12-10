@@ -270,14 +270,14 @@ mi = 2; %choose which monkey: mA=1, mB=2
 
 monkey=monkeys{mi}; %load data for chosen monkey
 if monkey=='mA'
-    load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data
+    load('mAgoodR1_pow_erp_lfp.mat'); %monkey A data w raw power
     mData = mAgoodR1; clear mAgoodR1
-    load('mAgoodR1_basepow_erp.mat'); 
+    load('mAgoodR1_basepow_erp.mat'); %baseline power
     data=mAgoodR1; clear mAgoodR1
 else
-    load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data
+    load('mBgoodR1_pow_erp_lfp.mat'); %monkey B data w raw power
     mData = mBgoodR1; clear mBgoodR1
-    load('mBgoodR1_basepow_erp.mat'); 
+    load('mBgoodR1_basepow_erp.mat'); %baseline power
     data=mBgoodR1; clear mBgoodR1
 end
 
