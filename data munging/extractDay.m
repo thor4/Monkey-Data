@@ -1,4 +1,4 @@
-function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoch)
+function [lfp, areas, trial_info, recording_info] = extractDay(path,monkey,day,good,stable,behResp,rule,epoch)
 %%%% Crawler for raw data %%%%
 %Will crawl specific file location based on PC used: koko, home or lab
 
@@ -20,6 +20,9 @@ function [lfp, areas] = extractDay(path,monkey,day,good,stable,behResp,rule,epoc
 % behResp: [0(incorrect), 1(correct) ]
 % rule: [ 1(identity), 2(location) ]
 % epoch: [ 'base', 'sample', 'delay', 'match', 'all', 'entire' ]
+% * 'all' pulls out each epoch and stitches them together, ensuring
+% * the same trial length, 'entire' just copies the entire trial
+
 
 %   homepc:
 %   path = 'H:\\OneDrive\\Documents\\PhD @ FAU\\research\\High Frequency FP Activity in VWM\\'
