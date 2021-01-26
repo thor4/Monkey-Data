@@ -1,4 +1,4 @@
-function [lfp, areas, trial_info, recording_info] = extractDay(path,monkey,day,good,stable,behResp,rule,epoch)
+function [lfp, areas, tri_info, recording_info] = extractDay(path,monkey,day,good,stable,behResp,rule,epoch)
 %%%% Crawler for raw data %%%%
 %Will crawl specific file location based on PC used: koko, home or lab
 
@@ -33,14 +33,23 @@ function [lfp, areas, trial_info, recording_info] = extractDay(path,monkey,day,g
 
 
     p = inputParser; %create inputParser object to check inputs
-    %define default optional parameter values
-%   test  monkey = 'betty'
-%   test day = '090615'
-%   test good = 1;
-%   test stable = 2;
-%   test behResp = 1;
-%   test rule = 1;
-%   test epoch = 'delay';
+    %define default optional parameter values for test (betty & clark):
+%   	monkey = 'betty'
+%   	day = '090615'
+%   	good = 1;
+%   	stable = 2;
+%   	behResp = 1;
+%   	rule = 1;
+%   	epoch = 'delay';
+%     monkey = 'clark';
+%     day = '060509';
+%     good = 1;
+%     stable = 1;
+%     behResp = 1;
+%     rule = 1;
+%     epoch = 'all';
+
+
     monkeys = { 'betty', 'clark' };
     %validate monkey exists and is accurate
     checkMonkey = @(x) any(strcmp(x,monkeys));
@@ -84,6 +93,7 @@ function [lfp, areas, trial_info, recording_info] = extractDay(path,monkey,day,g
     end
         
     idx = 0; %init counter
+    tri_used=[]; %init trials used tracker
     if ~(string(day) == "all") %single day
         for j=2:3
             if (j==3) && (monkey=="betty") %only one session for betty
@@ -132,6 +142,7 @@ function [lfp, areas, trial_info, recording_info] = extractDay(path,monkey,day,g
                         otherwise
                             warning('no such epoch exists')
                     end
+                    tri_used = [tri_used k];
                     %%save entire trial_info and rec_info per day in struct
                 elseif (stable==2) && ...%stable not specified, give stable perf and transition trials
                         (trial_info.good_trials(k) == good) && ...%artifacts/none
@@ -169,8 +180,14 @@ function [lfp, areas, trial_info, recording_info] = extractDay(path,monkey,day,g
                         otherwise
                             warning('no such epoch exists')
                     end
+                    tri_used = [tri_used k];
                 end
             end
+            tdata = fieldnames(trial_info); %save names of trial metadata
+            tdata(find(ismember(tdata,'numTrials')))=[]; %remove single dim metadata
+            for m=1:length(tdata)
+                tri_info.(tdata{m}) = trial_info.(tdata{m})(tri_used);
+            end            
         end
     else
         warning('can only provide single day data')

@@ -25,10 +25,14 @@ end
 
 i=0; %init counter
 
-%need to figure out how to take each trial's information and store it in
-%the returned trial_info struct. this is variable 'k' in extractDay script
-%rec_info shouldn't matter since it doesn't depend on trial, but confirm
-%this
+%try saving each day's tri_info & rec_info: error in clark day where
+%session 2 had 600 trials and session 3 had 579 due to a rule change in
+%session 2 for trials 578-600. the trial_info.rule for session 3 goes up to
+%600, while the rest end at 579. error is in extractDay:
+%trial_info.(tdata{m})(tri_used)
+%Index exceeds the number of array elements (579).
+%figure out how to go through the sessions in clark and save trial data
+%while preserving betty functionality
 
 %change var name per monkey/rule combo (4x)
 for lp=alldays %cycle through all days
