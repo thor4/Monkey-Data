@@ -44,7 +44,7 @@ function [lfp, areas, tri_info, recording_info] = extractDay(path,monkey,day,goo
 %     monkey = 'clark';
 %     day = '060509';
 %     good = 1;
-%     stable = 1;
+%     stable = 2;
 %     behResp = 1;
 %     rule = 1;
 %     epoch = 'all';
@@ -93,12 +93,12 @@ function [lfp, areas, tri_info, recording_info] = extractDay(path,monkey,day,goo
     end
         
     idx = 0; %init counter
-    tri_used=[]; %init trials used tracker
     if ~(string(day) == "all") %single day
         for j=2:3
             if (j==3) && (monkey=="betty") %only one session for betty
                 continue %skip rest of loop
             end
+            tri_used=[]; %init trials used tracker
             trial_infoN = sprintf(trial_info_path,monkey,day,days{j}); %create full path to trial_info.mat
             load(trial_infoN,'trial_info'); %load trial_info for day's trials
             recording_infoN = sprintf(recording_info_path,monkey,day,days{j}); %create full path to recording_info.mat
@@ -185,9 +185,13 @@ function [lfp, areas, tri_info, recording_info] = extractDay(path,monkey,day,goo
             end
             tdata = fieldnames(trial_info); %save names of trial metadata
             tdata(find(ismember(tdata,'numTrials')))=[]; %remove single dim metadata
-            for m=1:length(tdata)
-                tri_info.(tdata{m}) = trial_info.(tdata{m})(tri_used);
-            end            
+            for m=1:length(tdata) %add all trial_info contents for each used trial
+                tri_sesh_info.(tdata{m}) = trial_info.(tdata{m})(tri_used);
+            end
+            if (j==2) && (length(tri_used)~=0) tri_info.session1 = tri_sesh_info; %save per session
+            elseif (length(tri_used)~=0) tri_info.session2 = tri_sesh_info;
+            end
+            clear tri_used tri_sesh_info
         end
     else
         warning('can only provide single day data')

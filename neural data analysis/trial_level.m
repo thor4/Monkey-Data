@@ -34,6 +34,9 @@ i=0; %init counter
 %figure out how to go through the sessions in clark and save trial data
 %while preserving betty functionality
 
+%tri_info should return .session1 and/or .session2 substruct now for all
+%clark days, test
+
 %change var name per monkey/rule combo (4x)
 for lp=alldays %cycle through all days
     i = i+1;
