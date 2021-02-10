@@ -43,7 +43,7 @@ for lp=alldays %cycle through all days
     dayy = append('d',lp{:});
     [dataM1goodCorR1.(dayy).lfp,dataM1goodCorR1.(dayy).areas,...
         dataM1goodCorR1.(dayy).tri_info,dataM1goodCorR1.(dayy).rec_info] =...
-        extractDay(path,monkey,lp{:},1,1,1,1,'all');
+        extractDay(path,monkey,lp{:},1,2,1,1,'all');
     %convert to µV (1V = 10^6µV = 1,000,000µV) 
     dataM1goodCorR1.(dayy).lfp = dataM1goodCorR1.(dayy).lfp .* 1e6;
 end
