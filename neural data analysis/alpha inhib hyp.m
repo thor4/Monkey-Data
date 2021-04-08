@@ -32,7 +32,22 @@ else
 end
 trial_info_path = strcat(path,'%s\\%s\\%s\\trial_info.mat'); %build trial_info path
 recording_info_path = strcat(path,'%s\\%s\\%s\\recording_info.mat'); %build recording_info path
-lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.all.mat'); %build lfp raw data path
+lfp_path = strcat(path,'%s\\%s\\%s\\%s%s%s.ansig.mat'); %build lfp raw data path
+
+srate = 1000; % 1,000Hz
+min_freq = 4; %in Hz (need several cycles in an epoch, these epochs are 500ms min so 4Hz = 2 cycles)
+max_freq = 100; %nothing above 100
+num_frex = 35; %50 for 200Hz, 35 for 100Hz, better for statistics mult comp corr, less smooth spectrogram
+min_fwhm = .400; % in seconds (350ms)
+max_fwhm = .100; % in seconds (75ms)
+%there are N/2+1 frequencies between 0 and srate/2:
+frex = logspace(log10(min_freq),log10(max_freq),num_frex); %total num of freq's
+
+%504 samples in baseline
+%505 samples in cue
+%811 samples in delay
+%274 samples in match (check this)
+%2094 total samples across all chans, 35 total frequencies
 
 for day=alldays %cycle through all days
     for j=2:3
@@ -44,67 +59,36 @@ for day=alldays %cycle through all days
         recording_infoN = sprintf(recording_info_path,monkey,day{:},days{j}); %create full path to recording_info.mat
         load(recording_infoN,'recording_info'); %load recording_info for day's trials
         areas = recording_info.area;
+        %STOPPED HERE      
+        day_ansig = sprintf(lfp_path,monkey,day{:},days{j},monkey,day{:},days{j}{1}(8:9));
+        %load analytic signal for all trials across all chans in a single variable 'ansig':
+        load(day_ansig,'ansig'); %chan (recording_info.numChannels) x frex (35) x time (2079) x trial (trial_info.numTrials)
+        %size(ansig) %verify above
+        
         %STOPPED HERE
+        %PULL OUT TRIALS OF INTEREST: COR + RULE 1/2 (sep var) THEN PROCEED TO
+        %COMPUTE AVG POWER ACROSS TRIALS PER STIMULUS LOCATION
         
-        
-        trial_lfp = sprintf(lfp_path,monkey,day{:},days{j},monkey,day{:},days{j}{1}(8:9));
-        %load all trials across all chans in a single variable 'lfp':
-        load(trial_lfp,'lfp'); %chan (recording_info.numChannels) x time (2049) x trial (trial_info.numTrials)
         for k=1:recording_info.numChannels %parse all channels                       
-            signal = squeeze(lfp(k,:,:)); %rem single chan dim and confirm time x trials leftover
-            reflectsig_all = zeros(size(signal,1)+2*n_wavelet,size(signal,2)); %initialize reflected signals mat
-            % reflect all trials
-            for signalN=1:size(signal,2) %loop through trials
-                reflectsig = [ signal(n_wavelet:-1:1,signalN); signal(:,signalN); signal(end:-1:end-n_wavelet+1,signalN); ];        
-                reflectsig_all(:,signalN) = reflectsig;
+            for fi=1:length(frex)
+                
+                % & save avg power per freq component avg across trials
+                pow(fi) = mean( abs( as.^2 ),4 );
+                %need to identify stim location based on match loc & rule
+                % store dB-norm'd down-sampled power for each frequency in freq
+                % x time x trials
+%                 dbpow(fi,:,:) = 10*log10( abs( as(times2saveidx,:) ) .^2 ./basePow); 
+                % save raw power for ea. freqidx x down-sampled time x
+                % trial
+%                 pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
+                % mean( abs( as_ ).^2, 2);
+%                     clear as % start anew with these var's ea. loop
             end
-            % concatenate into a super-trial
-            reflectsig_supertri = reshape(reflectsig_all,1,[]); % reshape to 1D time-trials
-%             % confirm this reflection actually works by visualization:
-%             % plot original signal (example from mB chan 23 trial 500
-%             figure(1), clf
-%             subplot(211)
-%             plot(signal(:,500)','LineWidth',2,'color','b')
-%             set(gca,'xlim',[0 numel(reflectsig)]-n_wavelet)
-%             ylabel('Voltage (\muV)'); title('Original Signal')
-%             ax=gca; ax.FontSize = 25; x1=xticklabels; 
-%             set(gca, 'XTickLabel', []); box off
-%             % plot reflected signal
-%             subplot(212)
-%             p21=plot(n_wavelet+1:length(signal(:,500))+n_wavelet,signal(:,500),...
-%                 'LineWidth',3,'color','b');
-%             hold on
-%             p22=plot(reflectsig,'-','LineWidth',2,'color','k');
-%             p22.Color(4) = 0.35; %change transparency
-%             set(gca,'xlim',[0 numel(reflectsig)])
-%             title('Reflected Signal'); xlabel('Time step (ms)')
-%             ylabel('Voltage (\muV)')
-%             ax=gca; ax.FontSize = 25; xticklabels(x1); box off
-%             legend({'original';'reflected'},'FontSize',25,'Location','best','box','off')
-%             export_fig('reflected signal','-png','-transparent'); %save transparent pdf in pwd
-            % step 1: finish defining convolution parameters
-            n_data = length(reflectsig_supertri); % time*trials
-            n_convolution = n_wavelet+n_data-1;
-            % step 2: take FFTs
-            fft_data = fft(reflectsig_supertri,n_convolution); % all trials for chan        
-            parfor fi=1:length(frex)
-                % FFT of wavelet
-                fft_wavelet = fft(wavelets(fi,:),n_convolution);
-                % step 3: normalize kernel by scaling amplitudes to one in the 
-                % frequency domain. prevents amplitude from decreasing with 
-                % increasing frequency. diff from 1/f scaling
-                fft_wavelet = fft_wavelet ./ max(fft_wavelet);
-                % step 4: point-wise multiply and take iFFT
-                as = ifft( fft_data.*fft_wavelet ); % analytic signal
-                % step 5: trim wings
-                as = as(half_of_wavelet_size:end-half_of_wavelet_size+1);
-                % step 6: reshape back to reflected time-by-trials
-                as = reshape(as,size(reflectsig_all,1),size(reflectsig_all,2));
-                % step 7: chop off the reflections
-                as = as(n_wavelet+1:end-n_wavelet,:);
-                % as is now a time x trial complex matrix
+            %save downsampled power as chan x freqidx x time x trials
+%             data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow; 
+            %save avg baseline power for all frex as chan x freqidx
+            data.(monkey{:})(i).(dday{:}).basepow(chan,:) = basePow; % as is now a time x trial complex matrix
                 ansig(k,fi,:,:) = as;
-            end
         end
         lfp_as_path = strcat(path,'%s\\%s\\%s\\%s%s%s.ansig.mat'); %build lfp all analytic signals path
         lfp_as = sprintf(lfp_as_path,monkey,day{:},days{j},monkey,day{:},days{j}{1}(8:9));
