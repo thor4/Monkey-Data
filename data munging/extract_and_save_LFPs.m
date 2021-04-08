@@ -1,3 +1,14 @@
+%% Create analytic signal from lfp per day
+
+% FIRST extract_and_save_LFPs.m [this file]
+% lfp signal is chan x time x trials
+% ex: 'lfp' from clark06121303.all.mat
+
+% SECOND decompose_all_trial_lfps_to_as.m 
+
+%setup loops to crawl through each day, load the LFPs and create the
+%analytic signals then save them to disk
+
 %% Extract all LFPs from both monkeys, all trials and save as separate file in each session
 
 % init vars, run this twice (once for each monkey):
