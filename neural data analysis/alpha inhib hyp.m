@@ -58,22 +58,56 @@ for day=alldays %cycle through all days
         load(trial_infoN,'trial_info'); %load trial_info for day's trials
         recording_infoN = sprintf(recording_info_path,monkey,day{:},days{j}); %create full path to recording_info.mat
         load(recording_infoN,'recording_info'); %load recording_info for day's trials
-        areas = recording_info.area;
-        %STOPPED HERE      
+        areas = recording_info.area; 
         day_ansig = sprintf(lfp_path,monkey,day{:},days{j},monkey,day{:},days{j}{1}(8:9));
         %load analytic signal for all trials across all chans in a single variable 'ansig':
         load(day_ansig,'ansig'); %chan (recording_info.numChannels) x frex (35) x time (2079) x trial (trial_info.numTrials)
         %size(ansig) %verify above
-        
+              
+        for k=1:recording_info.numChannels %parse all channels
+            r1_locs = []; r2_locs = []; %init location vars for ea rule
+            %first, compile trials of interest
+            for l=1:trial_info.numTrials
+                if (trial_info.BehResp(l)==1) && (trial_info.rule(l)==1) %cor + rule1
+                    if (trial_info.CueObj(l)==trial_info.MatchObj1(l)) %match identity for rule 1
+                        r1_locs(end+1,:) = [l trial_info.MatchPos1(l)]; %save trial # & position
+                    elseif (trial_info.CueObj(l)==trial_info.MatchObj2(l))
+                        r1_locs(end+1,:) = [l trial_info.MatchPos2(l)];
+                    end
+                elseif (trial_info.BehResp(l)==1) && (trial_info.rule(l)==2) %cor + rule2
+                    if (trial_info.CueLoc(l)==trial_info.MatchPos1(l)) %match location for rule 2
+                        r2_locs(end+1,:) = [l trial_info.MatchPos1(l)];
+                    elseif (trial_info.CueLoc(l)==trial_info.MatchPos2(l))
+                        r2_locs(end+1,:) = [l trial_info.MatchPos2(l)];
+                    end
+                end
+            end
+            if ~isempty(r1_locs) %ensures r1_locs isn't empty
+                r1_locs_split=[]; %init var to hold trial numbers split by location
+                all_locs = unique(r1_locs(:,2))'; %row vec of all locations
+                for location=all_locs %cycle through locations (needs to be row vec)
+                    temp_loc = sprintf('l%d',location);
+                    r1_locs_split.(temp_loc) = r1_locs(find(r1_locs(:,2)==location)); %returns trials at loc specified by 'location'
+                end
+            end
+            if ~isempty(r2_locs) %ensures r2_locs isn't empty
+                r2_locs_split=[]; %init var to hold trial numbers split by location
+                all_locs = unique(r2_locs(:,2))'; %row vec of all locations
+                for location=all_locs %cycle through locations (needs to be row vec)
+                    temp_loc = sprintf('l%d',location);
+                    r2_locs_split.(temp_loc) = r2_locs(find(r2_locs(:,2)==location)); %returns trials at loc specified by 'location'
+                end
+            end
         %STOPPED HERE
-        %PULL OUT TRIALS OF INTEREST: COR + RULE 1/2 (sep var) THEN PROCEED TO
-        %COMPUTE AVG POWER ACROSS TRIALS PER STIMULUS LOCATION
-        
-        for k=1:recording_info.numChannels %parse all channels                       
+        %PULLED OUT SOME TRIALS OF INTEREST: COR + RULE 1/2 (sep var)
+        %NOW CONTINUE TO COMPUTE AVG POWER ACROSS TRIALS PER STIMULUS LOCATION
+            
+            
+            
+            
             for fi=1:length(frex)
-                
                 % & save avg power per freq component avg across trials
-                pow(fi) = mean( abs( as.^2 ),4 );
+                pow(fi) = mean( abs( ansig(k,fi,:,l) as.^2 ),4 );
                 %need to identify stim location based on match loc & rule
                 % store dB-norm'd down-sampled power for each frequency in freq
                 % x time x trials
@@ -83,7 +117,14 @@ for day=alldays %cycle through all days
 %                 pow(fi,:,:) = abs( as(times2saveidx,:) ) .^2;
                 % mean( abs( as_ ).^2, 2);
 %                     clear as % start anew with these var's ea. loop
+                if 
+                    continue
+                elseif (trial_info.rule(l)==2) %rule2 (location)
+                    continue
+                end
             end
+                    
+                
             %save downsampled power as chan x freqidx x time x trials
 %             data.(monkey{:})(i).(dday{:}).power(chan,:,:,:) = pow; 
             %save avg baseline power for all frex as chan x freqidx
@@ -99,6 +140,7 @@ for day=alldays %cycle through all days
 %         size(ansig)
     end
 end
+
 
 
 
