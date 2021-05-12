@@ -150,3 +150,43 @@ end
 toc
 
 % 1423.38 sec for clark
+
+
+% output: a single figure per channel with 3 subplots showing the avg power
+% for each stimulus location for a specific rule across all correct trials
+
+% work on the figures for each monkey
+
+for day=alldays %cycle through all days
+    for j=2:3
+        if (j==3) && (monkey=="betty") %only one session for betty
+            continue %skip rest of loop
+        end
+        trial_infoN = sprintf(trial_info_path,monkey,day{:},days{j}); %create full path to trial_info.mat
+        load(trial_infoN,'trial_info'); %load trial_info for day's trials
+        recording_infoN = sprintf(recording_info_path,monkey,day{:},days{j}); %create full path to recording_info.mat
+        load(recording_infoN,'recording_info'); %load recording_info for day's trials
+        areas = recording_info.area;
+        powloc_path = strcat(path,'%s\\%s\\%s\\%s%s%s.powloc.mat'); %build power x location data path
+        pow_loc = sprintf(powloc_path,monkey,day{:},days{j},monkey,day{:},days{j}{1}(8:9));
+        load(pow_loc); %r1 or r2 or r1 & r2
+        if exist('r1') %proceed with rule 1 trials
+            continue
+            clear r1
+        elseif exist('r2') %proceed with rule 2 trials
+            clear r2
+        else %proceed with both rule 1 and rule 2 trials
+            clear r1 r2
+        end
+        %STOPPED HERE. NEED TO PARSE THROUGH THE r1/r2 structs AND PULL OUT
+        %POWER AND PLOT IN FIGURES FOR CLARK. AFTERWARDS, START OVER WITH
+        %BETTY BY MAKING NEW POWLOC FILES AND DOING FIGURES AGAIN
+        for k=1:length(areas) %parse all channels
+            for fi=1:length(frex)
+                % save avg raw power for ea. chan x freq x down-sampled time avg across trials
+                temp_pow(k,:,fi) = squeeze( mean( abs( ansig(k,fi,times2saveidx,r1.(temp_loc)) ) .^2 ,4) );
+                % end up with down-sampled time vector of avg pow vals (187x1)
+            end
+        end
+    end
+end
