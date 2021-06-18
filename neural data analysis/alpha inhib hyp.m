@@ -57,7 +57,7 @@ times2save = -400:10:1466; % in ms, 1466 = 505 (sample) + 811 (delay) + 150 (mat
 times2saveidx = dsearchn((signalt.*1000)',times2save');
 
 tic
-for day=alldays %cycle through all days
+for day=alldays(1) %cycle through all days
     for j=2:3
         if (j==3) && (monkey=="betty") %only one session for betty
             continue %skip rest of loop
@@ -156,8 +156,10 @@ toc
 % for each stimulus location for a specific rule across all correct trials
 
 % work on the figures for each monkey
+day_rules=[];
 
 for day=alldays %cycle through all days
+    dday = append('d',day{:}); %setup day for indexing
     for j=2:3
         if (j==3) && (monkey=="betty") %only one session for betty
             continue %skip rest of loop
@@ -171,11 +173,21 @@ for day=alldays %cycle through all days
         pow_loc = sprintf(powloc_path,monkey,day{:},days{j},monkey,day{:},days{j}{1}(8:9));
         load(pow_loc); %r1 or r2 or r1 & r2
         if exist('r1') %proceed with rule 1 trials
-            continue
+            %continue
+            %day_rules.(dday).(days{j}) = 'rule1';
+            pow_fields_r1 = fieldnames(r1)';
+            pow_fields_r1{4:6}
+            for locN=4:6 % STOPPED HERE, WORK ON FIGURE WITHIN EACH RULE
+                r1.(pow_fields_r1{locN}) % avg pow over tri in chan x time x frex
             clear r1
         elseif exist('r2') %proceed with rule 2 trials
+            %day_rules.(dday).(days{j}) = 'rule2';
+            pow_fields_r2 = fieldnames(r2);
             clear r2
         else %proceed with both rule 1 and rule 2 trials
+            %day_rules.(dday).(days{j}) = 'rules 1 & 2';
+            pow_fields_r1 = fieldnames(r1);
+            pow_fields_r2 = fieldnames(r2);
             clear r1 r2
         end
         %STOPPED HERE. NEED TO PARSE THROUGH THE r1/r2 structs AND PULL OUT
@@ -186,6 +198,56 @@ for day=alldays %cycle through all days
                 % save avg raw power for ea. chan x freq x down-sampled time avg across trials
                 temp_pow(k,:,fi) = squeeze( mean( abs( ansig(k,fi,times2saveidx,r1.(temp_loc)) ) .^2 ,4) );
                 % end up with down-sampled time vector of avg pow vals (187x1)
+                %REVIEW THE BELOW FIGURE CODE
+                % plotting the raw difference data
+                
+                %pow is saved as chan x time x frex in ie: r1.
+                areaN = 2; %plot which area?
+                clim = [0 90];
+
+                pull out correct & incorrect power avg over trials
+                cor = mean( monkey(monkeyN).(responses{1}).(areas{areaN}),3 ); 
+                inc = mean( monkey(monkeyN).(responses{2}).(areas{areaN}),3 );
+                compute the difference in power between the two conditions
+                diffmap = squeeze(mean(tf(2,:,:,:),4 )) - squeeze(mean(tf(1,:,:,:),4 ));
+                diffmap = cor - inc;
+
+                figure(9), clf
+                subplot(221)
+                imagesc(times2save,[],cor)
+                hold on %vertical line
+                yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
+                set(gca,'clim',clim,'ydir','n')
+                set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
+                xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+                lim = get(cbar,'Limits'); cbar.Ticks=lim;
+                cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
+                cbar.Label.Position=[pos(1)-1 pos(2)];
+                title(sprintf('Monkey %d, Area %s, Resp Correct',monkeyN,areas{areaN}(2:end)));
+
+                subplot(222)
+                imagesc(times2save,[],inc)
+                hold on %vertical line
+                yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
+                set(gca,'clim',clim,'ydir','n')
+                set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
+                xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+                lim = get(cbar,'Limits'); cbar.Ticks=lim;
+                cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
+                cbar.Label.Position=[pos(1)-1 pos(2)];
+                title(sprintf('Monkey %d, Area %s, Resp Incorrect',monkeyN,areas{areaN}(2:end)));
+
+                subplot(223)
+                imagesc(times2save,[], diffmap)
+                hold on %vertical line
+                yL = get(gca,'YLim'); line([0 500;0 500],yL,'Color','k','LineStyle',':'); 
+                set(gca,'clim',[-mean(clim)/5 mean(clim)/5],'ydir','n')
+                set(gca,'ytick',1:4:num_frex,'yticklabel',round(logspace(log10(min_freq),log10(max_freq),13)*10)/10)
+                xlabel('Time (ms)'), ylabel('Frequency (Hz)'), cbar = colorbar; 
+                lim = get(cbar,'Limits'); cbar.Ticks=lim;
+                cbar.Label.String = 'Raw Power'; pos = cbar.Label.Position; 
+                cbar.Label.Position=[pos(1)-1 pos(2)];
+                title(sprintf('Monkey %d, Area %s, Correct - Incorrect',monkeyN,areas{areaN}(2:end)));
             end
         end
     end
